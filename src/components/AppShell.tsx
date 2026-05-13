@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
+  { to: '/auth', label: 'Auth / Sign in' },
   { to: '/dog-profile', label: 'Dog Profile' },
   { to: '/assistant', label: 'Assistant' },
   { to: '/reminders', label: 'Reminders' },
@@ -19,7 +20,12 @@ export function AppShell({ children }: AppShellProps) {
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-teal-700">DogCareAI</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-teal-700">DogCareAI</p>
+              <span className="rounded-full border border-stone-200 bg-stone-100 px-2 py-1 text-xs font-medium text-slate-600">
+                Phase 5 skeleton
+              </span>
+            </div>
             <h1 className="text-2xl font-bold tracking-normal">Care workspace</h1>
           </div>
           <DogPicker />
