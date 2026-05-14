@@ -21,6 +21,7 @@
 - `/auth` now supports Supabase email/password sign up.
 - `/auth` now supports Supabase email/password sign in.
 - The auth form shows loading, error, and success states.
+- The auth form performs basic client-side email validation and keeps password validation at minimum length 6.
 - The auth form disables duplicate submit while a request is pending.
 - If sign in succeeds, the user is redirected to the originally requested route or `/`.
 - If sign up succeeds with an active session, the user is redirected to `/`.

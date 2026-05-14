@@ -5,6 +5,8 @@ import { hasSupabaseConfig, supabase } from '../lib/supabaseClient';
 
 type AuthMode = 'sign-in' | 'sign-up';
 
+const REALISTIC_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [email, setEmail] = useState('');
@@ -36,6 +38,13 @@ export function AuthPage() {
     setErrorMessage('');
     setSuccessMessage('');
 
+    const normalizedEmail = email.trim();
+
+    if (!REALISTIC_EMAIL_PATTERN.test(normalizedEmail)) {
+      setErrorMessage('Please enter a valid email address, for example name@example.com.');
+      return;
+    }
+
     if (!supabase) {
       setErrorMessage('Supabase is not configured yet. Add the frontend env variables and restart the dev server.');
       return;
@@ -44,7 +53,7 @@ export function AuthPage() {
     setIsSubmitting(true);
 
     const credentials = {
-      email: email.trim(),
+      email: normalizedEmail,
       password,
     };
 
