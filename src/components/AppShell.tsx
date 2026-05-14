@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { DogPicker } from './DogPicker';
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
@@ -15,6 +17,17 @@ type AppShellProps = {
 };
 
 export function AppShell({ children }: AppShellProps) {
+  const { isAuthenticated, isLoading, signOut, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+
+    if (!error) {
+      navigate('/auth', { replace: true });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 text-slate-900">
       <header className="border-b border-stone-200 bg-white">
@@ -28,7 +41,22 @@ export function AppShell({ children }: AppShellProps) {
             </div>
             <h1 className="text-2xl font-bold tracking-normal">Care workspace</h1>
           </div>
-          <DogPicker />
+          <div className="flex flex-col gap-3 sm:items-end">
+            <DogPicker />
+            {isAuthenticated ? (
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                <span>{user?.email}</span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                  className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-stone-400 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 

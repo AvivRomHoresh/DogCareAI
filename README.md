@@ -4,15 +4,17 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 5 has started with the initial client skeleton only:
+Phase 6 has started with authentication and protected route setup:
 
 - React + Vite + TypeScript
 - TailwindCSS
 - React Router route stubs
 - Supabase browser client setup
+- Supabase email/password auth
+- Protected beta routes
 - Mock AI mode documented through environment variables
 
-Authentication, Dog Profile, AI Assistant, and Reminders are not implemented yet.
+Dog Profile, AI Assistant, Dashboard data loading, and Reminders persistence are not implemented yet.
 
 ## Local Setup
 
@@ -35,7 +37,7 @@ Authentication, Dog Profile, AI Assistant, and Reminders are not implemented yet
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-   The app skeleton can still open without real Supabase values, but future Supabase features will require them.
+   Authentication now requires these frontend-safe Supabase values. Do not add service-role keys to the frontend.
 
 4. Start the dev server:
 
@@ -58,12 +60,12 @@ Server-side variables such as `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and
 ## Available Routes
 
 - `/` - Dashboard stub
-- `/auth` - Authentication stub
+- `/auth` - Supabase email/password auth
 - `/dog-profile` - Dog Profile stub
 - `/assistant` - AI Assistant stub
 - `/reminders` - Reminders stub
 
-These routes are placeholders for the approved beta flow. They intentionally do not contain working feature logic yet.
+The `/auth` route contains Supabase email/password auth. The other beta routes remain placeholders for the approved beta flow and intentionally do not contain working feature logic yet.
 
 ## Cost-Control Notes
 
