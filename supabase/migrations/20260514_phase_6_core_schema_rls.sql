@@ -192,3 +192,16 @@ on public.reminders
 for delete
 to authenticated
 using (user_id = auth.uid());
+
+-- Authenticated frontend users need table grants to reach these tables through
+-- the Supabase Data API. RLS above still controls row-level access.
+-- Anonymous users should not access these beta data tables.
+grant usage on schema public to authenticated;
+
+grant select, insert, update, delete on public.profiles to authenticated;
+grant select, insert, update, delete on public.dogs to authenticated;
+grant select, insert, update, delete on public.reminders to authenticated;
+
+revoke all on public.profiles from anon;
+revoke all on public.dogs from anon;
+revoke all on public.reminders from anon;

@@ -104,6 +104,13 @@ RLS is enabled on all three tables.
 - Authenticated users can select and delete only reminders where `user_id = auth.uid()`.
 - Authenticated users can insert and update reminders only when `user_id = auth.uid()` and `dog_id` belongs to a dog owned by `auth.uid()`.
 
+## Grants Summary
+
+- `authenticated` has `usage` on schema `public`.
+- `authenticated` has `select`, `insert`, `update`, and `delete` grants on `profiles`, `dogs`, and `reminders`.
+- `anon` table access is explicitly revoked for `profiles`, `dogs`, and `reminders`.
+- RLS remains the real row-level protection; grants only allow authenticated frontend users to reach these tables through the Supabase Data API.
+
 ## Future Tables Intentionally Deferred
 
 - `activities`
