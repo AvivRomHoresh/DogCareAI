@@ -198,10 +198,14 @@ using (user_id = auth.uid());
 -- Anonymous users should not access these beta data tables.
 grant usage on schema public to authenticated;
 
+revoke all privileges on table public.profiles from authenticated;
+revoke all privileges on table public.dogs from authenticated;
+revoke all privileges on table public.reminders from authenticated;
+
+revoke all privileges on table public.profiles from anon;
+revoke all privileges on table public.dogs from anon;
+revoke all privileges on table public.reminders from anon;
+
 grant select, insert, update, delete on public.profiles to authenticated;
 grant select, insert, update, delete on public.dogs to authenticated;
 grant select, insert, update, delete on public.reminders to authenticated;
-
-revoke all on public.profiles from anon;
-revoke all on public.dogs from anon;
-revoke all on public.reminders from anon;

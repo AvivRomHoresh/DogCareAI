@@ -8,6 +8,8 @@
 
 Prepare a reviewable SQL migration for the minimal beta database schema and Row-Level Security policies. The SQL has not been applied to the real Supabase project.
 
+After review, this migration was manually applied in Supabase and verified.
+
 ## Migration File
 
 - `supabase/migrations/20260514_phase_6_core_schema_rls.sql`
@@ -109,7 +111,18 @@ RLS is enabled on all three tables.
 - `authenticated` has `usage` on schema `public`.
 - `authenticated` has `select`, `insert`, `update`, and `delete` grants on `profiles`, `dogs`, and `reminders`.
 - `anon` table access is explicitly revoked for `profiles`, `dogs`, and `reminders`.
+- The migration revokes all table privileges from `authenticated` and `anon` before granting only the required authenticated permissions.
 - RLS remains the real row-level protection; grants only allow authenticated frontend users to reach these tables through the Supabase Data API.
+
+## Manual Verification Results
+
+Manual Supabase verification passed:
+
+- RLS is enabled on `profiles`, `dogs`, and `reminders`.
+- `pg_policies` returns 12 policies for the beta tables.
+- `authenticated` has only `SELECT`, `INSERT`, `UPDATE`, and `DELETE` on `profiles`, `dogs`, and `reminders`.
+- `anon` has no table access to `profiles`, `dogs`, or `reminders`.
+- Extra authenticated privileges were cleaned by revoking all table privileges from `authenticated` and `anon`, then granting only the required minimum permissions to `authenticated`.
 
 ## Future Tables Intentionally Deferred
 
@@ -122,9 +135,9 @@ These tables remain deferred to keep the beta schema small and focused.
 
 ## Manual Application Steps
 
-Do not apply this migration until it has been reviewed.
+This migration has been reviewed and manually applied once in Supabase.
 
-When approved:
+For a new environment:
 
 1. Open the Supabase dashboard.
 2. Open the project SQL Editor.
@@ -150,7 +163,6 @@ After the migration is applied, verify in Supabase:
 
 ## Intentionally Not Implemented
 
-- No SQL was applied to the real Supabase project.
 - No Dog Profile CRUD was implemented.
 - No Reminders CRUD was implemented.
 - No Dashboard data loading was implemented.
