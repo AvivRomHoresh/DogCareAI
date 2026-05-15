@@ -431,6 +431,7 @@ Beta reminder types:
 - Medication
 - Vaccination
 - Grooming
+- Vet Visit
 - General note
 
 ### Reminder fields

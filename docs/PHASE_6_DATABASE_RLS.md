@@ -6,13 +6,21 @@
 
 ## Step Goal
 
-Prepare a reviewable SQL migration for the minimal beta database schema and Row-Level Security policies. The SQL has not been applied to the real Supabase project.
+Prepare a reviewable SQL migration for the minimal beta database schema and Row-Level Security policies.
 
-After review, this migration was manually applied in Supabase and verified.
+The core schema migration was initially prepared for review only. After review, it was manually applied in Supabase and verified.
 
 ## Migration File
 
 - `supabase/migrations/20260514_phase_6_core_schema_rls.sql`
+
+## Follow-Up Migration Before Step 5
+
+A follow-up migration was prepared before Phase 6 Step 5 to align reminder types with the Reminders beta UI:
+
+- `supabase/migrations/20260515_phase_6_add_vet_visit_reminder_type.sql`
+
+This follow-up migration adds `vet_visit` as an allowed `reminders.type` value. It does not change RLS policies, grants, tables, or existing reminder fields.
 
 ## Tables Created
 
@@ -74,7 +82,8 @@ After review, this migration was manually applied in Supabase and verified.
 - `dogs.activity_level` must be null or one of `low`, `medium`, `high`.
 - `dogs.gender` must be null or one of `male`, `female`, `unknown`.
 - `reminders.title` cannot be empty after trimming.
-- `reminders.type` must be one of `feeding`, `walk`, `medication`, `vaccination`, `grooming`, `general`.
+- `reminders.type` in the core migration initially allowed `feeding`, `walk`, `medication`, `vaccination`, `grooming`, and `general`.
+- The pre-Step 5 follow-up migration updates `reminders.type` to also allow `vet_visit`.
 - `reminders.recurring_frequency` must be one of `none`, `daily`, `weekly`, `monthly`, `yearly`.
 - `reminders.state` must be one of `upcoming`, `completed`, `missed`, `snoozed`.
 - `public.set_updated_at()` keeps `updated_at` current on updates for all three tables.
