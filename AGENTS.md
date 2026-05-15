@@ -80,15 +80,15 @@ Phase 6 progress completed:
 5. Phase 6 Step 4: Dog Profile.
 6. Phase 6 Step 5: Basic Reminders.
 7. Phase 6 Step 6: Dashboard basics.
+8. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
 
-Current implementation step:
+Current / next implementation step after this PR is reviewed and merged:
 
-- Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
+- Phase 6 Step 8: Optional Gemini/server-side boundary.
 
-The next implementation order after Step 7 is:
+The next implementation order after Step 8 is:
 
-1. Phase 6 Step 8: Optional Gemini/server-side boundary.
-2. Phase 6 Step 9: Stabilization before Phase 7 QA.
+1. Phase 6 Step 9: Stabilization before Phase 7 QA.
 
 Do not implement the full app in one large change.
 

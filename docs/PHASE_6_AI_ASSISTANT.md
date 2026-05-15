@@ -24,6 +24,8 @@ Implement the beta `/assistant` flow with active dog context, reminder context, 
 
 `AGENTS.md`, `docs/BACKLOG.md`, and `docs/PHASE_6_PRE_STEP7_ALIGNMENT.md` are the pre-Step 7 documentation alignment carried into this branch before implementation began.
 
+After implementation, `AGENTS.md` and `docs/BACKLOG.md` were updated so the repository points to Phase 6 Step 8 after this PR is reviewed and merged.
+
 ## Assistant Behavior Implemented
 
 - `/assistant` now shows a working beta Assistant screen instead of a stub.

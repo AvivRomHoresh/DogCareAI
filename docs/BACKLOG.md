@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during Phase 6 manual testing. These items are intentionally deferred and should not block the current beta flow.
 
-Current phase status: Phase 6 Step 7 is next — AI Assistant Mock + Context + Emergency.
+Current phase status: Phase 6 Step 7 has been implemented in PR #12. After review and merge, the next step is Phase 6 Step 8 — Optional Gemini/server-side boundary.
 
 ## Deferred Improvements
 
