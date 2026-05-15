@@ -70,7 +70,7 @@ export function DashboardPage() {
           Assistant stub
         </Link>
         <Link className="rounded-2xl border border-stone-200 bg-white p-4 text-sm font-medium text-teal-800 shadow-sm" to="/reminders">
-          Reminders stub
+          Reminders
         </Link>
       </section>
     </div>
