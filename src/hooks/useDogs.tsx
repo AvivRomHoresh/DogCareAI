@@ -30,6 +30,7 @@ export function DogProvider({ children }: DogProviderProps) {
   const [activeDogId, setActiveDogIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedDogs, setHasLoadedDogs] = useState(false);
+  const [storedDogIdUserId, setStoredDogIdUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshDogs = useCallback(async () => {
@@ -68,10 +69,12 @@ export function DogProvider({ children }: DogProviderProps) {
       setDogs([]);
       setError(null);
       setHasLoadedDogs(false);
+      setStoredDogIdUserId(null);
       return;
     }
 
     setActiveDogIdState(window.localStorage.getItem(getStorageKey(user.id)));
+    setStoredDogIdUserId(user.id);
   }, [user]);
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export function DogProvider({ children }: DogProviderProps) {
   }, [refreshDogs]);
 
   useEffect(() => {
-    if (!user || isLoading || !hasLoadedDogs) {
+    if (!user || isLoading || !hasLoadedDogs || storedDogIdUserId !== user.id) {
       return;
     }
 
@@ -95,7 +98,7 @@ export function DogProvider({ children }: DogProviderProps) {
     } else {
       window.localStorage.removeItem(getStorageKey(user.id));
     }
-  }, [activeDogId, dogs, hasLoadedDogs, isLoading, user]);
+  }, [activeDogId, dogs, hasLoadedDogs, isLoading, storedDogIdUserId, user]);
 
   const setActiveDogId = useCallback(
     (dogId: string | null) => {

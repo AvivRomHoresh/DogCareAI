@@ -75,8 +75,12 @@ function validateDogForm(form: DogFormState) {
   const age = parseOptionalNumber(form.age);
   const weight = parseOptionalNumber(form.weight);
 
-  if (!form.name.trim()) {
+  const trimmedName = form.name.trim();
+
+  if (!trimmedName) {
     errors.name = "Please enter your dog's name.";
+  } else if (trimmedName.length < 2) {
+    errors.name = 'Dog name must be at least 2 characters.';
   }
 
   if (age !== null && (!Number.isFinite(age) || age < 0 || age > 40)) {
@@ -402,7 +406,7 @@ export function DogProfilePage() {
                 />
               </Field>
 
-              <Field label="Weight" error={fieldErrors.weight}>
+              <Field label="Weight" error={fieldErrors.weight} helperText="Weight is in kilograms.">
                 <input
                   type="number"
                   min="0"
@@ -427,7 +431,11 @@ export function DogProfilePage() {
                 </select>
               </Field>
 
-              <Field label="Activity level" error={fieldErrors.activity_level}>
+              <Field
+                label="Activity level"
+                error={fieldErrors.activity_level}
+                helperText="Low: mostly calm / short walks. Medium: regular daily walks. High: very active dog."
+              >
                 <select
                   value={form.activity_level}
                   onChange={(event) => updateField('activity_level', event.target.value)}
@@ -514,14 +522,20 @@ export function DogProfilePage() {
             </button>
 
             {selectedDog ? (
-              <button
-                type="button"
-                onClick={handleArchive}
-                disabled={isSaving}
-                className="rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Archive profile
-              </button>
+              <div className="max-w-sm space-y-2">
+                <p className="text-xs leading-5 text-slate-500">
+                  Archived profiles are hidden from the beta list but not permanently deleted. Restore is not
+                  implemented yet.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleArchive}
+                  disabled={isSaving}
+                  className="rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Archive profile
+                </button>
+              </div>
             ) : null}
           </div>
         </form>
@@ -533,11 +547,12 @@ export function DogProfilePage() {
 type FieldProps = {
   children: ReactNode;
   error?: string;
+  helperText?: string;
   label: string;
   required?: boolean;
 };
 
-function Field({ children, error, label, required = false }: FieldProps) {
+function Field({ children, error, helperText, label, required = false }: FieldProps) {
   return (
     <label className="block text-sm font-medium text-slate-700">
       <span>
@@ -545,6 +560,7 @@ function Field({ children, error, label, required = false }: FieldProps) {
         {required ? <span className="text-red-600"> *</span> : null}
       </span>
       <div className="mt-1">{children}</div>
+      {helperText ? <p className="mt-1 text-xs leading-5 text-slate-500">{helperText}</p> : null}
       {error ? <p className="mt-1 text-xs font-medium text-red-700">{error}</p> : null}
     </label>
   );

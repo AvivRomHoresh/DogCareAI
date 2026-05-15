@@ -56,17 +56,26 @@ Implement beta Dog Profile functionality using the existing `public.dogs` table,
 - Active dog selection is scoped per authenticated user.
 - If the stored active dog no longer exists in the non-archived list, the provider selects the first available dog or clears the selection.
 - The active dog state remains frontend-only; no database field was added.
+- After PR smoke testing, active dog persistence was tightened so refresh waits for both localStorage hydration and dog loading before choosing a fallback dog.
 
 ## Validation Rules
 
 Client-side validation mirrors the database constraints:
 
 - Dog name is required and cannot be blank.
+- Dog name must be at least `2` characters after trimming.
 - Age must be empty or between `0` and `40`.
 - Weight must be empty or greater than `0` and less than or equal to `200`.
 - Gender must be empty or one of `male`, `female`, `unknown`.
 - Activity level must be empty or one of `low`, `medium`, `high`.
 - Duplicate save submissions are blocked while saving.
+
+## UX Notes Added After Smoke Test
+
+- Weight field includes helper text: "Weight is in kilograms."
+- Activity level field includes a short explanation for low, medium, and high activity levels.
+- Archive action explains that archived profiles are hidden from the beta list but not permanently deleted.
+- Archive restore is intentionally deferred.
 
 ## Supabase and RLS Assumptions
 
@@ -123,4 +132,3 @@ Client-side validation mirrors the database constraints:
 ## Readiness Statement
 
 The project is ready for Phase 6 Step 5: Basic Reminders.
-
