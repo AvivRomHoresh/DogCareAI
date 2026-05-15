@@ -78,14 +78,17 @@ Phase 6 progress completed:
 3. Phase 6 Step 2: Auth + protected routes.
 4. Phase 6 Step 3: Database schema + RLS.
 5. Phase 6 Step 4: Dog Profile.
+6. Phase 6 Step 5: Basic Reminders.
+7. Phase 6 Step 6: Dashboard basics.
+8. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
 
-The next implementation order is:
+Current / next implementation step after this PR is reviewed and merged:
 
-1. Phase 6 Step 5: Basic Reminders.
-2. Phase 6 Step 6: Dashboard basics.
-3. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
-4. Phase 6 Step 8: Optional Gemini/server-side boundary.
-5. Phase 6 Step 9: Stabilization before Phase 7 QA.
+- Phase 6 Step 8: Optional Gemini/server-side boundary.
+
+The next implementation order after Step 8 is:
+
+1. Phase 6 Step 9: Stabilization before Phase 7 QA.
 
 Do not implement the full app in one large change.
 
@@ -354,9 +357,11 @@ Before marking a task done:
 
 ---
 
-## 16. First Codex Task
+## 16. Historical First Codex Task
 
-When starting implementation, Codex should do only this:
+Historical note: this was the first implementation task for the initial project skeleton. It is preserved for context and is not the current implementation step.
+
+When starting implementation, Codex was instructed to do only this:
 
 ```text
 Read SPEC.md, docs/ARCHITECTURE.md, docs/DESIGN.md and AGENTS.md. Do not implement the full app yet. Create only the initial React + Vite + Tailwind client structure, Supabase client setup, README, and .env.example. Do not create a required paid backend service. Keep mock AI mode available.
@@ -386,9 +391,11 @@ Stop and ask for clarification before continuing if:
 
 ---
 
-## 18. Definition of Done for Phase 4
+## 18. Historical Definition of Done for Phase 4
 
-Phase 4 is complete when this file clearly defines:
+Historical note: this definition described completion criteria for Phase 4 documentation. It is preserved for context and is not the current definition of done.
+
+Phase 4 was complete when this file clearly defined:
 
 - project context,
 - approved stack,
