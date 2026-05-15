@@ -40,9 +40,11 @@ Reminder sections:
 - Today open reminders:
   - `scheduled_at` is today in the user's local timezone.
   - `state !== 'completed'`.
-- Upcoming open reminders:
+- Upcoming & unscheduled open reminders:
   - `state !== 'completed'`.
-  - `scheduled_at` is in the future.
+  - `scheduled_at` is in the future or `scheduled_at` is null.
+  - Scheduled future reminders appear first, sorted by `scheduled_at` ascending.
+  - Unscheduled open reminders appear after scheduled future reminders.
   - Limited to the next 5 reminders.
 - Completed reminders:
   - Shows only a count for the active dog.
@@ -58,7 +60,7 @@ Empty states:
 
 - If the active dog has no reminders, the dashboard shows: "No reminders yet. Add your first dog-care reminder."
 - If there are no open reminders for today, the dashboard shows: "No open reminders for today."
-- If there are no upcoming open reminders, the dashboard shows: "No upcoming open reminders."
+- If there are no upcoming or unscheduled open reminders, the dashboard shows: "No upcoming or unscheduled open reminders."
 
 Recurring reminders are displayed from the current `reminders` table state only. The dashboard does not generate recurring reminders or run background scheduling.
 
@@ -120,7 +122,8 @@ Dashboard opening does not trigger any LLM call.
 - Create reminders for the active dog from `/reminders`.
 - Return to `/` and confirm summary cards show active dog, open count, today open count, and completed count.
 - Confirm reminders scheduled today and not completed appear under Today open reminders.
-- Confirm future open reminders appear under Upcoming open reminders, limited to the next 5.
+- Confirm future open reminders and unscheduled open reminders appear under Upcoming & unscheduled open reminders, limited to the next 5.
+- Confirm scheduled future reminders appear before unscheduled reminders.
 - Confirm completed reminders affect only the completed count and do not appear in open lists.
 - Confirm an active dog with no reminders shows "No reminders yet. Add your first dog-care reminder."
 - Switch active dogs and confirm the dashboard reloads reminders only for the selected dog.

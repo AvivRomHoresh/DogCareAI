@@ -74,7 +74,7 @@ export function DashboardPage() {
     const openReminders = reminders.filter(isOpenReminder);
     const todayOpenReminders = openReminders.filter((reminder) => isScheduledToday(reminder.scheduled_at));
     const upcomingOpenReminders = openReminders
-      .filter((reminder) => isScheduledInFuture(reminder.scheduled_at))
+      .filter((reminder) => reminder.scheduled_at === null || isScheduledInFuture(reminder.scheduled_at))
       .sort(compareReminderSchedule)
       .slice(0, upcomingLimit);
     const completedReminders = reminders.filter((reminder) => reminder.state === 'completed');
@@ -188,7 +188,7 @@ export function DashboardPage() {
 
               <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
                 <SectionHeader
-                  title="Upcoming open reminders"
+                  title="Upcoming & unscheduled open reminders"
                   action={<Link className="text-sm font-semibold text-teal-700 hover:text-teal-900" to="/reminders">Add reminder</Link>}
                 />
 
@@ -196,7 +196,7 @@ export function DashboardPage() {
                 {remindersError ? <ErrorLine>Could not load reminders. {remindersError}</ErrorLine> : null}
 
                 {!isRemindersLoading && !remindersError && dashboardCounts.upcomingOpenReminders.length === 0 ? (
-                  <EmptyLine>No upcoming open reminders.</EmptyLine>
+                  <EmptyLine>No upcoming or unscheduled open reminders.</EmptyLine>
                 ) : null}
 
                 <ReminderList reminders={dashboardCounts.upcomingOpenReminders} />
