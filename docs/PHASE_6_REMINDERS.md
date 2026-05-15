@@ -26,6 +26,7 @@ Implement Basic Reminders functionality using the existing `public.reminders` ta
 - Reminder list cards show title, type, state, scheduled date/time, recurring frequency, and notes when present.
 - The list includes beta client-side filters for Open, Today open, Completed, and All.
 - Open is the default reminders view.
+- After creating or editing a reminder, the form resets to the new-reminder state so users do not accidentally keep editing the saved row.
 - The page shows loading, empty, error, saving, validation, and success states.
 - Duplicate form submits are blocked while saving.
 

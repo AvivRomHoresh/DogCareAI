@@ -293,8 +293,9 @@ export function RemindersPage() {
       state: form.state,
     };
 
+    const isCreatingReminder = selectedReminderId === 'new';
     const result =
-      selectedReminderId === 'new'
+      isCreatingReminder
         ? await supabase
             .from('reminders')
             .insert({ ...payload, user_id: user.id, dog_id: activeDogId })
@@ -314,11 +315,14 @@ export function RemindersPage() {
       return;
     }
 
-    const savedReminder = result.data as Reminder;
     await loadReminders();
-    setSelectedReminderId(savedReminder.id);
-    setForm(reminderToForm(savedReminder));
-    setFeedback({ tone: 'success', message: 'Reminder saved successfully.' });
+    setSelectedReminderId('new');
+    setForm(emptyForm);
+    setFieldErrors({});
+    setFeedback({
+      tone: 'success',
+      message: isCreatingReminder ? 'Reminder saved successfully.' : 'Reminder updated successfully.',
+    });
     setIsSaving(false);
   };
 
