@@ -43,3 +43,9 @@ Phase 6 Step 5 remains: Basic Reminders.
 - Archive behavior should have test coverage.
 - RLS assumptions should be covered through documented verification or integration tests where practical.
 
+### 6. Real Dog Image Upload
+
+- Beta uses static avatar choices and does not use Supabase Storage.
+- A future version may add real dog image upload with Supabase Storage.
+- Storage upload should remain deferred until after beta or until the core flow is stable.
+

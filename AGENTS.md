@@ -71,15 +71,21 @@ Never expose Gemini keys or Supabase service-role keys in frontend code.
 
 The planning phases are complete through Phase 3.
 
+Phase 6 progress completed:
+
+1. Phase 6 Step 0: Baseline build.
+2. Phase 6 Step 1: Supabase environment setup.
+3. Phase 6 Step 2: Auth + protected routes.
+4. Phase 6 Step 3: Database schema + RLS.
+5. Phase 6 Step 4: Dog Profile.
+
 The next implementation order is:
 
-1. Create project skeleton only.
-2. Implement authentication + protected routes.
-3. Implement Dog Profile with Supabase and RLS-aware access.
-4. Implement Dashboard basics.
-5. Implement AI Assistant with secure server-side boundary or Mock Mode fallback.
-6. Implement basic Reminders.
-7. Run beta QA and update README.
+1. Phase 6 Step 5: Basic Reminders.
+2. Phase 6 Step 6: Dashboard basics.
+3. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
+4. Phase 6 Step 8: Optional Gemini/server-side boundary.
+5. Phase 6 Step 9: Stabilization before Phase 7 QA.
 
 Do not implement the full app in one large change.
 
