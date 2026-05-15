@@ -4,13 +4,14 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const navItems = [
+const authenticatedNavItems = [
   { to: '/', label: 'Dashboard' },
-  { to: '/auth', label: 'Auth / Sign in' },
   { to: '/dog-profile', label: 'Dog Profile' },
   { to: '/assistant', label: 'Assistant' },
   { to: '/reminders', label: 'Reminders' },
 ];
+
+const publicNavItems = [{ to: '/auth', label: 'Auth / Sign in' }];
 
 type AppShellProps = {
   children: ReactNode;
@@ -19,6 +20,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const { isAuthenticated, isLoading, signOut, user } = useAuth();
   const navigate = useNavigate();
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
 
   const handleLogout = async () => {
     const { error } = await signOut();
@@ -36,7 +38,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-medium text-teal-700">DogCareAI</p>
               <span className="rounded-full border border-stone-200 bg-stone-100 px-2 py-1 text-xs font-medium text-slate-600">
-                Phase 5 skeleton
+                Phase 6 beta
               </span>
             </div>
             <h1 className="text-2xl font-bold tracking-normal">Care workspace</h1>
