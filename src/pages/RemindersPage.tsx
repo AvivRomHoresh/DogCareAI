@@ -7,7 +7,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import {
   formatReminderDateTime,
+  getEffectiveReminderState,
   isScheduledToday,
+  isMissedReminder,
   reminderFrequencyLabels,
   reminderStateLabels,
   reminderTypeLabels,
@@ -25,7 +27,7 @@ type ReminderFormState = {
   state: ReminderState;
 };
 
-type ReminderFilter = 'open' | 'today_open' | 'completed' | 'all';
+type ReminderFilter = 'open' | 'today_open' | 'missed' | 'completed' | 'all';
 
 const emptyForm: ReminderFormState = {
   title: '',
@@ -39,9 +41,12 @@ const emptyForm: ReminderFormState = {
 const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
   { value: 'open', label: 'Open' },
   { value: 'today_open', label: 'Today open' },
+  { value: 'missed', label: 'Missed' },
   { value: 'completed', label: 'Completed' },
   { value: 'all', label: 'All' },
 ];
+
+const betaReminderStateOptions = REMINDER_STATES.filter((state) => state.value !== 'snoozed');
 
 function validateReminderForm(form: ReminderFormState) {
   const errors: Partial<Record<keyof ReminderFormState, string>> = {};
@@ -154,13 +159,20 @@ export function RemindersPage() {
 
   const filteredReminders = useMemo(() => {
     if (activeFilter === 'open') {
-      return reminders.filter((reminder) => reminder.state !== 'completed');
+      return reminders.filter((reminder) => reminder.state !== 'completed' && !isMissedReminder(reminder));
     }
 
     if (activeFilter === 'today_open') {
       return reminders.filter(
-        (reminder) => reminder.state !== 'completed' && isScheduledToday(reminder.scheduled_at),
+        (reminder) =>
+          reminder.state !== 'completed'
+          && !isMissedReminder(reminder)
+          && isScheduledToday(reminder.scheduled_at),
       );
+    }
+
+    if (activeFilter === 'missed') {
+      return reminders.filter(isMissedReminder);
     }
 
     if (activeFilter === 'completed') {
@@ -175,6 +187,8 @@ export function RemindersPage() {
       ? 'No open reminders.'
       : activeFilter === 'today_open'
       ? 'No open reminders for today.'
+      : activeFilter === 'missed'
+      ? 'No missed reminders.'
       : activeFilter === 'completed'
         ? 'No completed reminders yet.'
         : 'No reminders yet. Add your first dog-care reminder.';
@@ -511,7 +525,7 @@ export function RemindersPage() {
                     onChange={(event) => updateField('state', event.target.value)}
                     className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
                   >
-                    {REMINDER_STATES.map((state) => (
+                    {betaReminderStateOptions.map((state) => (
                       <option key={state.value} value={state.value}>
                         {state.label}
                       </option>
@@ -630,6 +644,8 @@ function ReminderCard({
   onEdit,
   onMarkCompleted,
 }: ReminderCardProps) {
+  const effectiveState = getEffectiveReminderState(reminder);
+
   return (
     <article
       className={[
@@ -644,7 +660,7 @@ function ReminderCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge>{reminderTypeLabels[reminder.type] ?? reminder.type}</Badge>
-          <Badge>{reminderStateLabels[reminder.state] ?? reminder.state}</Badge>
+          <Badge>{reminderStateLabels[effectiveState] ?? effectiveState}</Badge>
         </div>
       </div>
 
@@ -655,7 +671,7 @@ function ReminderCard({
         </div>
         <div>
           <dt className="font-medium text-slate-800">State</dt>
-          <dd>{reminderStateLabels[reminder.state] ?? reminder.state}</dd>
+          <dd>{reminderStateLabels[effectiveState] ?? effectiveState}</dd>
         </div>
       </dl>
 

@@ -8,6 +8,8 @@ import { useDogs } from '../hooks/useDogs';
 import {
   compareReminderSchedule,
   formatReminderDateTime,
+  getEffectiveReminderState,
+  isMissedReminder,
   isOpenReminder,
   isScheduledInFuture,
   isScheduledToday,
@@ -71,7 +73,8 @@ export function DashboardPage() {
   }, [activeDogId, hasSupabaseConfig]);
 
   const dashboardCounts = useMemo(() => {
-    const openReminders = reminders.filter(isOpenReminder);
+    const missedReminders = reminders.filter(isMissedReminder);
+    const openReminders = reminders.filter((reminder) => isOpenReminder(reminder) && !isMissedReminder(reminder));
     const todayOpenReminders = openReminders.filter((reminder) => isScheduledToday(reminder.scheduled_at));
     const upcomingOpenReminders = openReminders
       .filter(
@@ -85,6 +88,7 @@ export function DashboardPage() {
 
     return {
       completedCount: completedReminders.length,
+      missedCount: missedReminders.length,
       openCount: openReminders.length,
       todayOpenCount: todayOpenReminders.length,
       todayOpenReminders,
@@ -150,10 +154,11 @@ export function DashboardPage() {
 
       {hasActiveDog ? (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <SummaryCard label="Active dog" value={activeDog?.name ?? 'Select a dog'} helper="Current dashboard context" />
-            <SummaryCard label="Open reminders" value={dashboardCounts.openCount} helper="Incomplete reminders" />
-            <SummaryCard label="Today open" value={dashboardCounts.todayOpenCount} helper="Due today, not completed" />
+            <SummaryCard label="Open reminders" value={dashboardCounts.openCount} helper="Active and not missed" />
+            <SummaryCard label="Today open" value={dashboardCounts.todayOpenCount} helper="Due today, not missed" />
+            <SummaryCard label="Missed" value={dashboardCounts.missedCount} helper="Past due or marked missed" />
             <SummaryCard label="Completed" value={dashboardCounts.completedCount} helper="Completed for this dog" />
           </section>
 
@@ -286,23 +291,27 @@ function ReminderList({ reminders }: { reminders: Reminder[] }) {
 
   return (
     <div className="mt-4 space-y-3">
-      {reminders.map((reminder) => (
-        <article key={reminder.id} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="font-semibold text-slate-950">{reminder.title}</h3>
-              <p className="mt-1 text-sm text-slate-600">{formatReminderDateTime(reminder.scheduled_at)}</p>
+      {reminders.map((reminder) => {
+        const effectiveState = getEffectiveReminderState(reminder);
+
+        return (
+          <article key={reminder.id} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-950">{reminder.title}</h3>
+                <p className="mt-1 text-sm text-slate-600">{formatReminderDateTime(reminder.scheduled_at)}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <MiniBadge>{reminderTypeLabels[reminder.type] ?? reminder.type}</MiniBadge>
+                <MiniBadge>{reminderStateLabels[effectiveState] ?? effectiveState}</MiniBadge>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <MiniBadge>{reminderTypeLabels[reminder.type] ?? reminder.type}</MiniBadge>
-              <MiniBadge>{reminderStateLabels[reminder.state] ?? reminder.state}</MiniBadge>
-            </div>
-          </div>
-          <p className="mt-3 text-xs text-slate-500">
-            Repeats: {reminderFrequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}
-          </p>
-        </article>
-      ))}
+            <p className="mt-3 text-xs text-slate-500">
+              Repeats: {reminderFrequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}
+            </p>
+          </article>
+        );
+      })}
     </div>
   );
 }

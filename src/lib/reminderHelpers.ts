@@ -28,6 +28,23 @@ export function isOpenReminder(reminder: Reminder) {
   return reminder.state !== 'completed';
 }
 
+export function isEffectivelyMissedReminder(reminder: Reminder) {
+  if (reminder.state === 'completed' || !reminder.scheduled_at) {
+    return false;
+  }
+
+  const date = new Date(reminder.scheduled_at);
+  return !Number.isNaN(date.getTime()) && date < new Date();
+}
+
+export function isMissedReminder(reminder: Reminder) {
+  return reminder.state === 'missed' || isEffectivelyMissedReminder(reminder);
+}
+
+export function getEffectiveReminderState(reminder: Reminder): ReminderState {
+  return isMissedReminder(reminder) ? 'missed' : reminder.state;
+}
+
 export function isScheduledToday(value: string | null) {
   if (!value) {
     return false;
