@@ -22,6 +22,8 @@ A follow-up migration was prepared before Phase 6 Step 5 to align reminder types
 
 This follow-up migration adds `vet_visit` as an allowed `reminders.type` value. It does not change RLS policies, grants, tables, or existing reminder fields.
 
+After review, this follow-up migration was manually applied in Supabase and verified. The `reminders_type_valid` constraint now includes `vet_visit`.
+
 ## Tables Created
 
 - `public.profiles`

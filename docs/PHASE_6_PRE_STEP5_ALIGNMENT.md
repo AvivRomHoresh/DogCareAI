@@ -56,7 +56,7 @@ No RLS policies, grants, tables, or columns were changed.
 
 - `supabase/migrations/20260515_phase_6_add_vet_visit_reminder_type.sql`
 
-This migration was committed for review only. It was not applied to Supabase in this task.
+This migration was committed for review, then manually applied in Supabase after PR review.
 
 ## Manual Supabase Apply Instructions
 
@@ -88,6 +88,8 @@ where conrelid = 'public.reminders'::regclass
 
 The returned definition should include `vet_visit`.
 
+Manual Supabase verification passed: the `reminders_type_valid` constraint now includes `vet_visit`.
+
 Optional functional check after Step 5 implements Reminders:
 
 ```sql
@@ -100,7 +102,7 @@ Optional functional check after Step 5 implements Reminders:
 - No Step 5 Reminders UI or CRUD.
 - No dashboard implementation.
 - No AI, Gemini, Edge Functions, or serverless functions.
-- No Supabase SQL was applied.
+- No Supabase SQL was applied by Codex; the follow-up migration was applied manually in Supabase after review.
 - No RLS policy changes.
 - No grant changes.
 - No new tables.
@@ -111,4 +113,3 @@ Optional functional check after Step 5 implements Reminders:
 ## Readiness Statement
 
 After this alignment PR is reviewed and merged, the project will be ready for Phase 6 Step 5: Basic Reminders.
-
