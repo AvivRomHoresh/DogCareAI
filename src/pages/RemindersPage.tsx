@@ -43,6 +43,8 @@ const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
   { value: 'all', label: 'All' },
 ];
 
+const betaReminderStateOptions = REMINDER_STATES.filter((state) => state.value !== 'snoozed');
+
 function validateReminderForm(form: ReminderFormState) {
   const errors: Partial<Record<keyof ReminderFormState, string>> = {};
   const title = form.title.trim();
@@ -511,7 +513,7 @@ export function RemindersPage() {
                     onChange={(event) => updateField('state', event.target.value)}
                     className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
                   >
-                    {REMINDER_STATES.map((state) => (
+                    {betaReminderStateOptions.map((state) => (
                       <option key={state.value} value={state.value}>
                         {state.label}
                       </option>

@@ -78,6 +78,8 @@ Reminder states:
 - `missed`
 - `snoozed`
 
+Snooze is kept as a future state in the schema, but the beta UI hides it until a real snooze action is implemented.
+
 Recurring frequencies:
 
 - `none`
