@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 6 has started with authentication and protected route setup:
+Phase 6 has started with authentication, protected route setup, database schema, and Dog Profile support:
 
 - React + Vite + TypeScript
 - TailwindCSS
@@ -12,9 +12,11 @@ Phase 6 has started with authentication and protected route setup:
 - Supabase browser client setup
 - Supabase email/password auth
 - Protected beta routes
+- Dog Profile create/edit/archive with Supabase RLS
+- Frontend-only active dog selection through `DogPicker`
 - Mock AI mode documented through environment variables
 
-Dog Profile, AI Assistant, Dashboard data loading, and Reminders persistence are not implemented yet.
+AI Assistant, full Dashboard data loading, and Reminders persistence are not implemented yet.
 
 ## Local Setup
 
@@ -61,11 +63,11 @@ Server-side variables such as `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and
 
 - `/` - Dashboard stub
 - `/auth` - Supabase email/password auth
-- `/dog-profile` - Dog Profile stub
+- `/dog-profile` - Dog Profile create/edit/archive
 - `/assistant` - AI Assistant stub
 - `/reminders` - Reminders stub
 
-The `/auth` route contains Supabase email/password auth. The other beta routes remain placeholders for the approved beta flow and intentionally do not contain working feature logic yet.
+The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The Assistant and Reminders routes remain placeholders for the approved beta flow and intentionally do not contain working feature logic yet.
 
 ## Cost-Control Notes
 

@@ -36,7 +36,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-medium text-teal-700">DogCareAI</p>
               <span className="rounded-full border border-stone-200 bg-stone-100 px-2 py-1 text-xs font-medium text-slate-600">
-                Phase 5 skeleton
+                Phase 6 beta
               </span>
             </div>
             <h1 className="text-2xl font-bold tracking-normal">Care workspace</h1>
