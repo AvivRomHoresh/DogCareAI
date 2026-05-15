@@ -24,11 +24,12 @@ Implement Basic Reminders functionality using the existing `public.reminders` ta
 - Users can mark a reminder as completed.
 - Users can delete reminders after confirmation.
 - Reminder list cards show title, type, state, scheduled date/time, recurring frequency, and notes when present.
-- The list includes beta client-side filters for Open, Today open, Completed, and All.
+- The list includes beta client-side filters for Open, Today open, Missed, Completed, and All.
 - Open is the default reminders view.
 - After creating or editing a reminder, the form resets to the new-reminder state so users do not accidentally keep editing the saved row.
 - The page shows loading, empty, error, saving, validation, and success states.
 - Duplicate form submits are blocked while saving.
+- Reminders with a past `scheduled_at` and a non-completed state are treated as missed in the UI without automatically updating the database.
 
 ## Active Dog Dependency
 
@@ -79,6 +80,7 @@ Reminder states:
 - `snoozed`
 
 Snooze is kept as a future state in the schema, but the beta UI hides it until a real snooze action is implemented.
+Existing `snoozed` rows can still display safely because the TypeScript type and labels remain compatible with the database.
 
 Recurring frequencies:
 
@@ -106,12 +108,15 @@ Recurring frequencies:
 
 ## Reminder Filters
 
-- `Open` is the default view and shows reminders where `state != completed`, including unscheduled open reminders.
-- `Today open` shows reminders scheduled for today in the user's browser timezone where `state != completed`.
+- `Open` is the default view and shows reminders where `state != completed` and the reminder is not effectively missed, including unscheduled open reminders.
+- `Today open` shows reminders scheduled for today in the user's browser timezone where `state != completed` and the reminder is not effectively missed.
+- `Missed` shows reminders explicitly saved with `state = missed` and reminders that are effectively missed because `scheduled_at` is in the past while the stored state is not completed.
 - `Completed` shows reminders where `state = completed`.
 - `All` shows the full loaded reminder list for the active dog, including completed recurring history.
+- Today reminders that are already past due appear in Missed instead of being duplicated in Today open.
 - Unscheduled reminders remain visible in `All reminders` and do not appear in `Today open`.
 - Filtering is frontend-only and does not add database fields or change Supabase queries.
+- Effective missed state is client-side beta UX logic only; no background job or database auto-mutation was added.
 
 ## Dashboard Compatibility
 
@@ -128,6 +133,7 @@ Recurring frequencies:
 - Reminder schema changes.
 - Activity logging when reminders are completed.
 - Push notifications or background scheduled jobs.
+- Cron jobs, calendar integration, or automatic missed-state persistence.
 - Calendar view.
 - Supabase Storage.
 - Final-only screens.
@@ -144,7 +150,10 @@ Recurring frequencies:
 - Edit the reminder title, type, scheduled date/time, recurring frequency, notes, and state.
 - Mark a reminder completed and confirm its state changes to `completed`.
 - Mark a recurring scheduled reminder completed and confirm the completed occurrence remains in Completed while a new upcoming occurrence is created.
-- Confirm Open, Today open, Completed, and All filters show the expected client-side subsets.
+- Confirm Open, Today open, Missed, Completed, and All filters show the expected client-side subsets.
+- Confirm past-due incomplete reminders appear in Missed and display a Missed label even if the stored state is still upcoming.
+- Confirm past-due reminders do not duplicate in Open or Today open.
+- Confirm Snoozed remains hidden from the State select.
 - Confirm Open is the default view and All includes completed recurring history.
 - Delete a reminder and confirm it is removed from the list.
 - Switch to a different active dog and confirm only that dog's reminders load.

@@ -40,21 +40,29 @@ Reminder sections:
 - Today open reminders:
   - `scheduled_at` is today in the user's local timezone.
   - `state !== 'completed'`.
+  - Reminders that are already past due are excluded because they are counted as missed.
 - Later & unscheduled open reminders:
   - `state !== 'completed'`.
   - `scheduled_at` is after today in the user's local timezone or `scheduled_at` is null.
   - Today reminders are intentionally not duplicated in this section because they already appear in Today open reminders.
+  - Past-due reminders are not duplicated in this section because they are counted as missed.
   - Scheduled reminders after today appear first, sorted by `scheduled_at` ascending.
   - Unscheduled open reminders appear after scheduled future reminders.
   - Limited to the next 5 reminders.
 - Completed reminders:
   - Shows only a count for the active dog.
+- Missed reminders:
+  - Shows only a count for the active dog.
+  - Includes reminders explicitly saved with `state = missed`.
+  - Includes reminders that are effectively missed because `scheduled_at` is in the past while the stored state is not completed.
+  - Does not automatically update the database.
 
 Summary cards:
 
 - Active dog name
 - Open reminders count
 - Today open count
+- Missed reminders count
 - Completed reminders count
 
 Empty states:
@@ -64,6 +72,7 @@ Empty states:
 - If there are no later or unscheduled open reminders, the dashboard shows: "No later or unscheduled open reminders."
 
 Recurring reminders are displayed from the current `reminders` table state only. The dashboard does not generate recurring reminders or run background scheduling.
+Missed status on the dashboard is client-side beta UX interpretation only. No background jobs or database auto-mutation were added.
 
 ## Active Dog Dependency
 
@@ -108,6 +117,7 @@ Added `src/lib/reminderHelpers.ts` for small shared reminder utilities:
 - Calendar integration.
 - Background scheduled jobs.
 - Recurring reminder generation from the dashboard.
+- Automatic missed-state persistence.
 - Complex analytics or charts.
 - Final-only screens.
 - Paid services.
@@ -121,8 +131,10 @@ Dashboard opening does not trigger any LLM call.
 - Create a dog profile and confirm `/` shows the active dog summary.
 - With dogs present but no active dog selected, confirm the dashboard asks the user to select a dog.
 - Create reminders for the active dog from `/reminders`.
-- Return to `/` and confirm summary cards show active dog, open count, today open count, and completed count.
+- Return to `/` and confirm summary cards show active dog, open count, today open count, missed count, and completed count.
+- Confirm the dashboard summary shows a missed reminders count.
 - Confirm reminders scheduled today and not completed appear under Today open reminders.
+- Confirm past-due incomplete reminders are counted as missed and do not appear in Today open or Later & unscheduled open reminders.
 - Confirm reminders scheduled today and not completed do not duplicate in the later/unscheduled section.
 - Confirm open reminders after today and unscheduled open reminders appear under Later & unscheduled open reminders, limited to the next 5.
 - Confirm scheduled reminders after today appear before unscheduled reminders.
