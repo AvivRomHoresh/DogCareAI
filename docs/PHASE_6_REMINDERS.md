@@ -24,7 +24,8 @@ Implement Basic Reminders functionality using the existing `public.reminders` ta
 - Users can mark a reminder as completed.
 - Users can delete reminders after confirmation.
 - Reminder list cards show title, type, state, scheduled date/time, recurring frequency, and notes when present.
-- The list includes beta client-side filters for All reminders, Today open, and Completed.
+- The list includes beta client-side filters for Open, Today open, Completed, and All.
+- Open is the default reminders view.
 - The page shows loading, empty, error, saving, validation, and success states.
 - Duplicate form submits are blocked while saving.
 
@@ -102,9 +103,10 @@ Recurring frequencies:
 
 ## Reminder Filters
 
-- `All reminders` shows the full loaded reminder list for the active dog.
+- `Open` is the default view and shows reminders where `state != completed`, including unscheduled open reminders.
 - `Today open` shows reminders scheduled for today in the user's browser timezone where `state != completed`.
 - `Completed` shows reminders where `state = completed`.
+- `All` shows the full loaded reminder list for the active dog, including completed recurring history.
 - Unscheduled reminders remain visible in `All reminders` and do not appear in `Today open`.
 - Filtering is frontend-only and does not add database fields or change Supabase queries.
 
@@ -139,7 +141,8 @@ Recurring frequencies:
 - Edit the reminder title, type, scheduled date/time, recurring frequency, notes, and state.
 - Mark a reminder completed and confirm its state changes to `completed`.
 - Mark a recurring scheduled reminder completed and confirm the completed occurrence remains in Completed while a new upcoming occurrence is created.
-- Confirm All reminders, Today open, and Completed filters show the expected client-side subsets.
+- Confirm Open, Today open, Completed, and All filters show the expected client-side subsets.
+- Confirm Open is the default view and All includes completed recurring history.
 - Delete a reminder and confirm it is removed from the list.
 - Switch to a different active dog and confirm only that dog's reminders load.
 - Confirm invalid or one-character titles show readable validation messages.

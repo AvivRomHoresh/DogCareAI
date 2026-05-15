@@ -18,7 +18,7 @@ type ReminderFormState = {
   state: ReminderState;
 };
 
-type ReminderFilter = 'all' | 'today_open' | 'completed';
+type ReminderFilter = 'open' | 'today_open' | 'completed' | 'all';
 
 const emptyForm: ReminderFormState = {
   title: '',
@@ -36,9 +36,10 @@ const frequencyLabels = Object.fromEntries(
 const stateLabels = Object.fromEntries(REMINDER_STATES.map((state) => [state.value, state.label]));
 
 const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
-  { value: 'all', label: 'All reminders' },
+  { value: 'open', label: 'Open' },
   { value: 'today_open', label: 'Today open' },
   { value: 'completed', label: 'Completed' },
+  { value: 'all', label: 'All' },
 ];
 
 function validateReminderForm(form: ReminderFormState) {
@@ -162,7 +163,7 @@ export function RemindersPage() {
   const [form, setForm] = useState<ReminderFormState>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ReminderFormState, string>>>({});
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
-  const [activeFilter, setActiveFilter] = useState<ReminderFilter>('all');
+  const [activeFilter, setActiveFilter] = useState<ReminderFilter>('open');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -173,6 +174,10 @@ export function RemindersPage() {
   );
 
   const filteredReminders = useMemo(() => {
+    if (activeFilter === 'open') {
+      return reminders.filter((reminder) => reminder.state !== 'completed');
+    }
+
     if (activeFilter === 'today_open') {
       return reminders.filter(
         (reminder) => reminder.state !== 'completed' && isScheduledToday(reminder.scheduled_at),
@@ -187,7 +192,9 @@ export function RemindersPage() {
   }, [activeFilter, reminders]);
 
   const emptyFilterMessage =
-    activeFilter === 'today_open'
+    activeFilter === 'open'
+      ? 'No open reminders.'
+      : activeFilter === 'today_open'
       ? 'No open reminders for today.'
       : activeFilter === 'completed'
         ? 'No completed reminders yet.'
@@ -582,6 +589,9 @@ export function RemindersPage() {
                   </button>
                 ))}
               </div>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Completed recurring reminders stay in history. Use Open to focus on active reminders.
+              </p>
             </section>
 
             {isLoading ? (
