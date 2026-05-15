@@ -323,39 +323,45 @@ export function RemindersPage() {
     setIsSaving(true);
     setFeedback(null);
 
-    const shouldAdvanceRecurring = isRecurringReminder(reminder) && Boolean(reminder.scheduled_at);
-    const updatePayload = shouldAdvanceRecurring
-      ? {
-          scheduled_at: getNextOccurrence(reminder.scheduled_at as string, reminder.recurring_frequency),
-          state: 'upcoming' as ReminderState,
-        }
-      : { state: 'completed' as ReminderState };
+    const shouldCreateNextOccurrence = isRecurringReminder(reminder) && Boolean(reminder.scheduled_at);
 
     const { error } = await supabase
       .from('reminders')
-      .update(updatePayload)
+      .update({ state: 'completed' })
       .eq('id', reminder.id)
       .eq('dog_id', activeDogId);
 
     if (error) {
       setFeedback({ tone: 'error', message: error.message });
     } else {
+      if (shouldCreateNextOccurrence) {
+        const { error: insertError } = await supabase.from('reminders').insert({
+          user_id: reminder.user_id,
+          dog_id: reminder.dog_id,
+          title: reminder.title,
+          type: reminder.type,
+          scheduled_at: getNextOccurrence(reminder.scheduled_at as string, reminder.recurring_frequency),
+          recurring_frequency: reminder.recurring_frequency,
+          notes: reminder.notes,
+          state: 'upcoming',
+        });
+
+        if (insertError) {
+          setFeedback({ tone: 'error', message: insertError.message });
+          setIsSaving(false);
+          return;
+        }
+      }
+
       await loadReminders();
       setFeedback({
         tone: 'success',
-        message: shouldAdvanceRecurring
-          ? 'Recurring reminder moved to the next scheduled occurrence.'
+        message: shouldCreateNextOccurrence
+          ? 'Recurring reminder completed and the next occurrence was created.'
           : 'Reminder marked completed.',
       });
       if (selectedReminderId === reminder.id) {
-        setForm((current) => ({
-          ...current,
-          scheduled_at:
-            shouldAdvanceRecurring && updatePayload.scheduled_at
-              ? toDateTimeLocalValue(updatePayload.scheduled_at)
-              : current.scheduled_at,
-          state: updatePayload.state,
-        }));
+        setForm((current) => ({ ...current, state: 'completed' }));
       }
     }
 
@@ -494,7 +500,7 @@ export function RemindersPage() {
                 <Field
                   label="Repeats"
                   error={fieldErrors.recurring_frequency}
-                  helperText="Repeating reminders move to the next scheduled occurrence when marked completed."
+                  helperText="In beta, completing a repeating reminder creates the next occurrence as a separate reminder."
                 >
                   <select
                     value={form.recurring_frequency}

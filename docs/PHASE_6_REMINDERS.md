@@ -87,15 +87,18 @@ Recurring frequencies:
 ## Recurring Completion Behavior
 
 - One-time reminders with `recurring_frequency = none` are marked `completed`.
-- Recurring reminders with a `scheduled_at` value are not duplicated.
-- When a recurring reminder is marked completed, the existing row moves to the next scheduled occurrence and stays `upcoming`.
+- Recurring reminders with a `scheduled_at` value mark the current reminder row `completed`.
+- The completed recurring occurrence keeps its original `scheduled_at`.
+- The app then creates a new reminder row for the next occurrence with `state = upcoming`.
+- The new row copies `user_id`, `dog_id`, `title`, `type`, `recurring_frequency`, and `notes`.
 - Next occurrence behavior:
   - `daily`: add 1 day.
   - `weekly`: add 7 days.
   - `monthly`: add 1 month.
   - `yearly`: add 1 year.
 - If a recurring reminder is overdue, the next occurrence advances until it is in the future relative to the user's current time.
-- This is beta client-side behavior and does not add background jobs or scheduled processing.
+- This is beta-safe row duplication behavior, not a full recurring-series engine.
+- No `series_id`, recurring-series management, background scheduler, notification system, or scheduled processing was added.
 
 ## Reminder Filters
 
@@ -135,7 +138,7 @@ Recurring frequencies:
 - Confirm the reminder persists after refresh.
 - Edit the reminder title, type, scheduled date/time, recurring frequency, notes, and state.
 - Mark a reminder completed and confirm its state changes to `completed`.
-- Mark a recurring scheduled reminder completed and confirm it moves to the next future occurrence with state `upcoming`.
+- Mark a recurring scheduled reminder completed and confirm the completed occurrence remains in Completed while a new upcoming occurrence is created.
 - Confirm All reminders, Today open, and Completed filters show the expected client-side subsets.
 - Delete a reminder and confirm it is removed from the list.
 - Switch to a different active dog and confirm only that dog's reminders load.
