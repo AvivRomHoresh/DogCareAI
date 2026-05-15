@@ -18,6 +18,8 @@ type ReminderFormState = {
   state: ReminderState;
 };
 
+type ReminderFilter = 'all' | 'today_open' | 'completed';
+
 const emptyForm: ReminderFormState = {
   title: '',
   type: 'feeding',
@@ -32,6 +34,12 @@ const frequencyLabels = Object.fromEntries(
   REMINDER_FREQUENCIES.map((frequency) => [frequency.value, frequency.label]),
 );
 const stateLabels = Object.fromEntries(REMINDER_STATES.map((state) => [state.value, state.label]));
+
+const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
+  { value: 'all', label: 'All reminders' },
+  { value: 'today_open', label: 'Today open' },
+  { value: 'completed', label: 'Completed' },
+];
 
 function validateReminderForm(form: ReminderFormState) {
   const errors: Partial<Record<keyof ReminderFormState, string>> = {};
@@ -100,6 +108,52 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value));
 }
 
+function isRecurringReminder(reminder: Reminder) {
+  return reminder.recurring_frequency !== 'none';
+}
+
+function addInterval(date: Date, frequency: ReminderFrequency) {
+  const nextDate = new Date(date);
+
+  if (frequency === 'daily') {
+    nextDate.setDate(nextDate.getDate() + 1);
+  } else if (frequency === 'weekly') {
+    nextDate.setDate(nextDate.getDate() + 7);
+  } else if (frequency === 'monthly') {
+    nextDate.setMonth(nextDate.getMonth() + 1);
+  } else if (frequency === 'yearly') {
+    nextDate.setFullYear(nextDate.getFullYear() + 1);
+  }
+
+  return nextDate;
+}
+
+function getNextOccurrence(value: string, frequency: ReminderFrequency) {
+  let nextDate = addInterval(new Date(value), frequency);
+  const now = new Date();
+
+  while (nextDate <= now) {
+    nextDate = addInterval(nextDate, frequency);
+  }
+
+  return nextDate.toISOString();
+}
+
+function isScheduledToday(value: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  const date = new Date(value);
+  const today = new Date();
+
+  return (
+    date.getFullYear() === today.getFullYear()
+    && date.getMonth() === today.getMonth()
+    && date.getDate() === today.getDate()
+  );
+}
+
 export function RemindersPage() {
   const { hasSupabaseConfig, user } = useAuth();
   const { activeDog, activeDogId, dogs, isLoading: isDogsLoading } = useDogs();
@@ -108,6 +162,7 @@ export function RemindersPage() {
   const [form, setForm] = useState<ReminderFormState>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ReminderFormState, string>>>({});
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
+  const [activeFilter, setActiveFilter] = useState<ReminderFilter>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -116,6 +171,27 @@ export function RemindersPage() {
     () => reminders.find((reminder) => reminder.id === selectedReminderId) ?? null,
     [reminders, selectedReminderId],
   );
+
+  const filteredReminders = useMemo(() => {
+    if (activeFilter === 'today_open') {
+      return reminders.filter(
+        (reminder) => reminder.state !== 'completed' && isScheduledToday(reminder.scheduled_at),
+      );
+    }
+
+    if (activeFilter === 'completed') {
+      return reminders.filter((reminder) => reminder.state === 'completed');
+    }
+
+    return reminders;
+  }, [activeFilter, reminders]);
+
+  const emptyFilterMessage =
+    activeFilter === 'today_open'
+      ? 'No open reminders for today.'
+      : activeFilter === 'completed'
+        ? 'No completed reminders yet.'
+        : 'No reminders yet. Add your first dog-care reminder.';
 
   const loadReminders = useCallback(async () => {
     if (!hasSupabaseConfig || !supabase || !activeDogId) {
@@ -247,9 +323,17 @@ export function RemindersPage() {
     setIsSaving(true);
     setFeedback(null);
 
+    const shouldAdvanceRecurring = isRecurringReminder(reminder) && Boolean(reminder.scheduled_at);
+    const updatePayload = shouldAdvanceRecurring
+      ? {
+          scheduled_at: getNextOccurrence(reminder.scheduled_at as string, reminder.recurring_frequency),
+          state: 'upcoming' as ReminderState,
+        }
+      : { state: 'completed' as ReminderState };
+
     const { error } = await supabase
       .from('reminders')
-      .update({ state: 'completed' })
+      .update(updatePayload)
       .eq('id', reminder.id)
       .eq('dog_id', activeDogId);
 
@@ -257,9 +341,21 @@ export function RemindersPage() {
       setFeedback({ tone: 'error', message: error.message });
     } else {
       await loadReminders();
-      setFeedback({ tone: 'success', message: 'Reminder marked completed.' });
+      setFeedback({
+        tone: 'success',
+        message: shouldAdvanceRecurring
+          ? 'Recurring reminder moved to the next scheduled occurrence.'
+          : 'Reminder marked completed.',
+      });
       if (selectedReminderId === reminder.id) {
-        setForm((current) => ({ ...current, state: 'completed' }));
+        setForm((current) => ({
+          ...current,
+          scheduled_at:
+            shouldAdvanceRecurring && updatePayload.scheduled_at
+              ? toDateTimeLocalValue(updatePayload.scheduled_at)
+              : current.scheduled_at,
+          state: updatePayload.state,
+        }));
       }
     }
 
@@ -395,7 +491,11 @@ export function RemindersPage() {
                   />
                 </Field>
 
-                <Field label="Repeats" error={fieldErrors.recurring_frequency}>
+                <Field
+                  label="Repeats"
+                  error={fieldErrors.recurring_frequency}
+                  helperText="Repeating reminders move to the next scheduled occurrence when marked completed."
+                >
                   <select
                     value={form.recurring_frequency}
                     onChange={(event) => updateField('recurring_frequency', event.target.value)}
@@ -457,6 +557,27 @@ export function RemindersPage() {
           </div>
 
           <div className="space-y-3">
+            <section className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap" role="tablist" aria-label="Reminder filters">
+                {reminderFilters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setActiveFilter(filter.value)}
+                    className={[
+                      'rounded-xl border px-3 py-2 text-sm font-medium transition',
+                      activeFilter === filter.value
+                        ? 'border-teal-200 bg-teal-50 text-teal-900'
+                        : 'border-stone-200 bg-white text-slate-700 hover:border-stone-300',
+                    ].join(' ')}
+                    aria-pressed={activeFilter === filter.value}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
             {isLoading ? (
               <section className="rounded-2xl border border-stone-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
                 Loading reminders...
@@ -469,14 +590,13 @@ export function RemindersPage() {
               </section>
             ) : null}
 
-            {!isLoading && !loadError && reminders.length === 0 ? (
+            {!isLoading && !loadError && filteredReminders.length === 0 ? (
               <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950 shadow-sm">
-                <h2 className="text-lg font-semibold">No reminders yet.</h2>
-                <p className="mt-2 leading-6">Add your first dog-care reminder.</p>
+                <h2 className="text-lg font-semibold">{emptyFilterMessage}</h2>
               </section>
             ) : null}
 
-            {reminders.map((reminder) => (
+            {filteredReminders.map((reminder) => (
               <ReminderCard
                 key={reminder.id}
                 reminder={reminder}
@@ -577,11 +697,12 @@ function ReminderCard({
 type FieldProps = {
   children: ReactNode;
   error?: string;
+  helperText?: string;
   label: string;
   required?: boolean;
 };
 
-function Field({ children, error, label, required = false }: FieldProps) {
+function Field({ children, error, helperText, label, required = false }: FieldProps) {
   return (
     <label className="block text-sm font-medium text-slate-700">
       <span>
@@ -589,6 +710,7 @@ function Field({ children, error, label, required = false }: FieldProps) {
         {required ? <span className="text-red-600"> *</span> : null}
       </span>
       <div className="mt-1">{children}</div>
+      {helperText ? <p className="mt-1 text-xs leading-5 text-slate-500">{helperText}</p> : null}
       {error ? <p className="mt-1 text-xs font-medium text-red-700">{error}</p> : null}
     </label>
   );
