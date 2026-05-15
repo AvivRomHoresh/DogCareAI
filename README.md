@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 6 has started with authentication, protected route setup, database schema, Dog Profile support, and Basic Reminders:
+Phase 6 has started with authentication, protected route setup, database schema, Dog Profile support, Basic Reminders, and Dashboard basics:
 
 - React + Vite + TypeScript
 - TailwindCSS
@@ -15,9 +15,10 @@ Phase 6 has started with authentication, protected route setup, database schema,
 - Dog Profile create/edit/archive with Supabase RLS
 - Frontend-only active dog selection through `DogPicker`
 - Basic Reminders create/edit/complete/delete for the active dog
+- Dashboard reminder summaries for the active dog
 - Mock AI mode documented through environment variables
 
-AI Assistant and full Dashboard data loading are not implemented yet.
+AI Assistant behavior is not implemented yet.
 
 ## Local Setup
 
@@ -62,13 +63,13 @@ Server-side variables such as `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and
 
 ## Available Routes
 
-- `/` - Dashboard stub
+- `/` - Dashboard basics with active dog and reminder summaries
 - `/auth` - Supabase email/password auth
 - `/dog-profile` - Dog Profile create/edit/archive
 - `/assistant` - AI Assistant stub
 - `/reminders` - Basic Reminders create/edit/complete/delete
 
-The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table. The Assistant route remains a placeholder for the approved beta flow and intentionally does not contain working AI logic yet.
+The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route remains a placeholder for the approved beta flow and intentionally does not contain working AI logic yet.
 
 ## Cost-Control Notes
 

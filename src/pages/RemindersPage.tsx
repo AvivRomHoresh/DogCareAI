@@ -5,6 +5,13 @@ import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
+import {
+  formatReminderDateTime,
+  isScheduledToday,
+  reminderFrequencyLabels,
+  reminderStateLabels,
+  reminderTypeLabels,
+} from '../lib/reminderHelpers';
 import { supabase } from '../lib/supabaseClient';
 import type { Reminder, ReminderFrequency, ReminderState, ReminderType } from '../types/reminder';
 import { REMINDER_FREQUENCIES, REMINDER_STATES, REMINDER_TYPES } from '../types/reminder';
@@ -28,12 +35,6 @@ const emptyForm: ReminderFormState = {
   notes: '',
   state: 'upcoming',
 };
-
-const typeLabels = Object.fromEntries(REMINDER_TYPES.map((type) => [type.value, type.label]));
-const frequencyLabels = Object.fromEntries(
-  REMINDER_FREQUENCIES.map((frequency) => [frequency.value, frequency.label]),
-);
-const stateLabels = Object.fromEntries(REMINDER_STATES.map((state) => [state.value, state.label]));
 
 const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
   { value: 'open', label: 'Open' },
@@ -99,14 +100,7 @@ function toIsoOrNull(value: string) {
 }
 
 function formatDateTime(value: string | null) {
-  if (!value) {
-    return 'No date set';
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  return formatReminderDateTime(value);
 }
 
 function isRecurringReminder(reminder: Reminder) {
@@ -138,21 +132,6 @@ function getNextOccurrence(value: string, frequency: ReminderFrequency) {
   }
 
   return nextDate.toISOString();
-}
-
-function isScheduledToday(value: string | null) {
-  if (!value) {
-    return false;
-  }
-
-  const date = new Date(value);
-  const today = new Date();
-
-  return (
-    date.getFullYear() === today.getFullYear()
-    && date.getMonth() === today.getMonth()
-    && date.getDate() === today.getDate()
-  );
 }
 
 export function RemindersPage() {
@@ -664,19 +643,19 @@ function ReminderCard({
           <p className="mt-1 text-sm text-slate-600">{formatDateTime(reminder.scheduled_at)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge>{typeLabels[reminder.type] ?? reminder.type}</Badge>
-          <Badge>{stateLabels[reminder.state] ?? reminder.state}</Badge>
+          <Badge>{reminderTypeLabels[reminder.type] ?? reminder.type}</Badge>
+          <Badge>{reminderStateLabels[reminder.state] ?? reminder.state}</Badge>
         </div>
       </div>
 
       <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
         <div>
           <dt className="font-medium text-slate-800">Repeats</dt>
-          <dd>{frequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}</dd>
+          <dd>{reminderFrequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}</dd>
         </div>
         <div>
           <dt className="font-medium text-slate-800">State</dt>
-          <dd>{stateLabels[reminder.state] ?? reminder.state}</dd>
+          <dd>{reminderStateLabels[reminder.state] ?? reminder.state}</dd>
         </div>
       </dl>
 
