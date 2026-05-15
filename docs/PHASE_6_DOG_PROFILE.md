@@ -91,6 +91,7 @@ Client-side validation mirrors the database constraints:
 
 - The dashboard remains intentionally minimal.
 - It now shows a small selected-dog summary or the approved empty state: "Create your dog profile to get started."
+- Authenticated navigation shows only the beta app routes and hides the Auth / Sign in link.
 - No reminders data loading was implemented.
 - No AI data loading or AI calls were implemented.
 

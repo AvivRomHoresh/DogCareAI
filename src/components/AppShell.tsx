@@ -4,13 +4,14 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const navItems = [
+const authenticatedNavItems = [
   { to: '/', label: 'Dashboard' },
-  { to: '/auth', label: 'Auth / Sign in' },
   { to: '/dog-profile', label: 'Dog Profile' },
   { to: '/assistant', label: 'Assistant' },
   { to: '/reminders', label: 'Reminders' },
 ];
+
+const publicNavItems = [{ to: '/auth', label: 'Auth / Sign in' }];
 
 type AppShellProps = {
   children: ReactNode;
@@ -19,6 +20,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const { isAuthenticated, isLoading, signOut, user } = useAuth();
   const navigate = useNavigate();
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
 
   const handleLogout = async () => {
     const { error } = await signOut();
