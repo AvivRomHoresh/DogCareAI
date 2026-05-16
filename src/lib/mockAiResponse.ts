@@ -8,7 +8,7 @@ import type { AssistantIntent } from './getDetectedIntent';
 import type { Dog } from '../types/dog';
 import type { Reminder, ReminderType } from '../types/reminder';
 
-export type AssistantResponseSource = 'mock' | 'emergency_rule';
+export type AssistantResponseSource = 'gemini' | 'mock' | 'fallback' | 'emergency_rule';
 
 export type AssistantResponse = {
   message: string;

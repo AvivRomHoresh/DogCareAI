@@ -54,6 +54,32 @@ function buildEmergencyResponse(dogName: string): AssistantResponse {
   };
 }
 
+function buildFallbackResponse(detectedIntent: Exclude<AssistantIntent, 'emergency'>): AssistantResponse {
+  return {
+    message:
+      'The AI assistant is temporarily unavailable. Your dog profile and reminders still work. Please try again later.',
+    response_source: 'fallback',
+    is_emergency: false,
+    detected_intent: detectedIntent,
+    disclaimer: DOGCARE_DISCLAIMER,
+  };
+}
+
+function isAssistantResponse(value: unknown): value is AssistantResponse {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const response = value as Partial<AssistantResponse>;
+  return (
+    typeof response.message === 'string'
+    && typeof response.response_source === 'string'
+    && typeof response.is_emergency === 'boolean'
+    && typeof response.detected_intent === 'string'
+    && typeof response.disclaimer === 'string'
+  );
+}
+
 export function AssistantPage() {
   const { hasSupabaseConfig } = useAuth();
   const { activeDog, activeDogId, dogs, error: dogsError, isLoading: isDogsLoading } = useDogs();
@@ -121,6 +147,43 @@ export function AssistantPage() {
 
   const canUseAssistant = Boolean(activeDog && activeDogId && hasSupabaseConfig);
 
+  async function requestServerAssistantResponse(trimmedQuestion: string) {
+    if (!supabase || !activeDogId) {
+      throw new Error('missing_supabase_or_dog');
+    }
+
+    const { data, error } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
+
+    if (error || !accessToken) {
+      throw new Error('missing_access_token');
+    }
+
+    const response = await fetch('/api/assistant', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dog_id: activeDogId,
+        question: trimmedQuestion,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('assistant_api_failed');
+    }
+
+    const payload = await response.json();
+
+    if (!isAssistantResponse(payload)) {
+      throw new Error('invalid_assistant_response');
+    }
+
+    return payload;
+  }
+
   async function sendQuestion(nextQuestion?: string) {
     if (isSending) {
       return;
@@ -154,15 +217,26 @@ export function AssistantPage() {
 
     await delaySendingState();
 
-    const response =
-      detectedIntent === 'emergency'
-        ? buildEmergencyResponse(activeDog.name)
-        : buildMockAiResponse({
-            question: trimmedQuestion,
-            dog: activeDog,
-            detectedIntent,
-            reminders,
-          });
+    let response: AssistantResponse;
+
+    if (detectedIntent === 'emergency') {
+      response = buildEmergencyResponse(activeDog.name);
+    } else {
+      try {
+        response = await requestServerAssistantResponse(trimmedQuestion);
+      } catch {
+        const localMockResponse = buildMockAiResponse({
+          question: trimmedQuestion,
+          dog: activeDog,
+          detectedIntent,
+          reminders,
+        });
+        response = {
+          ...buildFallbackResponse(detectedIntent),
+          message: `${buildFallbackResponse(detectedIntent).message} ${localMockResponse.message}`,
+        };
+      }
+    }
 
     setMessages((current) => [
       ...current,
@@ -188,12 +262,12 @@ export function AssistantPage() {
     <div className="space-y-4">
       <PageCard
         title="AI Assistant"
-        description="Ask beta dog-care questions using the selected dog profile and reminder context. Responses are mock/demo only."
+        description="Ask beta dog-care questions using the selected dog profile and reminder context through the secure assistant boundary."
       >
         <div className="flex flex-wrap gap-2">
           {activeDog ? <StatusBadge>Active dog: {activeDog.name}</StatusBadge> : null}
-          <StatusBadge tone="mock">Mock Mode</StatusBadge>
-          <StatusBadge>No Gemini calls</StatusBadge>
+          <StatusBadge tone="mock">Mock Mode available</StatusBadge>
+          <StatusBadge>Server-side AI boundary</StatusBadge>
         </div>
       </PageCard>
 
@@ -265,9 +339,11 @@ export function AssistantPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-slate-950">Conversation</h2>
-                    <p className="mt-1 text-sm text-slate-600">Frontend-local only. Messages are not saved.</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Messages stay local in this beta. They are not saved to Supabase.
+                    </p>
                   </div>
-                  <StatusBadge tone="mock">Demo response source</StatusBadge>
+                  <StatusBadge tone="mock">Response source shown</StatusBadge>
                 </div>
 
                 <div className="mt-4 min-h-48 space-y-3 rounded-2xl border border-stone-200 bg-stone-50 p-3">
