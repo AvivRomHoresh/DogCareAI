@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during Phase 6 manual testing. These items are intentionally deferred and should not block the current beta flow.
 
-Current phase status: Phase 6 Step 7 has been implemented in PR #12. After review and merge, the next step is Phase 6 Step 8 — Optional Gemini/server-side boundary.
+Current phase status: Phase 6 Step 8B has been implemented and merged. The current step is Phase 6 Step 9 - Stabilization before Phase 7 QA.
 
 ## Deferred Improvements
 
@@ -48,4 +48,3 @@ Current phase status: Phase 6 Step 7 has been implemented in PR #12. After revie
 - Beta uses static avatar choices and does not use Supabase Storage.
 - A future version may add real dog image upload with Supabase Storage.
 - Storage upload should remain deferred until after beta or until the core flow is stable.
-

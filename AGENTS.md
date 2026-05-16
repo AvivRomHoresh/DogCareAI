@@ -81,14 +81,16 @@ Phase 6 progress completed:
 6. Phase 6 Step 5: Basic Reminders.
 7. Phase 6 Step 6: Dashboard basics.
 8. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
+9. Phase 6 Step 8A: Vercel hosting compatibility.
+10. Phase 6 Step 8B: Gemini through Vercel server-side boundary.
 
-Current / next implementation step after this PR is reviewed and merged:
+Current implementation step:
 
-- Phase 6 Step 8: Optional Gemini/server-side boundary.
+- Phase 6 Step 9: Stabilization before Phase 7 QA.
 
-The next implementation order after Step 8 is:
+Next phase after Step 9:
 
-1. Phase 6 Step 9: Stabilization before Phase 7 QA.
+- Phase 7 QA.
 
 Do not implement the full app in one large change.
 
