@@ -16,7 +16,8 @@ Prepare the existing React + Vite + Supabase beta app for Vercel deployment with
 
 ## Vercel Config Added
 
-- Added `vercel.json` with a single SPA rewrite from `/(.*)` to `/index.html`.
+- Added `vercel.json` with a single SPA rewrite to `/index.html`.
+- The SPA rewrite intentionally excludes `/api/*` so future Vercel Functions can work.
 - The rewrite supports direct refreshes and deep links for React Router beta routes:
   - `/`
   - `/auth`

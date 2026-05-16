@@ -75,6 +75,8 @@ Use the Vite framework preset in Vercel.
 
 Do not add Gemini in this hosting-compatibility step. Do not add service-role keys to Vercel or the frontend bundle. Netlify deployment is still supported for now, so do not remove `netlify.toml` until Vercel has been verified. When `GEMINI_API_KEY` is added later for a secure server-side boundary, it must not be prefixed with `VITE_`.
 
+The Vercel SPA rewrite intentionally excludes `/api/*` so future Vercel Functions can work.
+
 ## Available Routes
 
 - `/` - Dashboard basics with active dog and reminder summaries
