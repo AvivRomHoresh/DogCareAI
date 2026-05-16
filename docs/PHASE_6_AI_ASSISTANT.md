@@ -57,6 +57,7 @@ After implementation, `AGENTS.md` and `docs/BACKLOG.md` were updated so the repo
 - Manual QA found that some accident, trauma, and repeated vomiting examples were not detected as emergencies.
 - Emergency keyword coverage was expanded for English and Hebrew accident, trauma, vomiting, severe pain, collapse, breathing, and gum-color symptoms.
 - No Gemini, backend, schema, RLS, paid service, or Assistant UI changes were added in this hotfix.
+- Assistant layout was polished so the main Conversation area appears before Starter questions in the English/LTR layout.
 
 ## Mock Response Behavior Implemented
 
