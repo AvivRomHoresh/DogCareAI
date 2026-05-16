@@ -100,3 +100,5 @@ The `/auth` route contains Supabase email/password auth. The `/dog-profile` rout
 ## Cost-Control Notes
 
 The MVP must remain demoable without paid services. Mock AI Mode stays available for local development and classroom demos and is default-safe when `MOCK_AI_MODE` is missing or true, or when `GEMINI_API_KEY` is missing. Real Gemini calls go only through `/api/assistant`, never from the browser.
+
+`AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE` controls a beta best-effort per-user Gemini request guard before real provider calls.

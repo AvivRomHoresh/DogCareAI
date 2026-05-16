@@ -80,6 +80,9 @@ Add real Gemini support behind a secure Vercel Function while preserving Mock Mo
 - Gemini is called only after explicit user send.
 - Deterministic emergency detection runs before Gemini.
 - Mock Mode remains default-safe.
+- `AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE` is implemented as a best-effort in-memory per-user Gemini-call guard.
+- The rate limit applies only before real Gemini calls.
+- Emergency and Mock Mode responses do not consume Gemini quota.
 - Provider timeout uses `AI_REQUEST_TIMEOUT_MS`, default `12000`.
 - Prompt input is capped with `AI_MAX_INPUT_CHARS`, default `6000`.
 - Provider failures, timeouts, rate limits, empty responses, and thrown errors return a safe fallback.

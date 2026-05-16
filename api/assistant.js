@@ -6,6 +6,15 @@ const DISCLAIMER =
 const FALLBACK_MESSAGE =
   'The AI assistant is temporarily unavailable. Your dog profile and reminders still work. Please try again later.';
 
+const RATE_LIMIT_MESSAGE =
+  'The AI assistant is temporarily rate-limited to protect the demo from excessive usage. Please try again in a minute.';
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
+// Best-effort beta guard only. Serverless instances may not share memory, so this is not a persistent
+// production-grade rate limiter. It still helps protect the demo from repeated Gemini calls per warm instance.
+const geminiAttemptTimestampsByUser = new Map();
+
 const EMERGENCY_KEYWORDS = [
   'bleeding',
   'blood loss',
@@ -223,9 +232,33 @@ function fallbackResponse(detectedIntent) {
   });
 }
 
+function rateLimitResponse(detectedIntent) {
+  return buildResponse({
+    message: RATE_LIMIT_MESSAGE,
+    responseSource: 'fallback',
+    detectedIntent,
+  });
+}
+
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function canAttemptGeminiForUser(userId, maxRequestsPerMinute) {
+  const now = Date.now();
+  const recentTimestamps = (geminiAttemptTimestampsByUser.get(userId) ?? []).filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS,
+  );
+
+  if (recentTimestamps.length >= maxRequestsPerMinute) {
+    geminiAttemptTimestampsByUser.set(userId, recentTimestamps);
+    return false;
+  }
+
+  recentTimestamps.push(now);
+  geminiAttemptTimestampsByUser.set(userId, recentTimestamps);
+  return true;
 }
 
 async function readJsonBody(req) {
@@ -534,6 +567,12 @@ export default async function handler(req, res) {
   }
 
   const model = process.env.AI_MODEL || 'gemini-2.5-flash';
+  const maxRequestsPerMinute = parsePositiveInteger(process.env.AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE, 10);
+
+  if (!canAttemptGeminiForUser(userData.user.id, maxRequestsPerMinute)) {
+    return sendJson(res, 200, rateLimitResponse(detectedIntent));
+  }
+
   const timeoutMs = parsePositiveInteger(process.env.AI_REQUEST_TIMEOUT_MS, 12000);
   const maxInputChars = parsePositiveInteger(process.env.AI_MAX_INPUT_CHARS, 6000);
   const prompt = buildGeminiPrompt({
