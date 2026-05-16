@@ -63,6 +63,18 @@ Use `.env.example` as the source of truth. Only variables prefixed with `VITE_` 
 
 Server-side variables such as `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `MOCK_AI_MODE` are reserved for a future Supabase Edge Function or serverless function. They must not be exposed in frontend code.
 
+## Deploying to Vercel
+
+Use the Vite framework preset in Vercel.
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Required frontend environment variables:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+
+Do not add Gemini in this hosting-compatibility step. Do not add service-role keys to Vercel or the frontend bundle. Netlify deployment is still supported for now, so do not remove `netlify.toml` until Vercel has been verified. When `GEMINI_API_KEY` is added later for a secure server-side boundary, it must not be prefixed with `VITE_`.
+
 ## Available Routes
 
 - `/` - Dashboard basics with active dog and reminder summaries
