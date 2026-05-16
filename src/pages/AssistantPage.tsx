@@ -259,26 +259,7 @@ export function AssistantPage() {
 
           {latestEmergencyMessage ? <EmergencyAlert dogName={activeDog.name} /> : null}
 
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <div className="space-y-4">
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-950">Starter questions</h2>
-                <div className="mt-4 grid gap-3">
-                  {starterQuestions.map((starterQuestion) => (
-                    <button
-                      key={starterQuestion}
-                      type="button"
-                      disabled={!canUseAssistant || isSending}
-                      onClick={() => setQuestion(starterQuestion)}
-                      className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-left text-sm font-medium leading-6 text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {starterQuestion}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            </div>
-
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="space-y-4">
               <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -337,6 +318,25 @@ export function AssistantPage() {
                     {isSending ? 'Sending...' : 'Send'}
                   </button>
                 </form>
+              </section>
+            </div>
+
+            <div className="space-y-4">
+              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-950">Starter questions</h2>
+                <div className="mt-4 grid gap-3">
+                  {starterQuestions.map((starterQuestion) => (
+                    <button
+                      key={starterQuestion}
+                      type="button"
+                      disabled={!canUseAssistant || isSending}
+                      onClick={() => setQuestion(starterQuestion)}
+                      className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-left text-sm font-medium leading-6 text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {starterQuestion}
+                    </button>
+                  ))}
+                </div>
               </section>
             </div>
           </section>
