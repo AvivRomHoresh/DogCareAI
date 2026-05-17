@@ -4,7 +4,13 @@
 
 This backlog captures future improvements discovered during Phase 6 manual testing. These items are intentionally deferred and should not block the current beta flow.
 
-Current phase status: Phase 6 Step 8B has been implemented and merged. The current step is Phase 6 Step 9 - Stabilization before Phase 7 QA.
+Current phase status: Phase 6 is complete through Step 9. The current phase is Phase 7 QA.
+
+## QA Notes
+
+- During Phase 7, bugs discovered in beta flows should be fixed.
+- Larger improvements should stay deferred unless they block the beta demo.
+- Final-only features such as Activity Log and Vet Finder remain deferred to Phase 8.
 
 ## Deferred Improvements
 

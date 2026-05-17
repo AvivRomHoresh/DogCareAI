@@ -4,7 +4,11 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 6 has started with authentication, protected route setup, database schema, Dog Profile support, Basic Reminders, Dashboard basics, the beta Assistant flow, and the Vercel server-side Gemini boundary:
+Phase 6 beta implementation is complete, and the current phase is Phase 7 QA. DogCareAI remains a beta/demo project and does not provide medical diagnosis.
+
+Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
+
+The app currently supports:
 
 - React + Vite + TypeScript
 - TailwindCSS
@@ -16,11 +20,9 @@ Phase 6 has started with authentication, protected route setup, database schema,
 - Frontend-only active dog selection through `DogPicker`
 - Basic Reminders create/edit/complete/delete for the active dog
 - Dashboard reminder summaries for the active dog
-- Beta Assistant responses using active dog and reminder context
-- Deterministic emergency pre-check before mock or Gemini response generation
-- Mock AI mode documented through environment variables
+- Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
 
-Gemini is available only through the Vercel Function at `/api/assistant`. Mock Mode remains the default-safe path for local development and demos.
+Mock Mode is the recommended default for routine testing and demos to avoid Gemini quota usage. Gemini can be enabled intentionally by setting `MOCK_AI_MODE=false` with a server-side `GEMINI_API_KEY`. Do not create `VITE_GEMINI_API_KEY`.
 
 ## Local Setup
 
@@ -83,9 +85,9 @@ Use the Vite framework preset in Vercel.
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
 
-Do not add service-role keys to Vercel or the frontend bundle. Netlify deployment is still supported for now, so do not remove `netlify.toml` until Vercel has been verified. `GEMINI_API_KEY` must not be prefixed with `VITE_`.
+Do not add service-role keys to Vercel or the frontend bundle. Netlify remains available as a backup/static deployment path, so do not remove `netlify.toml` yet. Active Gemini work should use Vercel because `/api/assistant` runs as a Vercel Function. `GEMINI_API_KEY` must not be prefixed with `VITE_`.
 
-The Vercel SPA rewrite intentionally excludes `/api/*` so future Vercel Functions can work.
+The Vercel SPA rewrite intentionally excludes `/api/*` so `/api/assistant` can run as a Vercel Function.
 
 ## Available Routes
 
