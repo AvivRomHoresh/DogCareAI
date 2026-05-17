@@ -83,14 +83,22 @@ Phase 6 progress completed:
 8. Phase 6 Step 7: AI Assistant Mock + Context + Emergency.
 9. Phase 6 Step 8A: Vercel hosting compatibility.
 10. Phase 6 Step 8B: Gemini through Vercel server-side boundary.
+11. Phase 6 Step 9: Stabilization before Phase 7 QA.
 
-Current implementation step:
-
-- Phase 6 Step 9: Stabilization before Phase 7 QA.
-
-Next phase after Step 9:
+Current implementation phase:
 
 - Phase 7 QA.
+
+Phase 7 QA focus:
+
+- Manual QA of the full beta flow.
+- Basic automated tests where practical.
+- README/demo documentation alignment.
+- Bug fixes only, unless explicitly approved.
+
+Next phase after Phase 7:
+
+- Phase 8 Final Version.
 
 Do not implement the full app in one large change.
 
