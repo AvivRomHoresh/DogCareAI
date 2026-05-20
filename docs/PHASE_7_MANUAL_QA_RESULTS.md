@@ -12,14 +12,14 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 |---|---|
 | QA date | 2026-05-20 |
 | Tester | Codex |
-| App version / commit | `2a40adf docs: record Phase 7 QA batch 3 results` |
+| App version / commit | `458825a docs: record Phase 7 QA batch 4 results` |
 | Environment | Vercel Production |
 | Vercel Production URL | `https://dog-care-ai.vercel.app` |
-| Local environment, if used | Not used for Batch 1, Batch 2, Batch 3, or Batch 4 |
+| Local environment, if used | Not used for Batch 1, Batch 2, Batch 3, Batch 4, or Batch 5 |
 | Browser/device | Headless Chrome 148 on Windows |
-| Mock Mode / Gemini mode | Not exercised in Batch 1, Batch 2, Batch 3, or Batch 4; routing/auth, Dog Profile/DogPicker, Reminders, and Dashboard only |
+| Mock Mode / Gemini mode | Batch 5 verified current production Mock Mode behavior and emergency bypass; real Gemini path was not enabled for routine QA |
 | Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
-| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Batch 4 covered QA-031 through QA-037. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Batch 4 covered QA-031 through QA-037. Batch 5 covered QA-038 through QA-046. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -77,15 +77,15 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | QA-035 | Dashboard | Later and unscheduled section | Active dog has future and unscheduled open reminders | Open `/` | Future scheduled items appear first; unscheduled items follow; today items are not duplicated | Vercel Production | Major | Pass | Later & unscheduled section showed future `QA Recurring Daily` before unscheduled `QA Unscheduled Open`. | Today reminder was intentionally not duplicated in this section. |  |
 | QA-036 | Dashboard | No AI on dashboard load | Logged in | Open `/` with network tab open | No `/api/assistant` or Gemini request occurs | Vercel Production | Critical | Pass | Dashboard loaded with no resource entries for `/api/assistant` or `generativelanguage.googleapis.com`. | Browser resource inspection returned an empty AI request list on Dashboard load. |  |
 | QA-037 | Dashboard | Quick actions | Logged in with dog | Use Dashboard quick actions | Links go to Dog Profile, Reminders, Assistant | Vercel Production | Minor | Pass | Dashboard quick actions navigated to Dog Profile, Reminders, and Assistant. | Verified `Edit Dog Profile -> /dog-profile`, `Add Reminder -> /reminders`, and `Ask Assistant -> /assistant`. |  |
-| QA-038 | Assistant Mock Mode | Missing dog empty state | Logged in with no dogs | Open `/assistant` | Friendly empty state; chat sending disabled | Vercel Production | Major | Not Run |  |  |  |
-| QA-039 | Assistant Mock Mode | Active dog context summary | Active dog exists | Open `/assistant` | Context summary shows active dog fields and reminder context | Vercel Production | Major | Not Run |  |  |  |
-| QA-040 | Assistant Mock Mode | Normal mock response | Mock Mode enabled | Ask feeding/routine question | Response source is mock; response mentions dog context; no Gemini call | Vercel Production | Critical | Not Run |  |  |  |
-| QA-041 | Assistant Mock Mode | Duplicate send protection | Active dog exists | Send question and click Send repeatedly | Only one in-flight request/response is produced; button disabled while sending | Vercel Production | Major | Not Run |  |  |  |
-| QA-042 | Assistant Gemini boundary | Real Gemini path | Gemini intentionally enabled | Ask normal question | Browser calls `/api/assistant`; response source is gemini; no direct browser Gemini call | Vercel Production | Critical | Not Run |  | Use sparingly |  |
-| QA-043 | Assistant Gemini boundary | Missing/invalid Gemini fallback | Gemini unavailable or intentionally disabled | Ask normal question | Friendly mock/fallback behavior; app does not crash | Vercel Production | Major | Not Run |  |  |  |
-| QA-044 | Emergency bypass | English choking emergency | Active dog exists | Ask "my dog is choking" | EmergencyAlert appears; source emergency_rule; Gemini not called | Vercel Production | Critical | Not Run |  |  |  |
-| QA-045 | Emergency bypass | English accident/vomiting emergency | Active dog exists | Ask "my dog was hit by a car" and "my dog keeps vomiting" | Both trigger emergency flow without normal answer | Vercel Production | Critical | Not Run |  |  |  |
-| QA-046 | Emergency bypass | Hebrew emergency prompts | Active dog exists | Ask Hebrew emergency prompts from test data section | Emergency flow appears; no diagnosis; advise vet immediately | Vercel Production | Critical | Not Run |  |  |  |
+| QA-038 | Assistant Mock Mode | Missing dog empty state | Logged in with no dogs | Open `/assistant` | Friendly empty state; chat sending disabled | Vercel Production | Major | Pass | Fresh synthetic account with no dog opened `/assistant` and saw the missing-dog assistant state. | Page showed "Create your dog profile to get started"; no chat input or Send button was available. |  |
+| QA-039 | Assistant Mock Mode | Active dog context summary | Active dog exists | Open `/assistant` | Context summary shows active dog fields and reminder context | Vercel Production | Major | Pass | Assistant opened with active dog `QA Batch3 Dog`; expanding the context summary showed loaded reminder context. | Context summary listed 9 loaded reminders and showed recent/relevant reminder entries for the selected dog. |  |
+| QA-040 | Assistant Mock Mode | Normal mock response | Mock Mode enabled | Ask feeding/routine question | Response source is mock; response mentions dog context; no Gemini call | Vercel Production | Critical | Pass | Feeding question returned `Source: mock`, detected feeding intent, selected dog context, and relevant feeding reminders. | Browser called `/api/assistant`; no direct browser Gemini provider request was observed. The response stated no real AI provider was called. |  |
+| QA-041 | Assistant Mock Mode | Duplicate send protection | Active dog exists | Send question and click Send repeatedly | Only one in-flight request/response is produced; button disabled while sending | Vercel Production | Major | Fail | Rapidly clicking Send produced three user messages, three mock responses, and three `/api/assistant` calls for the same prompt. | Send was not disabled quickly enough to prevent duplicate submits in the rapid-click path. | P7-BUG-003 |
+| QA-042 | Assistant Gemini boundary | Real Gemini path | Gemini intentionally enabled | Ask normal question | Browser calls `/api/assistant`; response source is gemini; no direct browser Gemini call | Vercel Production | Critical | Blocked | Vercel Production was in Mock Mode for routine QA; the normal assistant path returned `Source: mock`, not `Source: gemini`. | Environment/config was intentionally not changed for QA. Real Gemini path should be tested only when Gemini is intentionally enabled and safe to use. |  |
+| QA-043 | Assistant Gemini boundary | Missing/invalid Gemini fallback | Gemini unavailable or intentionally disabled | Ask normal question | Friendly mock/fallback behavior; app does not crash | Vercel Production | Major | Pass | With production Mock Mode active, a normal question returned friendly `Source: mock` behavior and the app did not crash. | No env vars were changed; this verifies the currently disabled-Gemini routine path rather than an invalid-key configuration. |  |
+| QA-044 | Emergency bypass | English choking emergency | Active dog exists | Ask "my dog is choking" | EmergencyAlert appears; source emergency_rule; Gemini not called | Vercel Production | Critical | Pass | "my dog is choking" triggered EmergencyAlert and `Source: emergency_rule`. | No `/api/assistant` or direct Gemini provider request was observed; response advised contacting a veterinarian or emergency animal clinic immediately and did not diagnose. Observed browser behavior suggests the frontend emergency pre-check handled this prompt before any `/api/assistant` request; server-side emergency behavior was not separately forced in this test. |  |
+| QA-045 | Emergency bypass | English accident/vomiting emergency | Active dog exists | Ask "my dog was hit by a car" and "my dog keeps vomiting" | Both trigger emergency flow without normal answer | Vercel Production | Critical | Pass | Both "my dog was hit by a car" and "my dog keeps vomiting" triggered EmergencyAlert and `Source: emergency_rule`. | No normal mock/Gemini answer was generated; no direct Gemini provider request was observed. |  |
+| QA-046 | Emergency bypass | Hebrew emergency prompts | Active dog exists | Ask Hebrew emergency prompts from test data section | Emergency flow appears; no diagnosis; advise vet immediately | Vercel Production | Critical | Pass | Hebrew prompts `הכלב לא נושם` and `שלג נדרס, מה ניתן לעשות?` triggered EmergencyAlert and `Source: emergency_rule`. | Emergency response advised contacting a veterinarian or emergency animal clinic immediately and did not diagnose. |  |
 | QA-047 | Error handling | Supabase/network failure behavior | Safe way to simulate unavailable network | Load data screen while offline or blocked | Friendly error or loading state; no crash or raw stack trace | Local / Vercel Production | Major | Not Run |  |  |  |
 | QA-048 | Responsive behavior | Mobile navigation and layout | Mobile viewport | Check all beta routes at mobile width | Text fits; navigation works; primary actions are reachable | Vercel Production | Major | Not Run |  |  |  |
 | QA-049 | Responsive behavior | Desktop layout | Desktop viewport | Check all beta routes | Layout is readable; Assistant conversation appears before starter questions | Vercel Production | Minor | Not Run |  |  |  |
@@ -101,11 +101,11 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 36 |
-| Failed | 1 |
-| Blocked | 1 |
+| Passed | 43 |
+| Failed | 2 |
+| Blocked | 2 |
 | Needs Review | 0 |
-| Not Run | 18 |
+| Not Run | 9 |
 
 ## 6. Bugs Discovered During QA
 
@@ -115,6 +115,7 @@ Bugs discovered during manual QA are listed below. Add new bugs only after manua
 |---|---|---|---|---|---|---|
 | P7-BUG-001 | QA-005 | Critical | Auth | Sign in with generated QA account stays on Auth page | Not Reproducible | Initial headless Codex run failed, but a controlled manual browser/incognito retest successfully signed in after logout and reached Dashboard. No confirmed auth bug. |
 | P7-BUG-002 | QA-017 | Major | DogPicker | Active dog selection does not persist after refresh | New | Selecting the second dog from the header DogPicker updates the current session and localStorage, but refreshing returns the UI to the first active dog. |
+| P7-BUG-003 | QA-041 | Major | Assistant | Rapid Send clicks create duplicate assistant requests and responses | New | Rapidly clicking Send for the same prompt produced three user messages, three mock responses, and three `/api/assistant` calls instead of a single in-flight request. |
 
 ## 7. Open Questions / Needs Review
 
