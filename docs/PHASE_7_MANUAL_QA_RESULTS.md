@@ -12,14 +12,14 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 |---|---|
 | QA date | 2026-05-20 |
 | Tester | Codex |
-| App version / commit | `8aa87de docs: record Phase 7 QA batch 1 results` |
+| App version / commit | `2a40adf docs: record Phase 7 QA batch 3 results` |
 | Environment | Vercel Production |
 | Vercel Production URL | `https://dog-care-ai.vercel.app` |
-| Local environment, if used | Not used for Batch 1, Batch 2, or Batch 3 |
+| Local environment, if used | Not used for Batch 1, Batch 2, Batch 3, or Batch 4 |
 | Browser/device | Headless Chrome 148 on Windows |
-| Mock Mode / Gemini mode | Not exercised in Batch 1, Batch 2, or Batch 3; routing/auth, Dog Profile/DogPicker, and Reminders only |
+| Mock Mode / Gemini mode | Not exercised in Batch 1, Batch 2, Batch 3, or Batch 4; routing/auth, Dog Profile/DogPicker, Reminders, and Dashboard only |
 | Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
-| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Batch 4 covered QA-031 through QA-037. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -70,13 +70,13 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | QA-028 | Reminders | Today open filter | Active dog has today future and past reminders | Select Today open | Shows today non-completed reminders that are not effectively missed | Vercel Production | Major | Pass | Today open filter showed `QA Today Future 2` and did not show the past-due reminder. | Past-due today reminder appeared under Missed instead of Today open. |  |
 | QA-029 | Reminders | Missed filter | Past-due incomplete reminder exists | Select Missed | Shows explicit missed and effective missed reminders | Vercel Production | Major | Pass | Missed filter showed both `QA Past Due` and `QA Explicit Missed`. | `QA Past Due` was stored as upcoming with a past scheduled time and displayed as Missed by client-side effective-state logic. |  |
 | QA-030 | Reminders | Snoozed compatibility | Existing snoozed row if available | View reminder list/form | App does not crash; Snoozed is hidden from State select | Vercel Production | Minor | Blocked | No existing snoozed reminder row was available through safe UI-created data, and manual database manipulation was out of scope. | Verified the State select only exposed Upcoming, Completed, and Missed; full existing-row snoozed compatibility could not be executed without manually creating a DB row. |  |
-| QA-031 | Dashboard | No dog empty state | Logged in with no dogs | Open `/` | Shows "Create your dog profile to get started." | Vercel Production | Major | Not Run |  |  |  |
-| QA-032 | Dashboard | Active dog summary | Active dog exists | Open `/` | Shows selected dog summary | Vercel Production | Major | Not Run |  |  |  |
-| QA-033 | Dashboard | Reminder summary counts | Active dog has mixed reminders | Open `/` | Open, today, missed, and completed counts are correct | Vercel Production | Major | Not Run |  |  |  |
-| QA-034 | Dashboard | Today open section | Active dog has today reminders | Open `/` | Today open reminders appear only in Today section | Vercel Production | Major | Not Run |  |  |  |
-| QA-035 | Dashboard | Later and unscheduled section | Active dog has future and unscheduled open reminders | Open `/` | Future scheduled items appear first; unscheduled items follow; today items are not duplicated | Vercel Production | Major | Not Run |  |  |  |
-| QA-036 | Dashboard | No AI on dashboard load | Logged in | Open `/` with network tab open | No `/api/assistant` or Gemini request occurs | Vercel Production | Critical | Not Run |  | Cost-control check |  |
-| QA-037 | Dashboard | Quick actions | Logged in with dog | Use Dashboard quick actions | Links go to Dog Profile, Reminders, Assistant | Vercel Production | Minor | Not Run |  |  |  |
+| QA-031 | Dashboard | No dog empty state | Logged in with no dogs | Open `/` | Shows "Create your dog profile to get started." | Vercel Production | Major | Pass | Fresh synthetic QA account with no dog opened `/` and saw the Dashboard no-dog empty state. | Dashboard showed "0 dog profiles" and "Create your dog profile to get started." |  |
+| QA-032 | Dashboard | Active dog summary | Active dog exists | Open `/` | Shows selected dog summary | Vercel Production | Major | Pass | Dashboard loaded with active dog `QA Batch3 Dog` and showed the selected dog summary. | Summary showed `Active dog: QA Batch3 Dog` and the selected-dog card for the same dog. |  |
+| QA-033 | Dashboard | Reminder summary counts | Active dog has mixed reminders | Open `/` | Open, today, missed, and completed counts are correct | Vercel Production | Major | Pass | Dashboard summary cards showed Open `3`, Today open `1`, Missed `3`, and Completed `3` for the synthetic reminder dataset. | Counts matched the visible dataset: one today-open reminder, future/unscheduled open reminders, missed reminders, and completed reminders. |  |
+| QA-034 | Dashboard | Today open section | Active dog has today reminders | Open `/` | Today open reminders appear only in Today section | Vercel Production | Major | Pass | Today open section showed `QA Dashboard Today Live`. | The today reminder was not duplicated in the Later & unscheduled section. |  |
+| QA-035 | Dashboard | Later and unscheduled section | Active dog has future and unscheduled open reminders | Open `/` | Future scheduled items appear first; unscheduled items follow; today items are not duplicated | Vercel Production | Major | Pass | Later & unscheduled section showed future `QA Recurring Daily` before unscheduled `QA Unscheduled Open`. | Today reminder was intentionally not duplicated in this section. |  |
+| QA-036 | Dashboard | No AI on dashboard load | Logged in | Open `/` with network tab open | No `/api/assistant` or Gemini request occurs | Vercel Production | Critical | Pass | Dashboard loaded with no resource entries for `/api/assistant` or `generativelanguage.googleapis.com`. | Browser resource inspection returned an empty AI request list on Dashboard load. |  |
+| QA-037 | Dashboard | Quick actions | Logged in with dog | Use Dashboard quick actions | Links go to Dog Profile, Reminders, Assistant | Vercel Production | Minor | Pass | Dashboard quick actions navigated to Dog Profile, Reminders, and Assistant. | Verified `Edit Dog Profile -> /dog-profile`, `Add Reminder -> /reminders`, and `Ask Assistant -> /assistant`. |  |
 | QA-038 | Assistant Mock Mode | Missing dog empty state | Logged in with no dogs | Open `/assistant` | Friendly empty state; chat sending disabled | Vercel Production | Major | Not Run |  |  |  |
 | QA-039 | Assistant Mock Mode | Active dog context summary | Active dog exists | Open `/assistant` | Context summary shows active dog fields and reminder context | Vercel Production | Major | Not Run |  |  |  |
 | QA-040 | Assistant Mock Mode | Normal mock response | Mock Mode enabled | Ask feeding/routine question | Response source is mock; response mentions dog context; no Gemini call | Vercel Production | Critical | Not Run |  |  |  |
@@ -101,11 +101,11 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 29 |
+| Passed | 36 |
 | Failed | 1 |
 | Blocked | 1 |
 | Needs Review | 0 |
-| Not Run | 25 |
+| Not Run | 18 |
 
 ## 6. Bugs Discovered During QA
 
