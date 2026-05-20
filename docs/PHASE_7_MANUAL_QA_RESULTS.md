@@ -11,15 +11,15 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 | Field | Value |
 |---|---|
 | QA date | 2026-05-18 |
-| Tester | TBD |
-| App version / commit | `d98b891 docs: add Phase 7 QA plan` |
-| Environment | TBD |
-| Vercel Production URL | TBD |
-| Local environment, if used | TBD |
-| Browser/device | TBD |
-| Mock Mode / Gemini mode | TBD |
-| Test accounts used | TBD; use generic QA accounts only |
-| Notes | Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Tester | Codex |
+| App version / commit | `54e167c docs: add Phase 7 manual QA results template` |
+| Environment | Vercel Production |
+| Vercel Production URL | `https://dog-care-ai.vercel.app` |
+| Local environment, if used | Not used for Batch 1 |
+| Browser/device | Headless Chrome 147 on Windows |
+| Mock Mode / Gemini mode | Not exercised in Batch 1; routing/auth only |
+| Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
+| Notes | Batch 1 covered QA-001 through QA-009 only. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -39,15 +39,15 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 
 | Test ID | Area | Scenario | Preconditions | Steps | Expected Result | Environment | Priority | Status | Actual Result | Evidence / Notes | Bug ID, if applicable |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| QA-001 | Landing / routing | Unauthenticated root redirect | Logged out | Open `/` directly | User is redirected to `/auth` or shown auth flow; app does not crash | Vercel Production | Critical | Not Run |  |  |  |
-| QA-002 | Landing / routing | Direct refresh on Dashboard | Logged in | Open `/`, refresh browser | Dashboard reloads successfully through Vercel SPA routing | Vercel Production | Major | Not Run |  |  |  |
-| QA-003 | Landing / routing | Direct refresh on nested routes | Logged in | Open and refresh `/dog-profile`, `/reminders`, `/assistant` | Each route reloads without 404 | Vercel Production | Major | Not Run |  |  |  |
-| QA-004 | Auth | Sign up with valid test account | Test email available | Open `/auth`, choose sign up, submit valid email/password | Account is created or confirmation message appears | Vercel Production | Critical | Not Run |  | Do not record password |  |
-| QA-005 | Auth | Sign in with valid account | Test account exists | Open `/auth`, sign in | User reaches Dashboard | Vercel Production | Critical | Not Run |  |  |  |
-| QA-006 | Auth | Invalid login error | Logged out | Submit invalid credentials | Friendly error appears; no crash; password not logged | Vercel Production | Major | Not Run |  |  |  |
-| QA-007 | Auth | Logout | Logged in | Click logout | User returns to `/auth`; protected routes require login | Vercel Production | Critical | Not Run |  |  |  |
-| QA-008 | Protected routes | Block protected routes when logged out | Logged out | Open `/dog-profile`, `/reminders`, `/assistant` directly | Redirect to `/auth`; no protected content visible | Vercel Production | Critical | Not Run |  |  |  |
-| QA-009 | Protected routes | Hide Auth for authenticated users | Logged in | Open `/auth` directly | User is redirected to `/` | Vercel Production | Minor | Not Run |  |  |  |
+| QA-001 | Landing / routing | Unauthenticated root redirect | Logged out | Open `/` directly | User is redirected to `/auth` or shown auth flow; app does not crash | Vercel Production | Critical | Pass | Opening `/` while logged out redirected/rendered the Auth sign-in page without crashing. | Path after load: `/auth`. |  |
+| QA-002 | Landing / routing | Direct refresh on Dashboard | Logged in | Open `/`, refresh browser | Dashboard reloads successfully through Vercel SPA routing | Vercel Production | Major | Pass | Authenticated Dashboard refreshed successfully through Vercel routing. | Path after refresh: `/`. |  |
+| QA-003 | Landing / routing | Direct refresh on nested routes | Logged in | Open and refresh `/dog-profile`, `/reminders`, `/assistant` | Each route reloads without 404 | Vercel Production | Major | Pass | Nested authenticated routes refreshed without 404 and rendered expected page content. | `/dog-profile` rendered Dog Profile; `/reminders` rendered Reminders; `/assistant` rendered AI Assistant. |  |
+| QA-004 | Auth | Sign up with valid test account | Test email available | Open `/auth`, choose sign up, submit valid email/password | Account is created or confirmation message appears | Vercel Production | Critical | Pass | Generic QA account was created and redirected to Dashboard with an active session. | Password not recorded. |  |
+| QA-005 | Auth | Sign in with valid account | Test account exists | Open `/auth`, sign in | User reaches Dashboard | Vercel Production | Critical | Pass | Controlled manual retest in a normal browser/incognito flow signed in with the same QA account after logout and reached Dashboard successfully. | Email verification is disabled, so the expected beta behavior is immediate sign-up session and successful later sign-in. Previous Codex headless result was not reproducible and is likely a headless/timing/session/test-account artifact. |  |
+| QA-006 | Auth | Invalid login error | Logged out | Submit invalid credentials | Friendly error appears; no crash; password not logged | Vercel Production | Major | Pass | Invalid credentials stayed on Auth and showed a friendly error without crashing. | No password recorded. |  |
+| QA-007 | Auth | Logout | Logged in | Click logout | User returns to `/auth`; protected routes require login | Vercel Production | Critical | Pass | Logout returned to Auth and protected route access required login afterward. | Path after logout: `/auth`; protected check path: `/auth`. |  |
+| QA-008 | Protected routes | Block protected routes when logged out | Logged out | Open `/dog-profile`, `/reminders`, `/assistant` directly | Redirect to `/auth`; no protected content visible | Vercel Production | Critical | Pass | Logged-out visits to protected routes redirected/rendered Auth without protected content. | `/dog-profile -> /auth`; `/reminders -> /auth`; `/assistant -> /auth`. |  |
+| QA-009 | Protected routes | Hide Auth for authenticated users | Logged in | Open `/auth` directly | User is redirected to `/` | Vercel Production | Minor | Pass | Authenticated visit to `/auth` redirected to Dashboard. | Path after load: `/`. |  |
 | QA-010 | Dog Profile | Empty dog profile state | Logged in as account with no dogs | Open `/dog-profile` | Friendly empty state appears | Vercel Production | Major | Not Run |  |  |  |
 | QA-011 | Dog Profile | Create minimal dog | Logged in, no active dog required | Create dog with valid name only | Dog saves and becomes available/active | Vercel Production | Critical | Not Run |  |  |  |
 | QA-012 | Dog Profile | Create complete dog profile | Logged in | Fill optional profile fields and save | Profile saves; values persist after refresh | Vercel Production | Major | Not Run |  |  |  |
@@ -101,27 +101,27 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 0 |
+| Passed | 9 |
 | Failed | 0 |
 | Blocked | 0 |
 | Needs Review | 0 |
-| Not Run | 56 |
+| Not Run | 47 |
 
 ## 6. Bugs Discovered During QA
 
-No bugs have been recorded yet. Add bugs here only after manual execution identifies an issue.
+Bugs discovered during manual QA are listed below. Add new bugs only after manual execution identifies an issue.
 
 | Bug ID | Related Test ID | Severity | Area | Title | Status | Notes |
 |---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |
+| P7-BUG-001 | QA-005 | Critical | Auth | Sign in with generated QA account stays on Auth page | Not Reproducible | Initial headless Codex run failed, but a controlled manual browser/incognito retest successfully signed in after logout and reached Dashboard. No confirmed auth bug. |
 
 ## 7. Open Questions / Needs Review
 
-No needs-review items have been recorded yet. Add observations here when behavior may require a product or scope decision rather than a straightforward bug fix.
+Needs-review items discovered during manual QA are listed below. Add observations here when behavior may require a product or scope decision rather than a straightforward bug fix.
 
 | Item ID | Related Test ID | Area | Question / Observation | Status | Notes |
 |---|---|---|---|---|---|
-|  |  |  |  |  |  |
+| P7-NR-001 | QA-005 | Auth | Codex headless sign-in with a generated QA account stayed on `/auth`, while manual user observation with an existing account reaches Dashboard successfully. Determine whether this is a real auth issue, a test-account issue, or a headless/timing artifact. | Resolved - Not Reproducible | Resolved by controlled manual browser/incognito retest. QA-005 is now marked Pass. |
 
 ## 8. Next Steps
 
