@@ -15,11 +15,11 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 | App version / commit | `8aa87de docs: record Phase 7 QA batch 1 results` |
 | Environment | Vercel Production |
 | Vercel Production URL | `https://dog-care-ai.vercel.app` |
-| Local environment, if used | Not used for Batch 1 or Batch 2 |
+| Local environment, if used | Not used for Batch 1, Batch 2, or Batch 3 |
 | Browser/device | Headless Chrome 148 on Windows |
-| Mock Mode / Gemini mode | Not exercised in Batch 1 or Batch 2; routing/auth and Dog Profile/DogPicker only |
+| Mock Mode / Gemini mode | Not exercised in Batch 1, Batch 2, or Batch 3; routing/auth, Dog Profile/DogPicker, and Reminders only |
 | Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
-| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -58,18 +58,18 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | QA-017 | DogPicker | Active dog persistence | At least 2 dogs exist | Select dog, refresh | Same active dog remains selected when available | Vercel Production | Major | Fail | Selecting `QA Complete Dog` from the header DogPicker updated the current screen and wrote the selected dog ID to localStorage, but refreshing returned the UI to `QA Minimal Dog`. | Same-tab refresh did not preserve the selected second dog while both dogs were available. Batch 2 DogPicker persistence was checked while both synthetic dogs were still active; archive visibility was checked afterward. | P7-BUG-002 |
 | QA-018 | DogPicker | Switch dogs | At least 2 dogs exist | Switch active dog from header | Dashboard/Reminders/Assistant context updates | Vercel Production | Major | Pass | Switching from `QA Minimal Dog` to `QA Complete Dog` in the header updated the current session; Dashboard and Assistant showed `QA Complete Dog` context. | Dashboard showed `Active dog: QA Complete Dog`; Assistant showed `Active dog: QA Complete Dog`. Persistence after refresh is tracked separately in QA-017. |  |
 | QA-019 | DogPicker | Archived dog removed from active choices | Dog archived | Open DogPicker | Archived dog is not selectable | Vercel Production | Major | Pass | After archiving `QA Complete Dog`, only `QA Minimal Dog` remained available in the active/profile selection UI. | Archived profile was not selectable; app did not crash. |  |
-| QA-020A | Reminders | Missing dog / no active dog state | Logged in with no dogs | Open `/reminders` | Friendly missing-dog or create-dog state appears; reminder actions are unavailable until a dog exists; app does not crash | Vercel Production | Major | Not Run |  |  |  |
-| QA-020 | Reminders | Empty reminders state | Active dog exists, no reminders | Open `/reminders` | Friendly empty state appears | Vercel Production | Major | Not Run |  |  |  |
-| QA-021 | Reminders | Create reminder | Active dog exists | Create valid reminder | Reminder saves for active dog and appears in list | Vercel Production | Critical | Not Run |  |  |  |
-| QA-022 | Reminders | Validation: invalid title | Active dog exists | Try blank or 1-character reminder title | Validation prevents save | Vercel Production | Major | Not Run |  |  |  |
-| QA-023 | Reminders | Edit reminder | Reminder exists | Edit title/type/date/notes/state | Updated values persist after refresh | Vercel Production | Major | Not Run |  |  |  |
-| QA-024 | Reminders | Mark one-time reminder completed | Upcoming reminder exists | Click complete | Reminder state becomes completed; appears under Completed | Vercel Production | Major | Not Run |  |  |  |
-| QA-025 | Reminders | Complete recurring reminder | Recurring scheduled reminder exists | Mark completed | Completed occurrence remains; new upcoming occurrence is created | Vercel Production | Major | Not Run |  |  |  |
-| QA-026 | Reminders | Delete reminder | Reminder exists | Delete and confirm | Reminder disappears and does not reappear after refresh | Vercel Production | Major | Not Run |  |  |  |
-| QA-027 | Reminders | Open filter | Active dog has open, missed, completed reminders | Select Open | Shows non-completed, non-effectively-missed reminders, including unscheduled open reminders | Vercel Production | Major | Not Run |  |  |  |
-| QA-028 | Reminders | Today open filter | Active dog has today future and past reminders | Select Today open | Shows today non-completed reminders that are not effectively missed | Vercel Production | Major | Not Run |  |  |  |
-| QA-029 | Reminders | Missed filter | Past-due incomplete reminder exists | Select Missed | Shows explicit missed and effective missed reminders | Vercel Production | Major | Not Run |  |  |  |
-| QA-030 | Reminders | Snoozed compatibility | Existing snoozed row if available | View reminder list/form | App does not crash; Snoozed is hidden from State select | Vercel Production | Minor | Not Run |  | Do not create DB rows manually unless approved |  |
+| QA-020A | Reminders | Missing dog / no active dog state | Logged in with no dogs | Open `/reminders` | Friendly missing-dog or create-dog state appears; reminder actions are unavailable until a dog exists; app does not crash | Vercel Production | Major | Pass | Fresh synthetic QA account with no dog opened `/reminders` and saw the missing-dog reminder state. | Page showed "Create a dog profile before adding reminders"; no reminder form fields were available until a dog existed. |  |
+| QA-020 | Reminders | Empty reminders state | Active dog exists, no reminders | Open `/reminders` | Friendly empty state appears | Vercel Production | Major | Pass | After creating `QA Batch3 Dog`, `/reminders` loaded with zero reminders and the empty Open state. | Page showed the reminder form and "No open reminders." |  |
+| QA-021 | Reminders | Create reminder | Active dog exists | Create valid reminder | Reminder saves for active dog and appears in list | Vercel Production | Critical | Pass | Created `QA Open Reminder`; it saved for the active dog and appeared in the reminders list. | Synthetic reminder used Feeding type, upcoming state, one-time recurrence, and a scheduled date. |  |
+| QA-022 | Reminders | Validation: invalid title | Active dog exists | Try blank or 1-character reminder title | Validation prevents save | Vercel Production | Major | Pass | Blank title and one-character title attempts did not create reminders. | Validation was exercised before valid reminder creation; reminder count did not increase until a valid title was used. |  |
+| QA-023 | Reminders | Edit reminder | Reminder exists | Edit title/type/date/notes/state | Updated values persist after refresh | Vercel Production | Major | Pass | Edited the created reminder to `QA Edited Reminder` with Walk type, updated date, notes, and upcoming state; updated values remained visible after saving. | Later Completed/All views showed the edited reminder with the updated title and type. |  |
+| QA-024 | Reminders | Mark one-time reminder completed | Upcoming reminder exists | Click complete | Reminder state becomes completed; appears under Completed | Vercel Production | Major | Pass | Marked `QA Complete One-Time` completed; it appeared in the Completed filter with state Completed. | Completed one-time reminder no longer appeared in Open. |  |
+| QA-025 | Reminders | Complete recurring reminder | Recurring scheduled reminder exists | Mark completed | Completed occurrence remains; new upcoming occurrence is created | Vercel Production | Major | Pass | Marked `QA Recurring Daily` completed; the UI showed "Recurring reminder completed and the next occurrence was created." | Completed filter showed the completed occurrence, and Open/All showed the next upcoming daily occurrence. |  |
+| QA-026 | Reminders | Delete reminder | Reminder exists | Delete and confirm | Reminder disappears and does not reappear after refresh | Vercel Production | Major | Pass | Deleted `QA Delete Target` with confirmation; it was removed from the list. | Follow-up All/Open checks no longer showed the deleted target reminder. |  |
+| QA-027 | Reminders | Open filter | Active dog has open, missed, completed reminders | Select Open | Shows non-completed, non-effectively-missed reminders, including unscheduled open reminders | Vercel Production | Major | Pass | Open filter showed open non-missed reminders including `QA Today Future 2`, `QA Recurring Daily`, and `QA Unscheduled Open`. | Completed reminders and missed reminders were not shown in Open. |  |
+| QA-028 | Reminders | Today open filter | Active dog has today future and past reminders | Select Today open | Shows today non-completed reminders that are not effectively missed | Vercel Production | Major | Pass | Today open filter showed `QA Today Future 2` and did not show the past-due reminder. | Past-due today reminder appeared under Missed instead of Today open. |  |
+| QA-029 | Reminders | Missed filter | Past-due incomplete reminder exists | Select Missed | Shows explicit missed and effective missed reminders | Vercel Production | Major | Pass | Missed filter showed both `QA Past Due` and `QA Explicit Missed`. | `QA Past Due` was stored as upcoming with a past scheduled time and displayed as Missed by client-side effective-state logic. |  |
+| QA-030 | Reminders | Snoozed compatibility | Existing snoozed row if available | View reminder list/form | App does not crash; Snoozed is hidden from State select | Vercel Production | Minor | Blocked | No existing snoozed reminder row was available through safe UI-created data, and manual database manipulation was out of scope. | Verified the State select only exposed Upcoming, Completed, and Missed; full existing-row snoozed compatibility could not be executed without manually creating a DB row. |  |
 | QA-031 | Dashboard | No dog empty state | Logged in with no dogs | Open `/` | Shows "Create your dog profile to get started." | Vercel Production | Major | Not Run |  |  |  |
 | QA-032 | Dashboard | Active dog summary | Active dog exists | Open `/` | Shows selected dog summary | Vercel Production | Major | Not Run |  |  |  |
 | QA-033 | Dashboard | Reminder summary counts | Active dog has mixed reminders | Open `/` | Open, today, missed, and completed counts are correct | Vercel Production | Major | Not Run |  |  |  |
@@ -101,11 +101,11 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 18 |
+| Passed | 29 |
 | Failed | 1 |
-| Blocked | 0 |
+| Blocked | 1 |
 | Needs Review | 0 |
-| Not Run | 37 |
+| Not Run | 25 |
 
 ## 6. Bugs Discovered During QA
 
