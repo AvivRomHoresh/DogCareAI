@@ -12,14 +12,14 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 |---|---|
 | QA date | 2026-05-20 |
 | Tester | Codex |
-| App version / commit | `458825a docs: record Phase 7 QA batch 4 results` |
+| App version / commit | `0020d37 docs: record Phase 7 QA batch 5 results` |
 | Environment | Vercel Production |
 | Vercel Production URL | `https://dog-care-ai.vercel.app` |
-| Local environment, if used | Not used for Batch 1, Batch 2, Batch 3, Batch 4, or Batch 5 |
+| Local environment, if used | Not used for Batch 1, Batch 2, Batch 3, Batch 4, Batch 5, or Batch 6 |
 | Browser/device | Headless Chrome 148 on Windows |
-| Mock Mode / Gemini mode | Batch 5 verified current production Mock Mode behavior and emergency bypass; real Gemini path was not enabled for routine QA |
+| Mock Mode / Gemini mode | Batch 5 verified current production Mock Mode behavior and emergency bypass; Batch 6 kept production in Mock Mode and did not force Gemini usage |
 | Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
-| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Batch 4 covered QA-031 through QA-037. Batch 5 covered QA-038 through QA-046. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Batch 3 covered QA-020A through QA-030. Batch 4 covered QA-031 through QA-037. Batch 5 covered QA-038 through QA-046. Batch 6 covered QA-047 through QA-055. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -86,26 +86,26 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | QA-044 | Emergency bypass | English choking emergency | Active dog exists | Ask "my dog is choking" | EmergencyAlert appears; source emergency_rule; Gemini not called | Vercel Production | Critical | Pass | "my dog is choking" triggered EmergencyAlert and `Source: emergency_rule`. | No `/api/assistant` or direct Gemini provider request was observed; response advised contacting a veterinarian or emergency animal clinic immediately and did not diagnose. Observed browser behavior suggests the frontend emergency pre-check handled this prompt before any `/api/assistant` request; server-side emergency behavior was not separately forced in this test. |  |
 | QA-045 | Emergency bypass | English accident/vomiting emergency | Active dog exists | Ask "my dog was hit by a car" and "my dog keeps vomiting" | Both trigger emergency flow without normal answer | Vercel Production | Critical | Pass | Both "my dog was hit by a car" and "my dog keeps vomiting" triggered EmergencyAlert and `Source: emergency_rule`. | No normal mock/Gemini answer was generated; no direct Gemini provider request was observed. |  |
 | QA-046 | Emergency bypass | Hebrew emergency prompts | Active dog exists | Ask Hebrew emergency prompts from test data section | Emergency flow appears; no diagnosis; advise vet immediately | Vercel Production | Critical | Pass | Hebrew prompts `הכלב לא נושם` and `שלג נדרס, מה ניתן לעשות?` triggered EmergencyAlert and `Source: emergency_rule`. | Emergency response advised contacting a veterinarian or emergency animal clinic immediately and did not diagnose. |  |
-| QA-047 | Error handling | Supabase/network failure behavior | Safe way to simulate unavailable network | Load data screen while offline or blocked | Friendly error or loading state; no crash or raw stack trace | Local / Vercel Production | Major | Not Run |  |  |  |
-| QA-048 | Responsive behavior | Mobile navigation and layout | Mobile viewport | Check all beta routes at mobile width | Text fits; navigation works; primary actions are reachable | Vercel Production | Major | Not Run |  |  |  |
-| QA-049 | Responsive behavior | Desktop layout | Desktop viewport | Check all beta routes | Layout is readable; Assistant conversation appears before starter questions | Vercel Production | Minor | Not Run |  |  |  |
-| QA-050 | Production sanity | Vercel deployed environment variables | Vercel Production configured | Open app and sign in | Supabase auth works; app does not show missing config warning | Vercel Production | Critical | Not Run |  |  |  |
-| QA-051 | Security sanity | No frontend Gemini key | Browser devtools available | Inspect source, bundle search, console, network response | No `GEMINI_API_KEY`, no `VITE_GEMINI_API_KEY`, no bearer token leaked in UI | Vercel Production | Critical | Not Run |  |  |  |
-| QA-052 | Security sanity | User isolation | User A and User B exist | Create dog/reminders as User A, sign out, sign in User B | User B cannot see User A dogs/reminders | Vercel Production | Critical | Not Run |  |  |  |
-| QA-053 | Cost-control sanity | No automatic AI call on Assistant load | Active dog exists | Open `/assistant` with network tab open | No `/api/assistant` request until user sends a question | Vercel Production | Critical | Not Run |  |  |  |
-| QA-054 | Cost-control sanity | Rate-limit/fallback handling | Gemini intentionally enabled and safe to test | Trigger repeated normal sends within configured limit boundaries | App handles limit/fallback gracefully without exposing internals | Vercel Production | Major | Not Run |  | Use sparingly; rate limiting is best-effort beta behavior, in-memory, and applies only before real Gemini calls, not production-grade shared persistence. |  |
-| QA-055 | Documentation readiness | README setup and deployment notes | Current README | Review README against actual app/deployment | README is beta/demo accurate and does not claim final features | Local | Minor | Not Run |  |  |  |
+| QA-047 | Error handling | Supabase/network failure behavior | Safe way to simulate unavailable network | Load data screen while offline or blocked | Friendly error or loading state; no crash or raw stack trace | Local / Vercel Production | Major | Pass | Browser blocked Supabase requests and opened `/reminders`; the app stayed rendered without a raw stack trace. | Header showed dog context unavailable and the page showed a friendly create-dog/reminder context state rather than crashing. Supabase configuration was not changed. |  |
+| QA-048 | Responsive behavior | Mobile navigation and layout | Mobile viewport | Check all beta routes at mobile width | Text fits; navigation works; primary actions are reachable | Vercel Production | Major | Pass | Checked `/`, `/dog-profile`, `/reminders`, `/assistant`, and `/auth` at mobile width. | No horizontal overflow was detected; navigation and primary actions were reachable. Auth redirected to Dashboard for the authenticated session. |  |
+| QA-049 | Responsive behavior | Desktop layout | Desktop viewport | Check all beta routes | Layout is readable; Assistant conversation appears before starter questions | Vercel Production | Minor | Pass | Checked desktop layout across the beta routes. | No horizontal overflow was detected; Assistant body order showed Conversation before Starter questions. |  |
+| QA-050 | Production sanity | Vercel deployed environment variables | Vercel Production configured | Open app and sign in | Supabase auth works; app does not show missing config warning | Vercel Production | Critical | Pass | Vercel Production loaded authenticated Dashboard, Dog Profile, Reminders, and Assistant screens with Supabase-backed data. | No missing configuration warning appeared during runtime checks. |  |
+| QA-051 | Security sanity | No frontend Gemini key | Browser devtools available | Inspect source, bundle search, console, network response | No `GEMINI_API_KEY`, no `VITE_GEMINI_API_KEY`, no bearer token leaked in UI | Vercel Production | Critical | Pass | Browser-visible HTML, loaded script text, page body, and resource URLs were checked for Gemini key names and obvious bearer-token exposure. | No `GEMINI_API_KEY`, no `VITE_GEMINI_API_KEY`, no body-visible secret, and no direct Gemini resource request were observed. No secret values were printed or recorded. |  |
+| QA-052 | Security sanity | User isolation | User A and User B exist | Create dog/reminders as User A, sign out, sign in User B | User B cannot see User A dogs/reminders | Vercel Production | Critical | Pass | Synthetic User B opened Dog Profile and Reminders and could not see synthetic User A dog or reminder data. | User B saw zero active dogs and the missing-dog reminder state; User A labels were not present. |  |
+| QA-053 | Cost-control sanity | No automatic AI call on Assistant load | Active dog exists | Open `/assistant` with network tab open | No `/api/assistant` request until user sends a question | Vercel Production | Critical | Pass | Opened `/assistant` and waited without submitting a question. | Browser resource inspection showed zero `/api/assistant` or direct Gemini requests on Assistant load. |  |
+| QA-054 | Cost-control sanity | Rate-limit/fallback handling | Gemini intentionally enabled and safe to test | Trigger repeated normal sends within configured limit boundaries | App handles limit/fallback gracefully without exposing internals | Vercel Production | Major | Blocked | Production remains in Mock Mode, and real Gemini usage was not intentionally enabled for routine QA. | Rate-limit behavior applies only before real Gemini calls, so this could not be safely exercised without changing environment/config or forcing Gemini usage. |  |
+| QA-055 | Documentation readiness | README setup and deployment notes | Current README | Review README against actual app/deployment | README is beta/demo accurate and does not claim final features | Local | Minor | Pass | README was reviewed against the current beta state and deployment model. | README states Phase 7 QA, Vercel Production active, Netlify backup only, Mock Mode recommended, Gemini through `/api/assistant`, no `VITE_GEMINI_API_KEY`, and does not claim Activity Log or Vet Finder as active beta features. |  |
 
 ## 5. Execution Summary
 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 43 |
+| Passed | 51 |
 | Failed | 2 |
-| Blocked | 2 |
+| Blocked | 3 |
 | Needs Review | 0 |
-| Not Run | 9 |
+| Not Run | 0 |
 
 ## 6. Bugs Discovered During QA
 
