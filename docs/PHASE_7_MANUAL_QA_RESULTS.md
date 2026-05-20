@@ -10,16 +10,16 @@ This is Phase 7 Step 2 only. The purpose is to execute and document QA results, 
 
 | Field | Value |
 |---|---|
-| QA date | 2026-05-18 |
+| QA date | 2026-05-20 |
 | Tester | Codex |
-| App version / commit | `54e167c docs: add Phase 7 manual QA results template` |
+| App version / commit | `8aa87de docs: record Phase 7 QA batch 1 results` |
 | Environment | Vercel Production |
 | Vercel Production URL | `https://dog-care-ai.vercel.app` |
-| Local environment, if used | Not used for Batch 1 |
-| Browser/device | Headless Chrome 147 on Windows |
-| Mock Mode / Gemini mode | Not exercised in Batch 1; routing/auth only |
+| Local environment, if used | Not used for Batch 1 or Batch 2 |
+| Browser/device | Headless Chrome 148 on Windows |
+| Mock Mode / Gemini mode | Not exercised in Batch 1 or Batch 2; routing/auth and Dog Profile/DogPicker only |
 | Test accounts used | Generic QA accounts created through the Auth UI; no passwords recorded |
-| Notes | Batch 1 covered QA-001 through QA-009 only. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
+| Notes | Batch 1 covered QA-001 through QA-009. Batch 2 covered QA-010 through QA-019. Do not record real passwords, secrets, tokens, API keys, or private credentials. |
 
 ## 3. Execution Rules
 
@@ -48,16 +48,16 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | QA-007 | Auth | Logout | Logged in | Click logout | User returns to `/auth`; protected routes require login | Vercel Production | Critical | Pass | Logout returned to Auth and protected route access required login afterward. | Path after logout: `/auth`; protected check path: `/auth`. |  |
 | QA-008 | Protected routes | Block protected routes when logged out | Logged out | Open `/dog-profile`, `/reminders`, `/assistant` directly | Redirect to `/auth`; no protected content visible | Vercel Production | Critical | Pass | Logged-out visits to protected routes redirected/rendered Auth without protected content. | `/dog-profile -> /auth`; `/reminders -> /auth`; `/assistant -> /auth`. |  |
 | QA-009 | Protected routes | Hide Auth for authenticated users | Logged in | Open `/auth` directly | User is redirected to `/` | Vercel Production | Minor | Pass | Authenticated visit to `/auth` redirected to Dashboard. | Path after load: `/`. |  |
-| QA-010 | Dog Profile | Empty dog profile state | Logged in as account with no dogs | Open `/dog-profile` | Friendly empty state appears | Vercel Production | Major | Not Run |  |  |  |
-| QA-011 | Dog Profile | Create minimal dog | Logged in, no active dog required | Create dog with valid name only | Dog saves and becomes available/active | Vercel Production | Critical | Not Run |  |  |  |
-| QA-012 | Dog Profile | Create complete dog profile | Logged in | Fill optional profile fields and save | Profile saves; values persist after refresh | Vercel Production | Major | Not Run |  |  |  |
-| QA-013 | Dog Profile | Validation: blank or short name | Logged in | Try blank or 1-character dog name | Inline validation prevents save | Vercel Production | Major | Not Run |  |  |  |
-| QA-014 | Dog Profile | Validation: invalid age/weight | Logged in | Enter invalid age or weight | Inline validation prevents save | Vercel Production | Major | Not Run |  |  |  |
-| QA-015 | Dog Profile | Edit dog profile | Dog exists | Change profile fields and save | Updated values persist after refresh | Vercel Production | Major | Not Run |  |  |  |
-| QA-016 | Dog Profile | Archive dog | Dog exists | Archive active dog | Dog is hidden from active list; no hard delete UI appears | Vercel Production | Major | Not Run |  |  |  |
-| QA-017 | DogPicker | Active dog persistence | At least 2 dogs exist | Select dog, refresh | Same active dog remains selected when available | Vercel Production | Major | Not Run |  |  |  |
-| QA-018 | DogPicker | Switch dogs | At least 2 dogs exist | Switch active dog from header | Dashboard/Reminders/Assistant context updates | Vercel Production | Major | Not Run |  |  |  |
-| QA-019 | DogPicker | Archived dog removed from active choices | Dog archived | Open DogPicker | Archived dog is not selectable | Vercel Production | Major | Not Run |  |  |  |
+| QA-010 | Dog Profile | Empty dog profile state | Logged in as account with no dogs | Open `/dog-profile` | Friendly empty state appears | Vercel Production | Major | Pass | New synthetic QA account opened `/dog-profile` with zero dogs and saw the create-dog empty state. | Empty state text included "Create your dog profile to get started" and the new dog form was available. |  |
+| QA-011 | Dog Profile | Create minimal dog | Logged in, no active dog required | Create dog with valid name only | Dog saves and becomes available/active | Vercel Production | Critical | Pass | Created `QA Minimal Dog` with name only; profile saved and appeared in the active dog/profile selectors. | Synthetic dog data only. |  |
+| QA-012 | Dog Profile | Create complete dog profile | Logged in | Fill optional profile fields and save | Profile saves; values persist after refresh | Vercel Production | Major | Pass | Created `QA Complete Dog` with breed, age, weight, gender, activity level, and notes; values were visible after returning to the profile. | Later edit verification also confirmed stored profile fields persisted after a fresh page load. |  |
+| QA-013 | Dog Profile | Validation: blank or short name | Logged in | Try blank or 1-character dog name | Inline validation prevents save | Vercel Production | Major | Pass | Blank name and one-character name were blocked; no new dog was created. | Inline messages included "Please enter your dog's name" and "Dog name must be at least 2 characters." |  |
+| QA-014 | Dog Profile | Validation: invalid age/weight | Logged in | Enter invalid age or weight | Inline validation prevents save | Vercel Production | Major | Pass | Negative age and weight values were blocked by validation; active dog count stayed unchanged. | Browser validation prevented save for values below zero. |  |
+| QA-015 | Dog Profile | Edit dog profile | Dog exists | Change profile fields and save | Updated values persist after refresh | Vercel Production | Major | Pass | Edited `QA Complete Dog` breed, age, and health notes; updated values were still present after a fresh page load. | Verified edited breed `Edited QA Breed`, age `5`, and edited synthetic health notes. |  |
+| QA-016 | Dog Profile | Archive dog | Dog exists | Archive active dog | Dog is hidden from active list; no hard delete UI appears | Vercel Production | Major | Pass | Archived `QA Complete Dog`; the profile was hidden from the active dog/profile selectors and the remaining dog stayed available. | Confirmed archive flow hides without hard-delete UI; no database rows were manually altered. |  |
+| QA-017 | DogPicker | Active dog persistence | At least 2 dogs exist | Select dog, refresh | Same active dog remains selected when available | Vercel Production | Major | Fail | Selecting `QA Complete Dog` from the header DogPicker updated the current screen and wrote the selected dog ID to localStorage, but refreshing returned the UI to `QA Minimal Dog`. | Same-tab refresh did not preserve the selected second dog while both dogs were available. Batch 2 DogPicker persistence was checked while both synthetic dogs were still active; archive visibility was checked afterward. | P7-BUG-002 |
+| QA-018 | DogPicker | Switch dogs | At least 2 dogs exist | Switch active dog from header | Dashboard/Reminders/Assistant context updates | Vercel Production | Major | Pass | Switching from `QA Minimal Dog` to `QA Complete Dog` in the header updated the current session; Dashboard and Assistant showed `QA Complete Dog` context. | Dashboard showed `Active dog: QA Complete Dog`; Assistant showed `Active dog: QA Complete Dog`. Persistence after refresh is tracked separately in QA-017. |  |
+| QA-019 | DogPicker | Archived dog removed from active choices | Dog archived | Open DogPicker | Archived dog is not selectable | Vercel Production | Major | Pass | After archiving `QA Complete Dog`, only `QA Minimal Dog` remained available in the active/profile selection UI. | Archived profile was not selectable; app did not crash. |  |
 | QA-020A | Reminders | Missing dog / no active dog state | Logged in with no dogs | Open `/reminders` | Friendly missing-dog or create-dog state appears; reminder actions are unavailable until a dog exists; app does not crash | Vercel Production | Major | Not Run |  |  |  |
 | QA-020 | Reminders | Empty reminders state | Active dog exists, no reminders | Open `/reminders` | Friendly empty state appears | Vercel Production | Major | Not Run |  |  |  |
 | QA-021 | Reminders | Create reminder | Active dog exists | Create valid reminder | Reminder saves for active dog and appears in list | Vercel Production | Critical | Not Run |  |  |  |
@@ -101,11 +101,11 @@ Initial status for every row is `Not Run`. Update rows only after actual manual 
 | Counter | Count |
 |---|---:|
 | Total tests | 56 |
-| Passed | 9 |
-| Failed | 0 |
+| Passed | 18 |
+| Failed | 1 |
 | Blocked | 0 |
 | Needs Review | 0 |
-| Not Run | 47 |
+| Not Run | 37 |
 
 ## 6. Bugs Discovered During QA
 
@@ -114,6 +114,7 @@ Bugs discovered during manual QA are listed below. Add new bugs only after manua
 | Bug ID | Related Test ID | Severity | Area | Title | Status | Notes |
 |---|---|---|---|---|---|---|
 | P7-BUG-001 | QA-005 | Critical | Auth | Sign in with generated QA account stays on Auth page | Not Reproducible | Initial headless Codex run failed, but a controlled manual browser/incognito retest successfully signed in after logout and reached Dashboard. No confirmed auth bug. |
+| P7-BUG-002 | QA-017 | Major | DogPicker | Active dog selection does not persist after refresh | New | Selecting the second dog from the header DogPicker updates the current session and localStorage, but refreshing returns the UI to the first active dog. |
 
 ## 7. Open Questions / Needs Review
 
