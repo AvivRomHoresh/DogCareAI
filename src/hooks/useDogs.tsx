@@ -30,6 +30,7 @@ export function DogProvider({ children }: DogProviderProps) {
   const [activeDogId, setActiveDogIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedDogs, setHasLoadedDogs] = useState(false);
+  const [hasLoadedStoredDogId, setHasLoadedStoredDogId] = useState(false);
   const [storedDogIdUserId, setStoredDogIdUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,11 +70,13 @@ export function DogProvider({ children }: DogProviderProps) {
       setDogs([]);
       setError(null);
       setHasLoadedDogs(false);
+      setHasLoadedStoredDogId(false);
       setStoredDogIdUserId(null);
       return;
     }
 
     setActiveDogIdState(window.localStorage.getItem(getStorageKey(user.id)));
+    setHasLoadedStoredDogId(true);
     setStoredDogIdUserId(user.id);
   }, [user]);
 
@@ -82,12 +85,14 @@ export function DogProvider({ children }: DogProviderProps) {
   }, [refreshDogs]);
 
   useEffect(() => {
-    if (!user || isLoading || !hasLoadedDogs || storedDogIdUserId !== user.id) {
+    if (!user || isLoading || !hasLoadedDogs || !hasLoadedStoredDogId || storedDogIdUserId !== user.id || error) {
       return;
     }
 
-    const storedDogIsAvailable = dogs.some((dog) => dog.id === activeDogId);
-    const nextActiveDogId = storedDogIsAvailable ? activeDogId : dogs[0]?.id ?? null;
+    const persistedDogId = window.localStorage.getItem(getStorageKey(user.id));
+    const candidateDogId = activeDogId ?? persistedDogId;
+    const storedDogIsAvailable = dogs.some((dog) => dog.id === candidateDogId);
+    const nextActiveDogId = storedDogIsAvailable ? candidateDogId : dogs[0]?.id ?? null;
 
     if (nextActiveDogId !== activeDogId) {
       setActiveDogIdState(nextActiveDogId);
@@ -98,7 +103,7 @@ export function DogProvider({ children }: DogProviderProps) {
     } else {
       window.localStorage.removeItem(getStorageKey(user.id));
     }
-  }, [activeDogId, dogs, hasLoadedDogs, isLoading, storedDogIdUserId, user]);
+  }, [activeDogId, dogs, error, hasLoadedDogs, hasLoadedStoredDogId, isLoading, storedDogIdUserId, user]);
 
   const setActiveDogId = useCallback(
     (dogId: string | null) => {
