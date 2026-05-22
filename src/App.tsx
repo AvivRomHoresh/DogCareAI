@@ -6,6 +6,7 @@ import { AssistantPage } from './pages/AssistantPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DogProfilePage } from './pages/DogProfilePage';
+import { NearbyPage } from './pages/NearbyPage';
 import { RemindersPage } from './pages/RemindersPage';
 
 export default function App() {
@@ -49,6 +50,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <RemindersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nearby"
+          element={
+            <ProtectedRoute>
+              <NearbyPage />
             </ProtectedRoute>
           }
         />

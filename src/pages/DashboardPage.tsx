@@ -103,7 +103,7 @@ export function DashboardPage() {
     <div className="space-y-4">
       <PageCard
         title="Dashboard"
-        description="Today at a glance for the selected dog, using profile and reminder data only."
+        description="Today at a glance for the selected dog, with reminders and optional location-based helpers."
       >
         <div className="flex flex-wrap gap-2">
           <StatusBadge>{dogs.length === 1 ? '1 dog profile' : `${dogs.length} dog profiles`}</StatusBadge>
@@ -218,7 +218,8 @@ export function DashboardPage() {
                 <div className="mt-4 grid gap-3">
                   <QuickAction to="/dog-profile" title="Edit Dog Profile" description="Update care details for the selected dog." />
                   <QuickAction to="/reminders" title="Add Reminder" description="Create or complete a dog-care reminder." />
-                  <QuickAction to="/assistant" title="Ask Assistant" description="Open the assistant stub for the next beta step." />
+                  <QuickAction to="/assistant" title="Ask Assistant" description="Ask a dog-care question with the active dog context." />
+                  <QuickAction to="/nearby" title="Nearby Places" description="Find nearby vets, pet shops, dog parks, and groomers." />
                 </div>
               </section>
 
