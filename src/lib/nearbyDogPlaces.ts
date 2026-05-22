@@ -6,8 +6,11 @@ export type NearbyDogPlace = {
   categoryLabel: string;
   dataCompletenessScore: number;
   distanceMeters: number;
-  googleMapsUrl: string;
+  facebookUrl: string | null;
+  googleMapsDirectionsUrl: string;
+  googleMapsSearchUrl: string;
   id: string;
+  instagramUrl: string | null;
   latitude: number;
   longitude: number;
   name: string;
@@ -20,17 +23,31 @@ export type NearbyDogPlace = {
 export type NearbyDogPlacesResult = {
   attribution: string;
   fromCache: boolean;
+  origin: SearchOrigin;
   places: NearbyDogPlace[];
+  radiusMeters: number;
 };
 
-type Coordinates = {
+export type Coordinates = {
   latitude: number;
   longitude: number;
 };
 
+export type SearchOrigin = Coordinates & {
+  label: string;
+  mode: 'address' | 'current_location';
+};
+
+export type AddressSuggestion = Coordinates & {
+  id: string;
+  label: string;
+};
+
 type CachePayload = {
   cachedAt: number;
+  origin: SearchOrigin;
   places: NearbyDogPlace[];
+  radiusMeters: number;
 };
 
 type OverpassElement = {
@@ -50,6 +67,7 @@ type OverpassResponse = {
 };
 
 export type NearbyDogPlacesErrorCode = 'api_error' | 'geolocation_unsupported' | 'permission_denied';
+export type GeocodingErrorCode = 'address_empty' | 'address_not_found' | 'geocoding_unavailable';
 
 export class NearbyDogPlacesError extends Error {
   code: NearbyDogPlacesErrorCode;
@@ -61,8 +79,12 @@ export class NearbyDogPlacesError extends Error {
 }
 
 const overpassEndpoint = 'https://overpass-api.de/api/interpreter';
+const nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
+const photonEndpoint = 'https://photon.komoot.io/api/';
 const cacheTtlMs = 10 * 60 * 1000;
 const cachePrefix = 'dogcareai.nearbyDogPlaces.v1';
+const lastCacheKey = `${cachePrefix}.last`;
+const suggestionCachePrefix = 'dogcareai.addressSuggestions.v1';
 const defaultRadiusMeters = 5000;
 const defaultLimit = 30;
 
@@ -73,7 +95,42 @@ const categoryLabels: Record<NearbyDogPlaceCategory, string> = {
   veterinary: 'Veterinary clinic',
 };
 
-export function getCurrentPosition(): Promise<Coordinates> {
+export class NearbyGeocodingError extends Error {
+  code: GeocodingErrorCode;
+
+  constructor(code: GeocodingErrorCode, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+type NominatimResult = {
+  display_name?: string;
+  lat?: string;
+  lon?: string;
+};
+
+type PhotonFeature = {
+  geometry?: {
+    coordinates?: [number, number];
+  };
+  properties?: {
+    city?: string;
+    country?: string;
+    housenumber?: string;
+    name?: string;
+    osm_id?: number;
+    postcode?: string;
+    state?: string;
+    street?: string;
+  };
+};
+
+type PhotonResponse = {
+  features?: PhotonFeature[];
+};
+
+export function getCurrentPosition(): Promise<SearchOrigin> {
   if (!('geolocation' in navigator)) {
     return Promise.reject(
       new NearbyDogPlacesError('geolocation_unsupported', 'Geolocation is not supported in this browser.'),
@@ -84,8 +141,10 @@ export function getCurrentPosition(): Promise<Coordinates> {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         resolve({
+          label: 'your current location',
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+          mode: 'current_location',
         });
       },
       (error) => {
@@ -106,23 +165,25 @@ export function getCurrentPosition(): Promise<Coordinates> {
 }
 
 export async function fetchNearbyDogPlaces(
-  coordinates: Coordinates,
+  origin: SearchOrigin,
   options: { limit?: number; radiusMeters?: number } = {},
 ): Promise<NearbyDogPlacesResult> {
   const radiusMeters = options.radiusMeters ?? defaultRadiusMeters;
   const limit = options.limit ?? defaultLimit;
-  const cacheKey = getCacheKey(coordinates, radiusMeters);
-  const cachedPlaces = readCachedPlaces(cacheKey);
+  const cacheKey = getCacheKey(origin, radiusMeters);
+  const cachedPayload = readCachedPlaces(cacheKey);
 
-  if (cachedPlaces) {
+  if (cachedPayload) {
     return {
       attribution: 'Data source: OpenStreetMap contributors via Overpass API.',
       fromCache: true,
-      places: cachedPlaces.slice(0, limit),
+      origin: cachedPayload.origin,
+      places: cachedPayload.places.slice(0, limit),
+      radiusMeters: cachedPayload.radiusMeters,
     };
   }
 
-  const query = buildOverpassQuery(coordinates, radiusMeters);
+  const query = buildOverpassQuery(origin, radiusMeters);
   const response = await fetch(`${overpassEndpoint}?${new URLSearchParams({ data: query }).toString()}`, {
     headers: {
       Accept: 'application/json',
@@ -134,16 +195,128 @@ export async function fetchNearbyDogPlaces(
   }
 
   const data = (await response.json()) as OverpassResponse;
-  const places = normalizeOverpassElements(data.elements ?? [], coordinates)
+  const places = normalizeOverpassElements(data.elements ?? [], origin)
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, limit);
 
-  writeCachedPlaces(cacheKey, places);
+  writeCachedPlaces(cacheKey, {
+    cachedAt: Date.now(),
+    origin,
+    places,
+    radiusMeters,
+  });
 
   return {
     attribution: 'Data source: OpenStreetMap contributors via Overpass API.',
     fromCache: false,
+    origin,
     places,
+    radiusMeters,
+  };
+}
+
+export async function geocodeAddress(address: string): Promise<SearchOrigin> {
+  const trimmedAddress = address.trim();
+
+  if (!trimmedAddress) {
+    throw new NearbyGeocodingError('address_empty', 'Enter an address before searching.');
+  }
+
+  const response = await fetch(
+    `${nominatimEndpoint}?${new URLSearchParams({
+      format: 'jsonv2',
+      limit: '1',
+      q: trimmedAddress,
+    }).toString()}`,
+    {
+      headers: {
+        Accept: 'application/json',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new NearbyGeocodingError('geocoding_unavailable', 'Address search is unavailable right now.');
+  }
+
+  const results = (await response.json()) as NominatimResult[];
+  const firstResult = results[0];
+  const latitude = Number(firstResult?.lat);
+  const longitude = Number(firstResult?.lon);
+
+  if (!firstResult || Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    throw new NearbyGeocodingError('address_not_found', 'No matching address was found.');
+  }
+
+  return {
+    label: firstResult.display_name || trimmedAddress,
+    latitude,
+    longitude,
+    mode: 'address',
+  };
+}
+
+export async function fetchAddressSuggestions(query: string, limit = 5): Promise<AddressSuggestion[]> {
+  const trimmedQuery = query.trim();
+
+  if (trimmedQuery.length < 3) {
+    return [];
+  }
+
+  const cacheKey = `${suggestionCachePrefix}.${trimmedQuery.toLowerCase()}`;
+  const cachedSuggestions = readCachedAddressSuggestions(cacheKey);
+
+  if (cachedSuggestions) {
+    return cachedSuggestions.slice(0, limit);
+  }
+
+  const response = await fetch(
+    `${photonEndpoint}?${new URLSearchParams({
+      lang: 'en',
+      limit: String(limit),
+      q: trimmedQuery,
+    }).toString()}`,
+    {
+      headers: {
+        Accept: 'application/json',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = (await response.json()) as PhotonResponse;
+  const suggestions = (data.features ?? [])
+    .map(normalizePhotonFeature)
+    .filter((suggestion): suggestion is AddressSuggestion => suggestion !== null)
+    .slice(0, limit);
+
+  writeCachedAddressSuggestions(cacheKey, suggestions);
+
+  return suggestions;
+}
+
+export function readLastCachedNearbyDogPlaces(limit = defaultLimit): NearbyDogPlacesResult | null {
+  const cacheKey = window.sessionStorage.getItem(lastCacheKey);
+
+  if (!cacheKey) {
+    return null;
+  }
+
+  const cachedPayload = readCachedPlaces(cacheKey);
+
+  if (!cachedPayload) {
+    return null;
+  }
+
+  return {
+    attribution: 'Data source: OpenStreetMap contributors via Overpass API.',
+    fromCache: true,
+    origin: cachedPayload.origin,
+    places: cachedPayload.places.slice(0, limit),
+    radiusMeters: cachedPayload.radiusMeters,
   };
 }
 
@@ -203,8 +376,16 @@ function normalizeOverpassElements(elements: OverpassElement[], origin: Coordina
       categoryLabel: categoryLabels[category],
       dataCompletenessScore: getDataCompletenessScore(element.tags ?? {}),
       distanceMeters: getDistanceMeters(origin, { latitude, longitude }),
-      googleMapsUrl: getGoogleMapsUrl(latitude, longitude, getPlaceName(element.tags ?? {}, category)),
+      facebookUrl: normalizeFacebookUrl(getTagValue(element.tags ?? {}, ['facebook', 'contact:facebook'])),
+      googleMapsDirectionsUrl: getGoogleMapsDirectionsUrl(latitude, longitude),
+      googleMapsSearchUrl: getGoogleMapsSearchUrl(
+        getPlaceName(element.tags ?? {}, category),
+        getAddress(element.tags ?? {}),
+        latitude,
+        longitude,
+      ),
       id,
+      instagramUrl: normalizeInstagramUrl(getTagValue(element.tags ?? {}, ['instagram', 'contact:instagram'])),
       latitude,
       longitude,
       name: getPlaceName(element.tags ?? {}, category),
@@ -278,9 +459,67 @@ function normalizeWebsiteUrl(value: string | null) {
   return `https://${value}`;
 }
 
-function getGoogleMapsUrl(latitude: number, longitude: number, name: string) {
-  const query = encodeURIComponent(`${name} ${latitude},${longitude}`);
+function normalizeInstagramUrl(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+
+  return `https://www.instagram.com/${value.replace(/^@/, '')}`;
+}
+
+function normalizeFacebookUrl(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+
+  return `https://www.facebook.com/${value}`;
+}
+
+function getGoogleMapsDirectionsUrl(latitude: number, longitude: number) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+}
+
+function getGoogleMapsSearchUrl(name: string, address: string | null, latitude: number, longitude: number) {
+  const query = encodeURIComponent([name, address, `${latitude},${longitude}`].filter(Boolean).join(' '));
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function normalizePhotonFeature(feature: PhotonFeature): AddressSuggestion | null {
+  const coordinates = feature.geometry?.coordinates;
+  const longitude = coordinates?.[0];
+  const latitude = coordinates?.[1];
+
+  if (latitude === undefined || longitude === undefined) {
+    return null;
+  }
+
+  const properties = feature.properties ?? {};
+  const streetLine = [properties.street, properties.housenumber].filter(Boolean).join(' ');
+  const label = [
+    properties.name,
+    streetLine,
+    properties.city,
+    properties.state,
+    properties.postcode,
+    properties.country,
+  ]
+    .filter((part): part is string => Boolean(part?.trim()))
+    .join(', ');
+
+  return {
+    id: String(properties.osm_id ?? `${latitude}-${longitude}-${label}`),
+    label: label || `${latitude}, ${longitude}`,
+    latitude,
+    longitude,
+  };
 }
 
 function getDataCompletenessScore(tags: Record<string, string | undefined>) {
@@ -300,6 +539,10 @@ function getDataCompletenessScore(tags: Record<string, string | undefined>) {
 
   if (tags.opening_hours) {
     score += 2;
+  }
+
+  if (tags.facebook || tags['contact:facebook'] || tags.instagram || tags['contact:instagram']) {
+    score += 1;
   }
 
   if (tags.name) {
@@ -341,27 +584,59 @@ function readCachedPlaces(cacheKey: string) {
 
     const payload = JSON.parse(rawValue) as CachePayload;
 
-    if (!Array.isArray(payload.places) || Date.now() - payload.cachedAt > cacheTtlMs) {
+    if (!Array.isArray(payload.places) || !payload.origin || Date.now() - payload.cachedAt > cacheTtlMs) {
       window.sessionStorage.removeItem(cacheKey);
       return null;
     }
 
-    return payload.places;
+    return payload;
   } catch {
     window.sessionStorage.removeItem(cacheKey);
     return null;
   }
 }
 
-function writeCachedPlaces(cacheKey: string, places: NearbyDogPlace[]) {
+function writeCachedPlaces(cacheKey: string, payload: CachePayload) {
   try {
-    const payload: CachePayload = {
-      cachedAt: Date.now(),
-      places,
-    };
-
     window.sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+    window.sessionStorage.setItem(lastCacheKey, cacheKey);
   } catch {
     // Cache writes are best-effort only; the feature still works without sessionStorage.
+  }
+}
+
+function readCachedAddressSuggestions(cacheKey: string) {
+  try {
+    const rawValue = window.sessionStorage.getItem(cacheKey);
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(rawValue) as { cachedAt: number; suggestions: AddressSuggestion[] };
+
+    if (!Array.isArray(payload.suggestions) || Date.now() - payload.cachedAt > cacheTtlMs) {
+      window.sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return payload.suggestions;
+  } catch {
+    window.sessionStorage.removeItem(cacheKey);
+    return null;
+  }
+}
+
+function writeCachedAddressSuggestions(cacheKey: string, suggestions: AddressSuggestion[]) {
+  try {
+    window.sessionStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        cachedAt: Date.now(),
+        suggestions,
+      }),
+    );
+  } catch {
+    // Address suggestion caching is best-effort only.
   }
 }
