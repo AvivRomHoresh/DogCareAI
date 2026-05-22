@@ -90,7 +90,7 @@ export function DogProvider({ children }: DogProviderProps) {
     }
 
     const persistedDogId = window.localStorage.getItem(getStorageKey(user.id));
-    const candidateDogId = activeDogId ?? persistedDogId;
+    const candidateDogId = persistedDogId ?? activeDogId;
     const storedDogIsAvailable = dogs.some((dog) => dog.id === candidateDogId);
     const nextActiveDogId = storedDogIsAvailable ? candidateDogId : dogs[0]?.id ?? null;
 

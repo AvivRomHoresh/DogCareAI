@@ -25,7 +25,8 @@ The scope was limited to the two approved Phase 7 bugs from `docs/PHASE_7_BUG_TR
 
 - Added an explicit stored-dog hydration flag in `DogProvider`.
 - Delayed active-dog fallback until both dog rows and the stored active dog ID have loaded.
-- Re-read the persisted active dog ID during reconciliation so a valid stored ID is honored before falling back to the first available dog.
+- Re-read the persisted active dog ID during reconciliation and prefer it over the current in-memory fallback when it matches an available dog.
+- Skipped reconciliation during temporary dog-loading errors so transient load failures do not clear or overwrite a valid stored active dog selection.
 - Kept the existing safe fallback when the stored dog is missing, archived, deleted, invalid, or unavailable to the current user.
 
 ### P7-BUG-003: Duplicate Assistant Sends
@@ -61,14 +62,7 @@ No test script exists in `package.json`; available scripts are `dev`, `build`, `
 
 ## Targeted Regression Results
 
-| Test ID | Status | Result / Notes |
-|---|---|---|
-| QA-017 | Pending manual verification | Code fix preserves a valid stored active dog ID after dog rows load and before fallback. Needs browser verification with two active synthetic dogs. |
-| QA-018 | Pending manual verification | Active dog switching path still writes the selected dog ID to state and localStorage. Needs browser verification across Dashboard, Reminders, and Assistant context. |
-| QA-039 | Pending manual verification | Assistant active dog context logic was indirectly touched through `useDogs`; context summary should be rechecked in browser. |
-| QA-041 | Pending manual verification | Assistant submit path now uses a synchronous ref guard before appending messages or calling `/api/assistant`. Needs browser rapid-click verification. |
-| QA-040 | Pending manual verification | Normal mock response path was preserved but should be rechecked in browser. |
-| QA-053 | Pending manual verification | Assistant still calls `/api/assistant` only from explicit send; opening `/assistant` should be rechecked with network inspection. |
+Final targeted regression results are recorded in `docs/PHASE_7_REGRESSION_QA.md`. QA-017, QA-018, QA-039, QA-040, QA-041, and QA-053 passed before merge readiness.
 
 ## Remaining Known Items
 
@@ -79,4 +73,4 @@ No test script exists in `package.json`; available scripts are `dev`, `build`, `
 
 ## Readiness for Phase 7 Step 5
 
-After review and commit/push of this bugfix branch, proceed to Phase 7 Step 5 targeted regression before merging back to main. Regression QA should focus on QA-017, QA-018, QA-039, QA-041, QA-040, and QA-053.
+Step 5 targeted regression has been completed and the branch is ready for review, commit/push, and merge to main.
