@@ -21,8 +21,11 @@ The app currently supports:
 - Basic Reminders create/edit/complete/delete for the active dog
 - Dashboard reminder summaries for the active dog
 - Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
+- Phase 7 QA documentation and beta demo guidance
 
 Mock Mode is the recommended default for routine testing and demos to avoid Gemini quota usage. Gemini can be enabled intentionally by setting `MOCK_AI_MODE=false` with a server-side `GEMINI_API_KEY`. Do not create `VITE_GEMINI_API_KEY`.
+
+Activity Log, Vet Finder, chat persistence, and `ai_usage_logs` persistence are not active beta features.
 
 ## Local Setup
 
@@ -82,6 +85,7 @@ Use the Vite framework preset in Vercel.
   - `AI_MODEL`
   - `AI_MAX_INPUT_CHARS`
   - `AI_REQUEST_TIMEOUT_MS`
+  - `AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE`
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
 
@@ -104,3 +108,13 @@ The `/auth` route contains Supabase email/password auth. The `/dog-profile` rout
 The MVP must remain demoable without paid services. Mock AI Mode stays available for local development and classroom demos and is default-safe when `MOCK_AI_MODE` is missing or true, or when `GEMINI_API_KEY` is missing. Real Gemini calls go only through `/api/assistant`, never from the browser.
 
 `AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE` controls a beta best-effort per-user Gemini request guard before real provider calls.
+
+## Phase 7 / Beta Demo Docs
+
+- `docs/DEMO_GUIDE.md` - recommended beta demo flow, known limitations, and success checklist.
+- `docs/PHASE_7_QA_PLAN.md` - QA plan and manual test matrix.
+- `docs/PHASE_7_MANUAL_QA_RESULTS.md` - full Phase 7 manual QA execution results.
+- `docs/PHASE_7_BUG_TRIAGE.md` - triage for bugs and blocked tests found during manual QA.
+- `docs/PHASE_7_BUGFIX_ROUND_1.md` - approved Phase 7 bugfix round.
+- `docs/PHASE_7_REGRESSION_QA.md` - targeted regression results for the bugfix round.
+- `docs/PHASE_7_AUTOMATED_TESTS_ASSESSMENT.md` - decision to defer automated tests for the current beta unless dependency/package changes are explicitly approved.
