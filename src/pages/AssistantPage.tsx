@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ContextSummaryCard } from '../components/ContextSummaryCard';
@@ -86,6 +86,7 @@ export function AssistantPage() {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const isSendingRef = useRef(false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isRemindersLoading, setIsRemindersLoading] = useState(false);
@@ -185,7 +186,7 @@ export function AssistantPage() {
   }
 
   async function sendQuestion(nextQuestion?: string) {
-    if (isSending) {
+    if (isSendingRef.current) {
       return;
     }
 
@@ -201,56 +202,62 @@ export function AssistantPage() {
       return;
     }
 
+    isSendingRef.current = true;
     setIsSending(true);
     setValidationMessage(null);
 
-    const detectedIntent = getDetectedIntent(trimmedQuestion);
-    const userMessage: ChatMessage = {
-      id: createMessageId(),
-      role: 'user',
-      content: trimmedQuestion,
-      detectedIntent,
-    };
-
-    setMessages((current) => [...current, userMessage]);
-    setQuestion('');
-
-    await delaySendingState();
-
-    let response: AssistantResponse;
-
-    if (detectedIntent === 'emergency') {
-      response = buildEmergencyResponse(activeDog.name);
-    } else {
-      try {
-        response = await requestServerAssistantResponse(trimmedQuestion);
-      } catch {
-        const localMockResponse = buildMockAiResponse({
-          question: trimmedQuestion,
-          dog: activeDog,
-          detectedIntent,
-          reminders,
-        });
-        response = {
-          ...buildFallbackResponse(detectedIntent),
-          message: `${buildFallbackResponse(detectedIntent).message} ${localMockResponse.message}`,
-        };
-      }
-    }
-
-    setMessages((current) => [
-      ...current,
-      {
+    try {
+      const detectedIntent = getDetectedIntent(trimmedQuestion);
+      const userMessage: ChatMessage = {
         id: createMessageId(),
-        role: 'assistant',
-        content: response.message,
-        detectedIntent: response.detected_intent,
-        disclaimer: response.disclaimer,
-        isEmergency: response.is_emergency,
-        responseSource: response.response_source,
-      },
-    ]);
-    setIsSending(false);
+        role: 'user',
+        content: trimmedQuestion,
+        detectedIntent,
+      };
+
+      setMessages((current) => [...current, userMessage]);
+      setQuestion('');
+
+      await delaySendingState();
+
+      let response: AssistantResponse;
+
+      if (detectedIntent === 'emergency') {
+        response = buildEmergencyResponse(activeDog.name);
+      } else {
+        try {
+          response = await requestServerAssistantResponse(trimmedQuestion);
+        } catch {
+          const localMockResponse = buildMockAiResponse({
+            question: trimmedQuestion,
+            dog: activeDog,
+            detectedIntent,
+            reminders,
+          });
+          const fallbackResponse = buildFallbackResponse(detectedIntent);
+          response = {
+            ...fallbackResponse,
+            message: `${fallbackResponse.message} ${localMockResponse.message}`,
+          };
+        }
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: createMessageId(),
+          role: 'assistant',
+          content: response.message,
+          detectedIntent: response.detected_intent,
+          disclaimer: response.disclaimer,
+          isEmergency: response.is_emergency,
+          responseSource: response.response_source,
+        },
+      ]);
+    } finally {
+      isSendingRef.current = false;
+      setIsSending(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
