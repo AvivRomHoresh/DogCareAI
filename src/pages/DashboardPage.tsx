@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { NearbyDogPlacesCard } from '../components/NearbyDogPlacesCard';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
@@ -220,10 +219,9 @@ export function DashboardPage() {
                   <QuickAction to="/dog-profile" title="Edit Dog Profile" description="Update care details for the selected dog." />
                   <QuickAction to="/reminders" title="Add Reminder" description="Create or complete a dog-care reminder." />
                   <QuickAction to="/assistant" title="Ask Assistant" description="Ask a dog-care question with the active dog context." />
+                  <QuickAction to="/nearby" title="Nearby Places" description="Find nearby vets, pet shops, dog parks, and groomers." />
                 </div>
               </section>
-
-              <NearbyDogPlacesCard />
 
               <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-semibold text-slate-950">Completed reminders</h2>

@@ -1,14 +1,20 @@
 export type NearbyDogPlaceCategory = 'dog_park' | 'groomer' | 'pet_shop' | 'veterinary';
 
 export type NearbyDogPlace = {
+  address: string | null;
   category: NearbyDogPlaceCategory;
   categoryLabel: string;
+  dataCompletenessScore: number;
   distanceMeters: number;
+  googleMapsUrl: string;
   id: string;
   latitude: number;
   longitude: number;
   name: string;
+  openingHours: string | null;
+  phone: string | null;
   source: 'OpenStreetMap / Overpass';
+  website: string | null;
 };
 
 export type NearbyDogPlacesResult = {
@@ -58,7 +64,7 @@ const overpassEndpoint = 'https://overpass-api.de/api/interpreter';
 const cacheTtlMs = 10 * 60 * 1000;
 const cachePrefix = 'dogcareai.nearbyDogPlaces.v1';
 const defaultRadiusMeters = 5000;
-const defaultLimit = 12;
+const defaultLimit = 30;
 
 const categoryLabels: Record<NearbyDogPlaceCategory, string> = {
   dog_park: 'Dog park',
@@ -192,14 +198,20 @@ function normalizeOverpassElements(elements: OverpassElement[], origin: Coordina
     seen.add(id);
 
     places.push({
+      address: getAddress(element.tags ?? {}),
       category,
       categoryLabel: categoryLabels[category],
+      dataCompletenessScore: getDataCompletenessScore(element.tags ?? {}),
       distanceMeters: getDistanceMeters(origin, { latitude, longitude }),
+      googleMapsUrl: getGoogleMapsUrl(latitude, longitude, getPlaceName(element.tags ?? {}, category)),
       id,
       latitude,
       longitude,
       name: getPlaceName(element.tags ?? {}, category),
+      openingHours: getTagValue(element.tags ?? {}, ['opening_hours']),
+      phone: getTagValue(element.tags ?? {}, ['phone', 'contact:phone']),
       source: 'OpenStreetMap / Overpass',
+      website: normalizeWebsiteUrl(getTagValue(element.tags ?? {}, ['website', 'contact:website', 'url'])),
     });
   }
 
@@ -228,6 +240,73 @@ function getCategory(tags: Record<string, string | undefined>): NearbyDogPlaceCa
 
 function getPlaceName(tags: Record<string, string | undefined>, category: NearbyDogPlaceCategory) {
   return tags.name?.trim() || categoryLabels[category];
+}
+
+function getAddress(tags: Record<string, string | undefined>) {
+  const streetLine = [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ');
+  const parts = [
+    streetLine,
+    tags['addr:city'],
+    tags['addr:postcode'],
+    tags['addr:country'],
+  ].filter((part): part is string => Boolean(part?.trim()));
+
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
+function getTagValue(tags: Record<string, string | undefined>, keys: string[]) {
+  for (const key of keys) {
+    const value = tags[key]?.trim();
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function normalizeWebsiteUrl(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+
+  return `https://${value}`;
+}
+
+function getGoogleMapsUrl(latitude: number, longitude: number, name: string) {
+  const query = encodeURIComponent(`${name} ${latitude},${longitude}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+function getDataCompletenessScore(tags: Record<string, string | undefined>) {
+  let score = 0;
+
+  if (tags.website || tags['contact:website'] || tags.url) {
+    score += 3;
+  }
+
+  if (getAddress(tags)) {
+    score += 3;
+  }
+
+  if (tags.phone || tags['contact:phone']) {
+    score += 2;
+  }
+
+  if (tags.opening_hours) {
+    score += 2;
+  }
+
+  if (tags.name) {
+    score += 1;
+  }
+
+  return score;
 }
 
 function getDistanceMeters(from: Coordinates, to: Coordinates) {
