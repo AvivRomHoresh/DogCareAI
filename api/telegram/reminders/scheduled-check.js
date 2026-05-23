@@ -42,6 +42,42 @@ function getSafeSupabaseDiagnostic(prefix, error) {
   return `${prefix}_unknown`;
 }
 
+function decodeJwtPayload(value) {
+  if (typeof value !== 'string' || value.split('.').length !== 3) {
+    return null;
+  }
+
+  try {
+    const [, payload] = value.split('.');
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const json = Buffer.from(padded, 'base64').toString('utf8');
+
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function getServiceRoleKeyDiagnostic(value) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return 'service_role_key_missing';
+  }
+
+  const trimmed = value.trim();
+  const jwtPayload = decodeJwtPayload(trimmed);
+
+  if (jwtPayload && jwtPayload.role !== 'service_role') {
+    return 'service_role_key_not_service_role_jwt';
+  }
+
+  if (!jwtPayload && /^(anon|publishable)[._-]/i.test(trimmed)) {
+    return 'service_role_key_looks_like_anon_or_publishable';
+  }
+
+  return null;
+}
+
 function getCronSecret(req) {
   const header = req.headers['x-telegram-cron-secret'] ?? req.headers['X-Telegram-Cron-Secret'];
 
@@ -319,14 +355,16 @@ export default async function handler(req, res) {
     if (!supabaseUrl) {
       return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', {
         ...counts,
-        diagnostic: 'missing_supabase_url',
+        diagnostic: 'supabase_url_missing',
       }));
     }
 
-    if (!serviceRoleKey) {
+    const serviceRoleDiagnostic = getServiceRoleKeyDiagnostic(serviceRoleKey);
+
+    if (serviceRoleDiagnostic) {
       return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', {
         ...counts,
-        diagnostic: 'missing_service_role_key',
+        diagnostic: serviceRoleDiagnostic,
       }));
     }
 
@@ -341,6 +379,12 @@ export default async function handler(req, res) {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
+      },
+      global: {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
       },
     });
 
