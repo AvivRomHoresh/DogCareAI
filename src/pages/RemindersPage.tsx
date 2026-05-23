@@ -105,6 +105,15 @@ function toIsoOrNull(value: string) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+function shouldResetMissedReminderState(state: ReminderState, scheduledAt: string | null) {
+  if (state !== 'missed' || !scheduledAt) {
+    return false;
+  }
+
+  const date = new Date(scheduledAt);
+  return !Number.isNaN(date.getTime()) && date > new Date();
+}
+
 function formatDateTime(value: string | null) {
   return formatReminderDateTime(value);
 }
@@ -278,13 +287,15 @@ export function RemindersPage() {
     setIsSaving(true);
     setFeedback(null);
 
+    const scheduledAt = toIsoOrNull(form.scheduled_at);
+    const nextState = shouldResetMissedReminderState(form.state, scheduledAt) ? 'upcoming' : form.state;
     const payload = {
       title: form.title.trim(),
       type: form.type,
-      scheduled_at: toIsoOrNull(form.scheduled_at),
+      scheduled_at: scheduledAt,
       recurring_frequency: form.recurring_frequency,
       notes: form.notes.trim() || null,
-      state: form.state,
+      state: nextState,
     };
 
     const isCreatingReminder = selectedReminderId === 'new';
