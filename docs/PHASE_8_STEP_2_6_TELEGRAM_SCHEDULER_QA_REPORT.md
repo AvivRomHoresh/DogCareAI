@@ -10,7 +10,7 @@ The scheduled endpoint is intended for cron-job.org to call automatically every 
 
 - Environment used: Vercel Preview
 - Endpoint tested: `POST /api/telegram/reminders/scheduled-check`
-- Test method: manual CMD request
+- Test methods: manual CMD request and cron-job.org Test Run
 - Vercel Protection Bypass: required for external automation access during Preview testing
 - App endpoint secret: `TELEGRAM_CRON_SECRET` required
 - Supabase elevated access: `SUPABASE_SERVICE_ROLE_KEY` configured server-side only
@@ -50,6 +50,18 @@ The scheduled endpoint returned success with the following safe count result:
 }
 ```
 
+## Successful cron-job.org Automation Result
+
+cron-job.org Test Run succeeded against the Vercel Preview scheduled endpoint.
+
+A real future reminder was created, and Telegram delivered the reminder notification automatically without CMD and
+without clicking "Check due reminders now".
+
+This confirms the scheduled Telegram automation works end-to-end.
+
+After cron-job.org is configured, CMD is no longer needed for routine scheduled reminder delivery checks. Manual CMD
+requests may still be useful for troubleshooting.
+
 ## Confirmed Behavior
 
 - Vercel Preview endpoint deployed and responded.
@@ -59,8 +71,11 @@ The scheduled endpoint returned success with the following safe count result:
 - Service-role grants fixed the previous `42501` settings-load failure.
 - The scheduled endpoint can read enabled notification settings.
 - The scheduled endpoint can read eligible reminders.
+- cron-job.org automation succeeded.
+- A real reminder notification was delivered automatically.
 - Duplicate prevention works.
 - Previously delivered reminder occurrences were counted as `skipped_duplicate`.
+- Duplicate prevention should also be verified by a repeated cron-job.org run after an automatic delivery.
 - No phone number was collected.
 - No frontend secrets were added.
 - No `VITE_TELEGRAM_BOT_TOKEN` was added.
@@ -77,7 +92,7 @@ The scheduled endpoint returned success with the following safe count result:
 
 ## cron-job.org Readiness
 
-The scheduler is ready for cron-job.org setup.
+The scheduler is ready for demo with cron-job.org automation.
 
 Recommended cron-job.org configuration:
 
@@ -88,11 +103,16 @@ Recommended cron-job.org configuration:
 
 If Vercel Preview protection remains enabled, cron-job.org also needs the Vercel Protection Bypass configuration used during QA. For Production, use the production endpoint and the app-level cron secret.
 
+When this branch is merged to main/production, update the cron-job.org URL from the Preview URL to the Production URL if
+needed.
+
+The manual "Check due reminders now" button remains available only as a demo/manual fallback and troubleshooting tool.
+
 ## Remaining Limitation
 
 Delivery timing depends on cron-job.org frequency and availability.
 
-For the current demo scope, a 5-minute interval is acceptable. The app does not guarantee exact-to-the-second reminder delivery.
+For the current demo scope, the current 5-minute interval is acceptable. The app does not guarantee exact-to-the-second reminder delivery.
 
 ## Validation Results
 
