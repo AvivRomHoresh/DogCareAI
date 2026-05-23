@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
+import { TelegramReminderSettingsCard } from '../components/TelegramReminderSettingsCard';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import {
@@ -446,6 +447,8 @@ export function RemindersPage() {
           Select a dog from the header before adding reminders.
         </section>
       ) : null}
+
+      {hasSupabaseConfig && user ? <TelegramReminderSettingsCard /> : null}
 
       {canUseReminders ? (
         <section className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
