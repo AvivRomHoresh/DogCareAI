@@ -4,6 +4,7 @@ const FALLBACK_TIME_ZONE = 'Asia/Jerusalem';
 const MAX_NOTIFICATIONS_PER_CHECK = 10;
 const OVERDUE_LOOKBACK_HOURS = 24;
 const MAX_REQUEST_BODY_CHARS = 4096;
+const DOG_EMOJI = '\u{1F436}';
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -59,12 +60,19 @@ function getSafeTimeZone(value) {
 }
 
 function formatReminderTime(value, timeZone) {
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZoneName: 'short',
-    timeZone,
-  }).format(value);
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+      timeZone,
+    }).format(value);
+  } catch {
+    return value.toISOString();
+  }
 }
 
 function truncateText(value, maxLength = 160) {
@@ -74,7 +82,7 @@ function truncateText(value, maxLength = 160) {
     return text;
   }
 
-  return `${text.slice(0, maxLength - 1)}…`;
+  return `${text.slice(0, maxLength - 3)}...`;
 }
 
 function buildTelegramMessage({ dogName, notificationKind, reminder, scheduledAt, timeZone }) {
@@ -83,7 +91,7 @@ function buildTelegramMessage({ dogName, notificationKind, reminder, scheduledAt
 
   if (notificationKind === 'reminder_missed') {
     return [
-      '🐶 DogCareAI Missed Reminder',
+      `${DOG_EMOJI} DogCareAI Missed Reminder`,
       `${safeDogName} missed a reminder:`,
       title,
       `Scheduled for: ${formatReminderTime(scheduledAt, timeZone)}`,
@@ -91,13 +99,12 @@ function buildTelegramMessage({ dogName, notificationKind, reminder, scheduledAt
   }
 
   return [
-    '🐶 DogCareAI Reminder',
+    `${DOG_EMOJI} DogCareAI Reminder`,
     `${safeDogName} has an upcoming reminder:`,
     title,
     `Time: ${formatReminderTime(scheduledAt, timeZone)}`,
   ].join('\n');
 }
-
 async function readJsonBody(req) {
   const canUseBuffer = typeof Buffer !== 'undefined';
 
@@ -135,20 +142,26 @@ async function readJsonBody(req) {
 }
 
 async function sendTelegramMessage({ botToken, chatId, text }) {
-  const response = await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      disable_web_page_preview: true,
-    }),
-  });
+  let response;
+
+  try {
+    response = await fetch(`https://api.telegram.org/bot${encodeURIComponent(botToken)}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+    });
+  } catch {
+    return { ok: false, messageId: null, diagnosticCode: 'telegram_fetch_exception' };
+  }
 
   if (!response.ok) {
-    return { ok: false, messageId: null };
+    return { ok: false, messageId: null, diagnosticCode: 'telegram_send_failed' };
   }
 
   const payload = await response.json().catch(() => null);
@@ -156,18 +169,27 @@ async function sendTelegramMessage({ botToken, chatId, text }) {
   return {
     ok: payload?.ok === true,
     messageId: payload?.result?.message_id ? String(payload.result.message_id) : null,
+    diagnosticCode: payload?.ok === true ? null : 'telegram_send_failed',
   };
 }
 
 async function hasExistingDelivery({ supabase, userId, reminderId, notificationKind, reminderScheduledAt }) {
-  const { data, error } = await supabase
-    .from('telegram_notification_deliveries')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('reminder_id', reminderId)
-    .eq('notification_kind', notificationKind)
-    .eq('reminder_scheduled_at', reminderScheduledAt)
-    .maybeSingle();
+  let result;
+
+  try {
+    result = await supabase
+      .from('telegram_notification_deliveries')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('reminder_id', reminderId)
+      .eq('notification_kind', notificationKind)
+      .eq('reminder_scheduled_at', reminderScheduledAt)
+      .maybeSingle();
+  } catch {
+    return false;
+  }
+
+  const { data, error } = result;
 
   if (error) {
     return false;
@@ -177,17 +199,25 @@ async function hasExistingDelivery({ supabase, userId, reminderId, notificationK
 }
 
 async function recordDelivery({ supabase, delivery }) {
-  const { error } = await supabase.from('telegram_notification_deliveries').insert(delivery);
+  let result;
+
+  try {
+    result = await supabase.from('telegram_notification_deliveries').insert(delivery);
+  } catch {
+    return { recorded: false, duplicate: false, diagnosticCode: 'delivery_record_exception' };
+  }
+
+  const { error } = result;
 
   if (!error) {
-    return { recorded: true, duplicate: false };
+    return { recorded: true, duplicate: false, diagnosticCode: null };
   }
 
   if (error.code === '23505') {
-    return { recorded: false, duplicate: true };
+    return { recorded: false, duplicate: true, diagnosticCode: 'duplicate_delivery' };
   }
 
-  return { recorded: false, duplicate: false };
+  return { recorded: false, duplicate: false, diagnosticCode: 'delivery_record_failed' };
 }
 
 export default async function handler(req, res) {
@@ -312,86 +342,111 @@ export default async function handler(req, res) {
       skippedDuplicate: 0,
       skipped: 0,
     };
+    let lastDiagnosticCode = null;
 
     for (const reminder of relevantReminders) {
-      const scheduledAt = new Date(reminder.scheduled_at);
+      try {
+        const scheduledAt = new Date(reminder.scheduled_at);
 
-      if (Number.isNaN(scheduledAt.getTime())) {
-        counts.skipped += 1;
-        continue;
-      }
+        if (Number.isNaN(scheduledAt.getTime())) {
+          counts.skipped += 1;
+          continue;
+        }
 
-      const notificationKind = getNotificationKind(scheduledAt, now);
-      const reminderScheduledAt = scheduledAt.toISOString();
-      stage = 'record_delivery';
-      const alreadySent = await hasExistingDelivery({
-        supabase,
-        userId,
-        reminderId: reminder.id,
-        notificationKind,
-        reminderScheduledAt,
-      });
-
-      if (alreadySent) {
-        counts.skippedDuplicate += 1;
-        continue;
-      }
-
-      if (counts.sent >= MAX_NOTIFICATIONS_PER_CHECK) {
-        counts.skipped += 1;
-        continue;
-      }
-
-      stage = 'send_telegram';
-      const telegramResult = await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: buildTelegramMessage({
-          dogName: dogNamesById.get(reminder.dog_id),
+        const notificationKind = getNotificationKind(scheduledAt, now);
+        const reminderScheduledAt = scheduledAt.toISOString();
+        stage = 'record_delivery';
+        const alreadySent = await hasExistingDelivery({
+          supabase,
+          userId,
+          reminderId: reminder.id,
           notificationKind,
-          reminder,
-          scheduledAt,
-          timeZone,
-        }),
-      }).catch(() => ({ ok: false, messageId: null }));
+          reminderScheduledAt,
+        });
 
-      if (!telegramResult.ok) {
+        if (alreadySent) {
+          counts.skippedDuplicate += 1;
+          continue;
+        }
+
+        if (counts.sent >= MAX_NOTIFICATIONS_PER_CHECK) {
+          counts.skipped += 1;
+          continue;
+        }
+
+        stage = 'send_telegram';
+        let messageText;
+
+        try {
+          messageText = buildTelegramMessage({
+            dogName: dogNamesById.get(reminder.dog_id),
+            notificationKind,
+            reminder,
+            scheduledAt,
+            timeZone,
+          });
+        } catch {
+          lastDiagnosticCode = 'message_format_failed';
+          counts.skipped += 1;
+          continue;
+        }
+
+        const telegramResult = await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: messageText,
+        });
+
+        if (!telegramResult.ok) {
+          lastDiagnosticCode = telegramResult.diagnosticCode ?? 'telegram_send_failed';
+          counts.skipped += 1;
+          continue;
+        }
+
+        stage = 'record_delivery';
+        const deliveryResult = await recordDelivery({
+          supabase,
+          delivery: {
+            user_id: userId,
+            dog_id: reminder.dog_id,
+            reminder_id: reminder.id,
+            notification_kind: notificationKind,
+            reminder_scheduled_at: reminderScheduledAt,
+            telegram_message_id: telegramResult.messageId,
+          },
+        });
+
+        if (deliveryResult.duplicate) {
+          counts.skippedDuplicate += 1;
+          continue;
+        }
+
+        if (!deliveryResult.recorded) {
+          lastDiagnosticCode = deliveryResult.diagnosticCode ?? 'delivery_record_failed';
+          counts.skipped += 1;
+          continue;
+        }
+
+        counts.sent += 1;
+      } catch {
+        lastDiagnosticCode = 'reminder_processing_failed';
         counts.skipped += 1;
-        continue;
       }
-
-      stage = 'record_delivery';
-      const deliveryResult = await recordDelivery({
-        supabase,
-        delivery: {
-          user_id: userId,
-          dog_id: reminder.dog_id,
-          reminder_id: reminder.id,
-          notification_kind: notificationKind,
-          reminder_scheduled_at: reminderScheduledAt,
-          telegram_message_id: telegramResult.messageId,
-        },
-      });
-
-      if (deliveryResult.duplicate) {
-        counts.skippedDuplicate += 1;
-        continue;
-      }
-
-      if (!deliveryResult.recorded) {
-        counts.skipped += 1;
-        continue;
-      }
-
-      counts.sent += 1;
     }
 
-    const message =
-      counts.sent > 0
-        ? `Telegram reminder check complete. Sent ${counts.sent} notification${counts.sent === 1 ? '' : 's'}.`
-        : 'Telegram reminder check complete. No new notifications were sent.';
+    const message = (() => {
+      if (counts.sent > 0) {
+        return `Telegram reminder check complete. Sent ${counts.sent} notification${counts.sent === 1 ? '' : 's'}.`;
+      }
 
-    return sendJson(res, 200, buildResult(true, message, counts));
+      if (counts.skipped > 0 && lastDiagnosticCode) {
+        return `Telegram reminder check complete, but no notifications could be sent. Diagnostic: ${lastDiagnosticCode}.`;
+      }
+
+      return 'Telegram reminder check complete. No new notifications were sent.';
+    })();
+
+    return sendJson(res, 200, buildResult(!(counts.sent === 0 && counts.skipped > 0), message, counts));
   } catch {
     return sendJson(
       res,
