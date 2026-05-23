@@ -8,7 +8,7 @@ The scheduled endpoint is intended for cron-job.org to call automatically every 
 
 ## Environment
 
-- Environment used: Vercel Preview
+- Environments used: Vercel Preview and the current deployment/production URL
 - Endpoint tested: `POST /api/telegram/reminders/scheduled-check`
 - Test methods: manual CMD request and cron-job.org Test Run
 - Vercel Protection Bypass: required for external automation access during Preview testing
@@ -62,10 +62,22 @@ This confirms the scheduled Telegram automation works end-to-end.
 After cron-job.org is configured, CMD is no longer needed for routine scheduled reminder delivery checks. Manual CMD
 requests may still be useful for troubleshooting.
 
+## Production cron-job.org Verification
+
+After the branch was merged and the deployment target changed, the cron-job.org URL was updated from the Preview URL to
+the current deployment/production URL as needed.
+
+The updated cron-job.org Test Run succeeded. This confirms the scheduled Telegram endpoint is reachable from
+cron-job.org beyond Preview and that scheduled Telegram reminders are verified without CMD and without clicking the
+manual "Check due reminders now" button.
+
+Duplicate prevention should remain verified by repeated cron-job.org Test Run after an automatic delivery.
+
 ## Confirmed Behavior
 
 - Vercel Preview endpoint deployed and responded.
 - Vercel Protection Bypass worked for Preview access.
+- Production/updated cron-job.org Test Run succeeded.
 - `TELEGRAM_CRON_SECRET` authorization worked.
 - `SUPABASE_SERVICE_ROLE_KEY` worked server-side.
 - Service-role grants fixed the previous `42501` settings-load failure.
@@ -73,6 +85,7 @@ requests may still be useful for troubleshooting.
 - The scheduled endpoint can read eligible reminders.
 - cron-job.org automation succeeded.
 - A real reminder notification was delivered automatically.
+- Scheduled Telegram reminders are verified without CMD and without the manual reminder-check button.
 - Duplicate prevention works.
 - Previously delivered reminder occurrences were counted as `skipped_duplicate`.
 - Duplicate prevention should also be verified by a repeated cron-job.org run after an automatic delivery.
@@ -103,8 +116,7 @@ Recommended cron-job.org configuration:
 
 If Vercel Preview protection remains enabled, cron-job.org also needs the Vercel Protection Bypass configuration used during QA. For Production, use the production endpoint and the app-level cron secret.
 
-When this branch is merged to main/production, update the cron-job.org URL from the Preview URL to the Production URL if
-needed.
+The cron-job.org URL has been updated from the Preview URL to the current deployment/production URL as needed.
 
 The manual "Check due reminders now" button remains available only as a demo/manual fallback and troubleshooting tool.
 
