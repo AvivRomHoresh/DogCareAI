@@ -99,16 +99,22 @@ function buildTelegramMessage({ dogName, notificationKind, reminder, scheduledAt
 }
 
 async function readJsonBody(req) {
-  if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+  const canUseBuffer = typeof Buffer !== 'undefined';
+
+  if (req.body && typeof req.body === 'object' && (!canUseBuffer || !Buffer.isBuffer(req.body))) {
     return req.body;
   }
 
-  if (Buffer.isBuffer(req.body)) {
+  if (canUseBuffer && Buffer.isBuffer(req.body)) {
     return JSON.parse(req.body.toString('utf8') || '{}');
   }
 
   if (typeof req.body === 'string') {
     return JSON.parse(req.body || '{}');
+  }
+
+  if (typeof req.on !== 'function') {
+    return {};
   }
 
   const body = await new Promise((resolve, reject) => {
@@ -189,190 +195,208 @@ export default async function handler(req, res) {
     return sendJson(res, 405, buildResult(false, 'Method not allowed.'));
   }
 
-  let body;
+  let stage = 'read_body';
+
   try {
-    body = await readJsonBody(req);
-  } catch {
-    return sendJson(res, 400, buildResult(false, 'Invalid request body.'));
-  }
+    let body = {};
 
-  const timeZone = getSafeTimeZone(body?.timeZone);
-  const token = getBearerToken(req);
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      body = {};
+    }
 
-  if (!token) {
-    return sendJson(res, 401, buildResult(false, 'Please sign in before checking Telegram reminders.'));
-  }
+    const timeZone = getSafeTimeZone(body?.timeZone);
+    stage = 'auth';
+    const token = getBearerToken(req);
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    if (!token) {
+      return sendJson(res, 401, buildResult(false, 'Please sign in before checking Telegram reminders.'));
+    }
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return sendJson(res, 500, buildResult(false, 'Server Supabase configuration is missing.'));
-  }
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return sendJson(res, 500, buildResult(false, 'Server Supabase configuration is missing.'));
+    }
 
-  if (!botToken) {
-    return sendJson(res, 500, buildResult(false, 'Telegram notifications are not configured on the server yet.'));
-  }
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    if (!botToken) {
+      return sendJson(res, 500, buildResult(false, 'Telegram notifications are not configured on the server yet.'));
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
-    },
-  });
-
-  const { data: userData, error: userError } = await supabase.auth.getUser(token);
-
-  if (userError || !userData?.user) {
-    return sendJson(res, 401, buildResult(false, 'Your session could not be verified. Please sign in again.'));
-  }
-
-  const userId = userData.user.id;
-  const { data: settings, error: settingsError } = await supabase
-    .from('notification_settings')
-    .select('user_id,telegram_chat_id,telegram_enabled,reminder_notifications_enabled,notify_minutes_before')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (settingsError) {
-    return sendJson(res, 500, buildResult(false, 'Telegram settings could not be loaded. Please try again later.'));
-  }
-
-  if (!settings) {
-    return sendJson(res, 400, buildResult(false, 'Telegram notification settings have not been saved yet.'));
-  }
-
-  if (!settings.telegram_enabled || !settings.reminder_notifications_enabled) {
-    return sendJson(res, 400, buildResult(false, 'Telegram reminder notifications are not enabled for this account.'));
-  }
-
-  const chatId = typeof settings.telegram_chat_id === 'string' ? settings.telegram_chat_id.trim() : '';
-
-  if (!chatId) {
-    return sendJson(res, 400, buildResult(false, 'Telegram chat ID is missing. Save a chat ID before checking reminders.'));
-  }
-
-  const notifyMinutesBefore = [0, 15, 30, 60].includes(settings.notify_minutes_before)
-    ? settings.notify_minutes_before
-    : 15;
-  const now = new Date();
-  const windowEnd = getNotifyWindowEnd(now, notifyMinutesBefore);
-  const overdueStart = getOverdueLookbackStart(now);
-
-  const { data: reminders, error: remindersError } = await supabase
-    .from('reminders')
-    .select('id,user_id,dog_id,title,type,scheduled_at,state')
-    .eq('user_id', userId)
-    .neq('state', 'completed')
-    .not('scheduled_at', 'is', null)
-    .gte('scheduled_at', overdueStart.toISOString())
-    .lte('scheduled_at', windowEnd.toISOString())
-    .order('scheduled_at', { ascending: true });
-
-  if (remindersError) {
-    return sendJson(res, 500, buildResult(false, 'Reminders could not be loaded. Please try again later.'));
-  }
-
-  const relevantReminders = reminders ?? [];
-  const dogIds = [...new Set(relevantReminders.map((reminder) => reminder.dog_id).filter(Boolean))];
-  const dogNamesById = new Map();
-
-  if (dogIds.length > 0) {
-    const { data: dogs } = await supabase.from('dogs').select('id,name').eq('user_id', userId).in('id', dogIds);
-
-    for (const dog of dogs ?? []) {
-      dogNamesById.set(dog.id, dog.name);
-    }
-  }
-
-  const counts = {
-    checked: relevantReminders.length,
-    sent: 0,
-    skippedDuplicate: 0,
-    skipped: 0,
-  };
-
-  for (const reminder of relevantReminders) {
-    const scheduledAt = new Date(reminder.scheduled_at);
-
-    if (Number.isNaN(scheduledAt.getTime())) {
-      counts.skipped += 1;
-      continue;
-    }
-
-    const notificationKind = getNotificationKind(scheduledAt, now);
-    const reminderScheduledAt = scheduledAt.toISOString();
-    const alreadySent = await hasExistingDelivery({
-      supabase,
-      userId,
-      reminderId: reminder.id,
-      notificationKind,
-      reminderScheduledAt,
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
 
-    if (alreadySent) {
-      counts.skippedDuplicate += 1;
-      continue;
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !userData?.user) {
+      return sendJson(res, 401, buildResult(false, 'Your session could not be verified. Please sign in again.'));
     }
 
-    if (counts.sent >= MAX_NOTIFICATIONS_PER_CHECK) {
-      counts.skipped += 1;
-      continue;
+    const userId = userData.user.id;
+    stage = 'load_settings';
+    const { data: settings, error: settingsError } = await supabase
+      .from('notification_settings')
+      .select('user_id,telegram_chat_id,telegram_enabled,reminder_notifications_enabled,notify_minutes_before')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (settingsError) {
+      return sendJson(res, 500, buildResult(false, 'Telegram settings could not be loaded. Please try again later.'));
     }
 
-    const telegramResult = await sendTelegramMessage({
-      botToken,
-      chatId,
-      text: buildTelegramMessage({
-        dogName: dogNamesById.get(reminder.dog_id),
+    if (!settings) {
+      return sendJson(res, 400, buildResult(false, 'Telegram notification settings have not been saved yet.'));
+    }
+
+    if (!settings.telegram_enabled || !settings.reminder_notifications_enabled) {
+      return sendJson(res, 400, buildResult(false, 'Telegram reminder notifications are not enabled for this account.'));
+    }
+
+    const chatId = typeof settings.telegram_chat_id === 'string' ? settings.telegram_chat_id.trim() : '';
+
+    if (!chatId) {
+      return sendJson(res, 400, buildResult(false, 'Telegram chat ID is missing. Save a chat ID before checking reminders.'));
+    }
+
+    const notifyMinutesBefore = [0, 15, 30, 60].includes(settings.notify_minutes_before)
+      ? settings.notify_minutes_before
+      : 15;
+    const now = new Date();
+    const windowEnd = getNotifyWindowEnd(now, notifyMinutesBefore);
+    const overdueStart = getOverdueLookbackStart(now);
+
+    stage = 'load_reminders';
+    const { data: reminders, error: remindersError } = await supabase
+      .from('reminders')
+      .select('id,user_id,dog_id,title,type,scheduled_at,state')
+      .eq('user_id', userId)
+      .neq('state', 'completed')
+      .not('scheduled_at', 'is', null)
+      .gte('scheduled_at', overdueStart.toISOString())
+      .lte('scheduled_at', windowEnd.toISOString())
+      .order('scheduled_at', { ascending: true });
+
+    if (remindersError) {
+      return sendJson(res, 500, buildResult(false, 'Reminders could not be loaded. Please try again later.'));
+    }
+
+    const relevantReminders = reminders ?? [];
+    const dogIds = [...new Set(relevantReminders.map((reminder) => reminder.dog_id).filter(Boolean))];
+    const dogNamesById = new Map();
+
+    if (dogIds.length > 0) {
+      stage = 'load_dogs';
+      const { data: dogs } = await supabase.from('dogs').select('id,name').eq('user_id', userId).in('id', dogIds);
+
+      for (const dog of dogs ?? []) {
+        dogNamesById.set(dog.id, dog.name);
+      }
+    }
+
+    const counts = {
+      checked: relevantReminders.length,
+      sent: 0,
+      skippedDuplicate: 0,
+      skipped: 0,
+    };
+
+    for (const reminder of relevantReminders) {
+      const scheduledAt = new Date(reminder.scheduled_at);
+
+      if (Number.isNaN(scheduledAt.getTime())) {
+        counts.skipped += 1;
+        continue;
+      }
+
+      const notificationKind = getNotificationKind(scheduledAt, now);
+      const reminderScheduledAt = scheduledAt.toISOString();
+      stage = 'record_delivery';
+      const alreadySent = await hasExistingDelivery({
+        supabase,
+        userId,
+        reminderId: reminder.id,
         notificationKind,
-        reminder,
-        scheduledAt,
-        timeZone,
-      }),
-    }).catch(() => ({ ok: false, messageId: null }));
+        reminderScheduledAt,
+      });
 
-    if (!telegramResult.ok) {
-      counts.skipped += 1;
-      continue;
+      if (alreadySent) {
+        counts.skippedDuplicate += 1;
+        continue;
+      }
+
+      if (counts.sent >= MAX_NOTIFICATIONS_PER_CHECK) {
+        counts.skipped += 1;
+        continue;
+      }
+
+      stage = 'send_telegram';
+      const telegramResult = await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: buildTelegramMessage({
+          dogName: dogNamesById.get(reminder.dog_id),
+          notificationKind,
+          reminder,
+          scheduledAt,
+          timeZone,
+        }),
+      }).catch(() => ({ ok: false, messageId: null }));
+
+      if (!telegramResult.ok) {
+        counts.skipped += 1;
+        continue;
+      }
+
+      stage = 'record_delivery';
+      const deliveryResult = await recordDelivery({
+        supabase,
+        delivery: {
+          user_id: userId,
+          dog_id: reminder.dog_id,
+          reminder_id: reminder.id,
+          notification_kind: notificationKind,
+          reminder_scheduled_at: reminderScheduledAt,
+          telegram_message_id: telegramResult.messageId,
+        },
+      });
+
+      if (deliveryResult.duplicate) {
+        counts.skippedDuplicate += 1;
+        continue;
+      }
+
+      if (!deliveryResult.recorded) {
+        counts.skipped += 1;
+        continue;
+      }
+
+      counts.sent += 1;
     }
 
-    const deliveryResult = await recordDelivery({
-      supabase,
-      delivery: {
-        user_id: userId,
-        dog_id: reminder.dog_id,
-        reminder_id: reminder.id,
-        notification_kind: notificationKind,
-        reminder_scheduled_at: reminderScheduledAt,
-        telegram_message_id: telegramResult.messageId,
-      },
-    });
+    const message =
+      counts.sent > 0
+        ? `Telegram reminder check complete. Sent ${counts.sent} notification${counts.sent === 1 ? '' : 's'}.`
+        : 'Telegram reminder check complete. No new notifications were sent.';
 
-    if (deliveryResult.duplicate) {
-      counts.skippedDuplicate += 1;
-      continue;
-    }
-
-    if (!deliveryResult.recorded) {
-      counts.skipped += 1;
-      continue;
-    }
-
-    counts.sent += 1;
+    return sendJson(res, 200, buildResult(true, message, counts));
+  } catch {
+    return sendJson(
+      res,
+      500,
+      buildResult(false, `Telegram reminder check failed on the server during: ${stage}. Please try again later.`),
+    );
   }
-
-  const message =
-    counts.sent > 0
-      ? `Telegram reminder check complete. Sent ${counts.sent} notification${counts.sent === 1 ? '' : 's'}.`
-      : 'Telegram reminder check complete. No new notifications were sent.';
-
-  return sendJson(res, 200, buildResult(true, message, counts));
 }
