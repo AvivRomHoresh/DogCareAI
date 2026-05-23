@@ -16,9 +16,22 @@ type NotificationSettingsRow = Omit<TelegramSettingsForm, 'telegram_chat_id'> & 
 };
 
 type Feedback = {
+  counts?: TelegramCheckCounts | null;
   tone: 'success' | 'error';
   message: string;
 };
+
+type TelegramCheckCounts = {
+  checked: number;
+  sent: number;
+  skipped_duplicate: number;
+  skipped: number;
+};
+
+type TelegramApiResponse = {
+  success?: boolean;
+  message?: string;
+} & Partial<TelegramCheckCounts>;
 
 const defaultForm: TelegramSettingsForm = {
   telegram_chat_id: '',
@@ -26,6 +39,9 @@ const defaultForm: TelegramSettingsForm = {
   reminder_notifications_enabled: false,
   notify_minutes_before: 15,
 };
+
+const telegramRouteUnavailableMessage =
+  'Telegram API route is not available in this local dev server. Use Vercel Preview or vercel dev to test Telegram delivery.';
 
 const notifyBeforeOptions: Array<{ value: TelegramSettingsForm['notify_minutes_before']; label: string }> = [
   { value: 0, label: 'Due now only' },
@@ -59,6 +75,16 @@ function validateSettings(form: TelegramSettingsForm) {
   return null;
 }
 
+async function readTelegramApiResponse(response: Response): Promise<TelegramApiResponse | null> {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (!contentType.toLowerCase().includes('application/json')) {
+    return null;
+  }
+
+  return (await response.json().catch(() => null)) as TelegramApiResponse | null;
+}
+
 function areFormsEqual(a: TelegramSettingsForm, b: TelegramSettingsForm) {
   const normalizedA = normalizeForm(a);
   const normalizedB = normalizeForm(b);
@@ -79,6 +105,7 @@ export function TelegramReminderSettingsCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [isCheckingReminders, setIsCheckingReminders] = useState(false);
   const [hasSavedSettings, setHasSavedSettings] = useState(false);
 
   const isDirty = useMemo(() => {
@@ -240,8 +267,8 @@ export function TelegramReminderSettingsCard() {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
-      const payload = (await response.json().catch(() => null)) as { success?: boolean; message?: string } | null;
-      const message = payload?.message ?? 'Telegram test message could not be sent.';
+      const payload = await readTelegramApiResponse(response);
+      const message = payload?.message ?? telegramRouteUnavailableMessage;
 
       setFeedback({
         tone: payload?.success ? 'success' : 'error',
@@ -251,6 +278,89 @@ export function TelegramReminderSettingsCard() {
       setFeedback({ tone: 'error', message: 'Telegram test message could not be sent. Please try again.' });
     } finally {
       setIsSendingTest(false);
+    }
+  };
+
+  const validateSavedTelegramReminderSettings = () => {
+    if (!session?.access_token) {
+      return 'Please sign in before checking Telegram reminders.';
+    }
+
+    if (!hasSavedSettings) {
+      return 'Save Telegram settings before checking due reminders.';
+    }
+
+    if (isDirty) {
+      return 'Save your latest Telegram settings before checking due reminders.';
+    }
+
+    const validationError = validateSettings(form);
+
+    if (validationError) {
+      return validationError;
+    }
+
+    if (!form.telegram_enabled || !form.telegram_chat_id.trim()) {
+      return 'Enable Telegram and save a chat ID before checking due reminders.';
+    }
+
+    if (!form.reminder_notifications_enabled) {
+      return 'Enable reminder notifications before checking due reminders.';
+    }
+
+    return null;
+  };
+
+  const checkDueReminders = async () => {
+    if (isCheckingReminders) {
+      return;
+    }
+
+    const validationError = validateSavedTelegramReminderSettings();
+
+    if (validationError) {
+      setFeedback({ tone: 'error', message: validationError });
+      return;
+    }
+
+    setIsCheckingReminders(true);
+    setFeedback(null);
+
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jerusalem';
+
+    try {
+      const response = await fetch('/api/telegram/reminders/check', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timeZone }),
+      });
+      const payload = await readTelegramApiResponse(response);
+      const message = payload?.message ?? telegramRouteUnavailableMessage;
+      const counts =
+        typeof payload?.checked === 'number'
+          && typeof payload.sent === 'number'
+          && typeof payload.skipped_duplicate === 'number'
+          && typeof payload.skipped === 'number'
+          ? {
+              checked: payload.checked,
+              sent: payload.sent,
+              skipped_duplicate: payload.skipped_duplicate,
+              skipped: payload.skipped,
+            }
+          : null;
+
+      setFeedback({
+        tone: payload?.success ? 'success' : 'error',
+        message,
+        counts,
+      });
+    } catch {
+      setFeedback({ tone: 'error', message: 'Telegram reminder check could not be completed. Please try again.' });
+    } finally {
+      setIsCheckingReminders(false);
     }
   };
 
@@ -275,8 +385,11 @@ export function TelegramReminderSettingsCard() {
       </div>
 
       <p className="mt-3 text-sm leading-6 text-slate-600">
-        Start the DogCareAI Telegram bot before sending a test message. Reminder delivery logic is not active yet; this
-        card only saves settings and verifies the secure test-message connection.
+        Start the DogCareAI Telegram bot before sending a test message. You can also manually check due reminders while
+        the app is open.
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        The reminder check runs only when you click it while the app is open. It does not run in the background yet.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -285,7 +398,7 @@ export function TelegramReminderSettingsCard() {
           <input
             value={form.telegram_chat_id}
             onChange={(event) => updateField('telegram_chat_id', event.target.value)}
-            disabled={isLoading || isSaving || isSendingTest}
+            disabled={isLoading || isSaving || isSendingTest || isCheckingReminders}
             className="mt-1 w-full rounded-xl border border-sky-200 bg-white px-3 py-2 text-slate-900 disabled:cursor-not-allowed disabled:bg-stone-100"
             placeholder="Example: 123456789"
             autoComplete="off"
@@ -297,7 +410,7 @@ export function TelegramReminderSettingsCard() {
           <select
             value={form.notify_minutes_before}
             onChange={handleNotifyBeforeChange}
-            disabled={isLoading || isSaving || isSendingTest}
+            disabled={isLoading || isSaving || isSendingTest || isCheckingReminders}
             className="mt-1 w-full rounded-xl border border-sky-200 bg-white px-3 py-2 text-slate-900 disabled:cursor-not-allowed disabled:bg-stone-100"
           >
             {notifyBeforeOptions.map((option) => (
@@ -315,7 +428,7 @@ export function TelegramReminderSettingsCard() {
             type="checkbox"
             checked={form.telegram_enabled}
             onChange={(event) => updateField('telegram_enabled', event.target.checked)}
-            disabled={isLoading || isSaving || isSendingTest}
+            disabled={isLoading || isSaving || isSendingTest || isCheckingReminders}
             className="mt-1 h-4 w-4 rounded border-sky-300 text-teal-700"
           />
           <span>
@@ -329,12 +442,12 @@ export function TelegramReminderSettingsCard() {
             type="checkbox"
             checked={form.reminder_notifications_enabled}
             onChange={(event) => updateField('reminder_notifications_enabled', event.target.checked)}
-            disabled={isLoading || isSaving || isSendingTest || !form.telegram_enabled}
+            disabled={isLoading || isSaving || isSendingTest || isCheckingReminders || !form.telegram_enabled}
             className="mt-1 h-4 w-4 rounded border-sky-300 text-teal-700"
           />
           <span>
             <span className="font-medium text-slate-900">Enable reminder notifications</span>
-            <span className="block text-xs leading-5 text-slate-500">Reminder sending arrives in the next step.</span>
+            <span className="block text-xs leading-5 text-slate-500">Required before checking due reminders.</span>
           </span>
         </label>
       </div>
@@ -348,7 +461,27 @@ export function TelegramReminderSettingsCard() {
               : 'border-red-200 bg-red-50 text-red-800',
           ].join(' ')}
         >
-          {feedback.message}
+          <p>{feedback.message}</p>
+          {feedback.counts ? (
+            <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
+              <div>
+                <dt className="font-semibold">Checked</dt>
+                <dd>{feedback.counts.checked}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Sent</dt>
+                <dd>{feedback.counts.sent}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Duplicates</dt>
+                <dd>{feedback.counts.skipped_duplicate}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Skipped</dt>
+                <dd>{feedback.counts.skipped}</dd>
+              </div>
+            </dl>
+          ) : null}
         </div>
       ) : null}
 
@@ -356,7 +489,7 @@ export function TelegramReminderSettingsCard() {
         <button
           type="button"
           onClick={saveSettings}
-          disabled={isLoading || isSaving || isSendingTest || !hasSupabaseConfig}
+          disabled={isLoading || isSaving || isSendingTest || isCheckingReminders || !hasSupabaseConfig}
           className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-stone-300"
         >
           {isSaving ? 'Saving...' : 'Save settings'}
@@ -364,10 +497,18 @@ export function TelegramReminderSettingsCard() {
         <button
           type="button"
           onClick={sendTestMessage}
-          disabled={isLoading || isSaving || isSendingTest || !hasSupabaseConfig}
+          disabled={isLoading || isSaving || isSendingTest || isCheckingReminders || !hasSupabaseConfig}
           className="rounded-xl border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-sky-900 transition hover:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSendingTest ? 'Sending...' : 'Send test message'}
+        </button>
+        <button
+          type="button"
+          onClick={checkDueReminders}
+          disabled={isLoading || isSaving || isSendingTest || isCheckingReminders || !hasSupabaseConfig}
+          className="rounded-xl border border-sky-300 bg-sky-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-950 disabled:cursor-not-allowed disabled:bg-stone-300"
+        >
+          {isCheckingReminders ? 'Checking...' : 'Check due reminders now'}
         </button>
       </div>
     </section>
