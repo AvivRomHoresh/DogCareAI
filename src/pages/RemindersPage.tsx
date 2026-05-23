@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
+import { TelegramReminderSettingsCard } from '../components/TelegramReminderSettingsCard';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import {
@@ -102,6 +103,15 @@ function toIsoOrNull(value: string) {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function shouldResetMissedReminderState(state: ReminderState, scheduledAt: string | null) {
+  if (state !== 'missed' || !scheduledAt) {
+    return false;
+  }
+
+  const date = new Date(scheduledAt);
+  return !Number.isNaN(date.getTime()) && date > new Date();
 }
 
 function formatDateTime(value: string | null) {
@@ -277,13 +287,15 @@ export function RemindersPage() {
     setIsSaving(true);
     setFeedback(null);
 
+    const scheduledAt = toIsoOrNull(form.scheduled_at);
+    const nextState = shouldResetMissedReminderState(form.state, scheduledAt) ? 'upcoming' : form.state;
     const payload = {
       title: form.title.trim(),
       type: form.type,
-      scheduled_at: toIsoOrNull(form.scheduled_at),
+      scheduled_at: scheduledAt,
       recurring_frequency: form.recurring_frequency,
       notes: form.notes.trim() || null,
-      state: form.state,
+      state: nextState,
     };
 
     const isCreatingReminder = selectedReminderId === 'new';
@@ -446,6 +458,8 @@ export function RemindersPage() {
           Select a dog from the header before adding reminders.
         </section>
       ) : null}
+
+      {hasSupabaseConfig && user ? <TelegramReminderSettingsCard /> : null}
 
       {canUseReminders ? (
         <section className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">

@@ -45,7 +45,7 @@ The final-project feedback asks DogCareAI to improve in these areas:
 Phase 8 should target these items first:
 
 - Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass.
-- Browser Reminder Notifications MVP.
+- Telegram Reminder Notifications MVP.
 - Google Login through Supabase Auth, if setup is practical without paid services.
 - Dog/Breed API enrichment, such as a public dog API or breed image enrichment.
 - Dog facts / Did You Know / dog insights.
@@ -69,7 +69,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 
 - SMS reminders.
 - Full email reminder system.
-- Telegram reminders.
+- WhatsApp reminders.
 - Instagram login.
 - Product marketplace APIs.
 - Google Places API if billing is required.
@@ -81,7 +81,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 
 1. Phase 8.0: Documentation alignment and scope approval.
 2. Phase 8.1: Nearby Dog Places API MVP.
-3. Phase 8.2: Browser Reminder Notifications MVP.
+3. Phase 8.2: Telegram Reminder Notifications MVP.
 4. Phase 8.3: Google Login.
 5. Phase 8.4: Dog/Breed API + Dog Insights.
 6. Phase 8.5: UX/UI + Mobile polish + logo.
@@ -109,20 +109,30 @@ Implementation rules:
 - Do not make automatic repeated API calls in the background.
 - Do not use Google Places if billing is required.
 
-### Reminder Notifications
+### Telegram Reminder Notifications
 
-Goal: make reminders more useful during the demo without adding paid notification infrastructure.
+Goal: make reminders more useful during the demo by sending reminder notifications through an external channel without adding paid notification infrastructure.
 
 Implementation rules:
 
-- Start with the Browser Notifications API.
-- Ask notification permission explicitly.
-- Add a clear UI preference for reminder alerts.
-- Notify for upcoming or missed reminders while the app is open or active.
-- Provide an in-app fallback if browser notifications are denied.
-- Keep reminder logic client-side for the MVP unless explicitly approved otherwise.
-- Do not implement SMS, email, or Telegram reminders in this first version.
-- Do not add background scheduled jobs or paid notification services.
+- Use Telegram Bot API through a secure server-side function only.
+- Keep the Telegram bot token in a server-side environment variable such as `TELEGRAM_BOT_TOKEN`.
+- Never expose the Telegram bot token in frontend code, logs, bundles, or browser network responses.
+- Use Telegram `chat_id` for delivery; do not collect phone numbers.
+- Keep email/password auth and existing reminder CRUD working.
+- Add reminder notification settings only after the required schema/RLS plan is approved.
+- Prevent duplicate reminder notifications with server-side state where practical.
+- Start with an app-open MVP: check/send due notifications only while the authenticated user is using the app or explicitly triggers a check.
+- Browser Notifications may be kept as an optional local fallback only; they are not the primary Phase 8.2 feature.
+- Do not implement SMS, WhatsApp, or full email reminder systems in Phase 8 unless explicitly approved.
+- Do not add paid notification services.
+
+Why Telegram was chosen:
+
+- It satisfies the instructor request for an external notification channel.
+- It avoids SMS and WhatsApp per-message cost and provider-registration risk.
+- It avoids collecting user phone numbers.
+- It allows the bot token to remain server-side behind the existing Vercel Function pattern.
 
 ### Google Login
 
@@ -179,7 +189,9 @@ Implementation rules:
 |---|---|
 | External API rate limits | Limit radius/results, cache briefly, avoid background polling, and show graceful fallbacks. |
 | Browser geolocation denied | Provide a friendly denied-permission state and optional manual retry. |
-| Mobile browser notification limitations | Treat browser notifications as an MVP convenience, not a guaranteed background reminder system. |
+| Telegram setup friction | Provide clear connect/test instructions and do not collect phone numbers. |
+| Duplicate external notifications | Use server-side delivery tracking where practical, plus frontend in-flight guards. |
+| Mobile browser notification limitations | Treat browser notifications as optional fallback only, not the primary external reminder channel. |
 | Supabase Google Auth setup complexity | Keep email/password working and defer Google login if provider setup becomes risky. |
 | Time constraints before June 2 | Prioritize Nearby Places, Reminder Notifications, and visible UX/mobile polish first. |
 | Breaking Phase 7 flows | Use small branches, focused regression, and manual checks after each feature. |
@@ -198,13 +210,17 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 - OpenStreetMap attribution appears when relevant.
 - Repeated page loads do not spam the API.
 
-### Reminder Notifications QA
+### Telegram Reminder Notifications QA
 
-- Permission is requested only after user action.
-- Notifications can be enabled or declined.
-- Upcoming/missed reminder alerts work while the app is open or active.
-- In-app fallback appears when notifications are denied or unsupported.
-- No SMS, email, Telegram, or paid notification dependency is introduced.
+- Telegram bot token does not appear in frontend code, browser source, console, or network responses.
+- Telegram settings use `chat_id`, not phone number.
+- Email/password auth still works.
+- Reminder CRUD still works.
+- Test notification sends only after user action.
+- Upcoming/missed reminder notifications are sent only for the authenticated user's reminders.
+- Duplicate notifications are not sent for the same reminder occurrence.
+- Missing/invalid Telegram configuration shows a friendly fallback.
+- No SMS, WhatsApp, paid email provider, paid notification dependency, API key exposure, or phone-number collection is introduced.
 
 ### Google Login QA
 
@@ -251,4 +267,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8 should begin with Nearby Dog Places and Browser Reminder Notifications because they best match the instructor priorities: more real APIs, more dog-owner specificity, and more useful reminders while staying free, focused, and demo-friendly.
+Phase 8 should continue from Nearby Dog Places into Telegram Reminder Notifications because those steps best match the instructor priorities: more real APIs, more dog-owner specificity, external reminder delivery, and stronger reminder usefulness while staying free, focused, and demo-friendly.
