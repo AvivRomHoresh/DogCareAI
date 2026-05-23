@@ -27,6 +27,21 @@ function buildResult(success, message, counts = {}) {
   };
 }
 
+function getSafeSupabaseDiagnostic(prefix, error) {
+  const code = typeof error?.code === 'string' ? error.code : '';
+  const status = typeof error?.status === 'number' ? error.status : null;
+
+  if (code && /^[A-Za-z0-9_]+$/.test(code)) {
+    return `${prefix}_${code}`;
+  }
+
+  if (status === 401 || status === 403) {
+    return `${prefix}_auth`;
+  }
+
+  return `${prefix}_unknown`;
+}
+
 function getCronSecret(req) {
   const header = req.headers['x-telegram-cron-secret'] ?? req.headers['X-Telegram-Cron-Secret'];
 
@@ -301,8 +316,25 @@ export default async function handler(req, res) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-    if (!supabaseUrl || !serviceRoleKey || !botToken) {
-      return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', counts));
+    if (!supabaseUrl) {
+      return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', {
+        ...counts,
+        diagnostic: 'missing_supabase_url',
+      }));
+    }
+
+    if (!serviceRoleKey) {
+      return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', {
+        ...counts,
+        diagnostic: 'missing_service_role_key',
+      }));
+    }
+
+    if (!botToken) {
+      return sendJson(res, 500, buildResult(false, 'Scheduled Telegram reminder check is not configured.', {
+        ...counts,
+        diagnostic: 'missing_telegram_bot_token',
+      }));
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -324,7 +356,7 @@ export default async function handler(req, res) {
     if (settingsError) {
       return sendJson(res, 500, buildResult(false, 'Scheduled Telegram settings could not be loaded.', {
         ...counts,
-        diagnostic: 'load_settings_failed',
+        diagnostic: getSafeSupabaseDiagnostic('load_settings_failed', settingsError),
       }));
     }
 
@@ -366,7 +398,7 @@ export default async function handler(req, res) {
 
         if (remindersError) {
           counts.skipped += 1;
-          counts.diagnostic = counts.diagnostic ?? 'load_reminders_failed';
+          counts.diagnostic = counts.diagnostic ?? getSafeSupabaseDiagnostic('load_reminders_failed', remindersError);
           continue;
         }
 
