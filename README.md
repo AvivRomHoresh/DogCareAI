@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 6 beta implementation is complete, and the current phase is Phase 7 QA. DogCareAI remains a beta/demo project and does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
 Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
 
@@ -19,6 +19,7 @@ The app currently supports:
 - Dog Profile create/edit/archive with Supabase RLS
 - Frontend-only active dog selection through `DogPicker`
 - Basic Reminders create/edit/complete/delete for the active dog
+- Telegram reminder notifications with test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention
 - Dashboard reminder summaries for the active dog
 - Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
 - Phase 7 QA documentation and beta demo guidance
@@ -66,7 +67,7 @@ Activity Log, Vet Finder, chat persistence, and `ai_usage_logs` persistence are 
 
 Use `.env.example` as the source of truth. Only variables prefixed with `VITE_` are safe for the browser bundle.
 
-Server-side variables such as `GEMINI_API_KEY`, `MOCK_AI_MODE`, `AI_MODEL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` are for the Vercel Function or future server-side boundaries. They must not be exposed in frontend code.
+Server-side variables such as `GEMINI_API_KEY`, `MOCK_AI_MODE`, `AI_MODEL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CRON_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` are for Vercel Functions or server-side boundaries. They must not be exposed in frontend code.
 
 For local Gemini testing, add `GEMINI_API_KEY` to `.env.local` and set `MOCK_AI_MODE=false` only when intentionally testing real Gemini. Do not create `VITE_GEMINI_API_KEY`; Gemini keys must stay server-side only.
 
@@ -88,8 +89,11 @@ Use the Vite framework preset in Vercel.
   - `AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE`
   - `SUPABASE_URL`
   - `SUPABASE_ANON_KEY`
+  - `TELEGRAM_BOT_TOKEN`
+  - `TELEGRAM_CRON_SECRET`
+  - `SUPABASE_SERVICE_ROLE_KEY`
 
-Do not add service-role keys to Vercel or the frontend bundle. Netlify remains available as a backup/static deployment path, so do not remove `netlify.toml` yet. Active Gemini work should use Vercel because `/api/assistant` runs as a Vercel Function. `GEMINI_API_KEY` must not be prefixed with `VITE_`.
+Do not add service-role keys to frontend code or the frontend bundle. `SUPABASE_SERVICE_ROLE_KEY` is server-side only and is used by the scheduled Telegram reminder endpoint. Netlify remains available as a backup/static deployment path, so do not remove `netlify.toml` yet. Active Gemini and Telegram server-side work should use Vercel because `/api/*` routes run as Vercel Functions. `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CRON_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` must not be prefixed with `VITE_`.
 
 The Vercel SPA rewrite intentionally excludes `/api/*` so `/api/assistant` can run as a Vercel Function.
 
@@ -99,9 +103,9 @@ The Vercel SPA rewrite intentionally excludes `/api/*` so `/api/assistant` can r
 - `/auth` - Supabase email/password auth
 - `/dog-profile` - Dog Profile create/edit/archive
 - `/assistant` - Beta Assistant with active dog context, emergency pre-check, Mock Mode, and secure Gemini boundary
-- `/reminders` - Basic Reminders create/edit/complete/delete
+- `/reminders` - Basic Reminders create/edit/complete/delete and Telegram reminder settings
 
-The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route calls `/api/assistant` after explicit user action, uses active dog and reminder context, and runs deterministic emergency keyword detection before Gemini. Emergency responses bypass Gemini and advise contacting a veterinarian immediately. DogCareAI does not provide medical diagnosis.
+The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table plus optional Telegram reminder settings. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route calls `/api/assistant` after explicit user action, uses active dog and reminder context, and runs deterministic emergency keyword detection before Gemini. Emergency responses bypass Gemini and advise contacting a veterinarian immediately. DogCareAI does not provide medical diagnosis.
 
 ## Cost-Control Notes
 
@@ -118,3 +122,9 @@ The MVP must remain demoable without paid services. Mock AI Mode stays available
 - `docs/PHASE_7_BUGFIX_ROUND_1.md` - approved Phase 7 bugfix round.
 - `docs/PHASE_7_REGRESSION_QA.md` - targeted regression results for the bugfix round.
 - `docs/PHASE_7_AUTOMATED_TESTS_ASSESSMENT.md` - decision to defer automated tests for the current beta unless dependency/package changes are explicitly approved.
+
+## Phase 8 Docs
+
+- `docs/PHASE_8_PLAN.md` - final demo upgrade plan.
+- `docs/PHASE_8_STEP_1_NEARBY_DOG_PLACES_REPORT.md` - Nearby Places implementation report.
+- `docs/PHASE_8_STEP_2_6_TELEGRAM_SCHEDULER_QA_REPORT.md` - completed Telegram scheduler QA and production verification.

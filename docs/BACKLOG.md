@@ -2,15 +2,15 @@
 
 ## Purpose
 
-This backlog captures future improvements discovered during Phase 6 manual testing. These items are intentionally deferred and should not block the current beta flow.
+This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 6 is complete through Step 9. The current phase is Phase 7 QA.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete and merged to main.
 
 ## QA Notes
 
-- During Phase 7, bugs discovered in beta flows should be fixed.
-- Larger improvements should stay deferred unless they block the beta demo.
-- Final-only features such as Activity Log and Vet Finder remain deferred to Phase 8.
+- During remaining Phase 8 work, bugs discovered in stable demo flows should be fixed.
+- Larger improvements should stay deferred unless they block the final demo.
+- Final-only features such as Activity Log and Vet Finder remain deferred unless explicitly approved.
 
 ## Deferred Improvements
 

@@ -44,8 +44,8 @@ The final-project feedback asks DogCareAI to improve in these areas:
 
 Phase 8 should target these items first:
 
-- Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass.
-- Telegram Reminder Notifications MVP.
+- Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass. Completed in Phase 8.1.
+- Telegram Reminder Notifications MVP. Completed in Phase 8.2, including test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention.
 - Google Login through Supabase Auth, if setup is practical without paid services.
 - Dog/Breed API enrichment, such as a public dog API or breed image enrichment.
 - Dog facts / Did You Know / dog insights.
@@ -80,8 +80,8 @@ These items are not approved for Phase 8 unless explicitly approved later:
 ## Proposed Implementation Order
 
 1. Phase 8.0: Documentation alignment and scope approval.
-2. Phase 8.1: Nearby Dog Places API MVP.
-3. Phase 8.2: Telegram Reminder Notifications MVP.
+2. Phase 8.1: Nearby Dog Places API MVP. Completed.
+3. Phase 8.2: Telegram Reminder Notifications MVP. Completed.
 4. Phase 8.3: Google Login.
 5. Phase 8.4: Dog/Breed API + Dog Insights.
 6. Phase 8.5: UX/UI + Mobile polish + logo.
@@ -111,6 +111,8 @@ Implementation rules:
 
 ### Telegram Reminder Notifications
 
+Status: completed in Phase 8.2.
+
 Goal: make reminders more useful during the demo by sending reminder notifications through an external channel without adding paid notification infrastructure.
 
 Implementation rules:
@@ -122,7 +124,7 @@ Implementation rules:
 - Keep email/password auth and existing reminder CRUD working.
 - Add reminder notification settings only after the required schema/RLS plan is approved.
 - Prevent duplicate reminder notifications with server-side state where practical.
-- Start with an app-open MVP: check/send due notifications only while the authenticated user is using the app or explicitly triggers a check.
+- Support test messages, manual due-reminder checks, and scheduled delivery through cron-job.org.
 - Browser Notifications may be kept as an optional local fallback only; they are not the primary Phase 8.2 feature.
 - Do not implement SMS, WhatsApp, or full email reminder systems in Phase 8 unless explicitly approved.
 - Do not add paid notification services.
@@ -133,6 +135,16 @@ Why Telegram was chosen:
 - It avoids SMS and WhatsApp per-message cost and provider-registration risk.
 - It avoids collecting user phone numbers.
 - It allows the bot token to remain server-side behind the existing Vercel Function pattern.
+
+Implemented Phase 8.2 result:
+
+- Telegram settings UI on `/reminders`.
+- Server-side Telegram test message endpoint.
+- Manual "Check due reminders now" endpoint and UI.
+- Scheduled Telegram reminder endpoint for cron-job.org.
+- Service-role grants for the scheduled endpoint, applied manually in Supabase.
+- Duplicate notification prevention through `telegram_notification_deliveries`.
+- Production scheduler verification passed after updating cron-job.org to the current deployment/production URL.
 
 ### Google Login
 
@@ -267,4 +279,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8 should continue from Nearby Dog Places into Telegram Reminder Notifications because those steps best match the instructor priorities: more real APIs, more dog-owner specificity, external reminder delivery, and stronger reminder usefulness while staying free, focused, and demo-friendly.
+Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete. The next recommended Phase 8 focus is Google Login if Supabase provider setup is practical without risking the stable demo; otherwise continue with Dog/Breed API enrichment, Dog Insights, and UX/mobile polish.
