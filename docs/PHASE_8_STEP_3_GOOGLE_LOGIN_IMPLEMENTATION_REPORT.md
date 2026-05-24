@@ -9,6 +9,7 @@ The goal was to add a small Supabase Auth Google OAuth entry point while keeping
 ## What Changed
 
 - Added a secondary "Continue with Google" action to the existing `/auth` page.
+- Visually polished the Google Login button with a decorative inline Google icon.
 - Added a dedicated Google OAuth loading state so users get immediate feedback while the OAuth redirect starts.
 - Added friendly error handling if the Google OAuth flow cannot be started.
 - Kept the existing email/password sign in and sign up form unchanged as the required fallback path.
