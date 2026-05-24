@@ -12,6 +12,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export function AuthPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (isSubmitting) {
+    if (isSubmitting || isGoogleSubmitting) {
       return;
     }
 
@@ -82,6 +83,37 @@ export function AuthPage() {
     }
 
     setSuccessMessage('Account created. Check your email if Supabase requires confirmation before sign in.');
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (isSubmitting || isGoogleSubmitting) {
+      return;
+    }
+
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!supabase) {
+      setErrorMessage('Supabase is not configured yet. Add the frontend env variables and restart the dev server.');
+      return;
+    }
+
+    setIsGoogleSubmitting(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+
+    if (error) {
+      setIsGoogleSubmitting(false);
+      setErrorMessage('Google sign in could not be started. Please try email/password or try again later.');
+      return;
+    }
+
+    setSuccessMessage('Redirecting to Google sign in...');
   };
 
   const switchMode = (nextMode: AuthMode) => {
@@ -173,12 +205,32 @@ export function AuthPage() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleSubmitting}
           className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-teal-400"
         >
           {isSubmitting ? 'Please wait...' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
         </button>
       </form>
+
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-stone-200" />
+        <span className="text-xs font-medium uppercase tracking-normal text-slate-500">or</span>
+        <div className="h-px flex-1 bg-stone-200" />
+      </div>
+
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={isSubmitting || isGoogleSubmitting}
+          className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-stone-400 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isGoogleSubmitting ? 'Opening Google sign in...' : 'Continue with Google'}
+        </button>
+        <p className="text-xs leading-5 text-slate-500">
+          Email and password sign in remains available for demo and fallback access.
+        </p>
+      </div>
     </PageCard>
   );
 }
