@@ -46,9 +46,10 @@ Phase 8 should target these items first:
 
 - Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass. Completed in Phase 8.1.
 - Telegram Reminder Notifications MVP. Completed in Phase 8.2, including test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention.
-- Google Login through Supabase Auth, if setup is practical without paid services.
-- Dog/Breed API enrichment, such as a public dog API or breed image enrichment.
-- Dog facts / Did You Know / dog insights.
+- Google Login through Supabase Auth, starting with feasibility only and only if setup is practical without paid services.
+- Breed Recognition + Did You Know, using the existing dog profile breed value with safe static/general fallbacks.
+- Breed-Based Product Recommendations MVP, using curated/static demo-safe recommendation cards first.
+- Profile Image / Breed-Inspired Avatar planning or small fallback improvements, without requiring paid image APIs.
 - UX/UI visual upgrade with logo.
 - Mobile responsive polish.
 - README and demo guide updates after implementation.
@@ -82,11 +83,13 @@ These items are not approved for Phase 8 unless explicitly approved later:
 1. Phase 8.0: Documentation alignment and scope approval.
 2. Phase 8.1: Nearby Dog Places API MVP. Completed.
 3. Phase 8.2: Telegram Reminder Notifications MVP. Completed.
-4. Phase 8.3: Google Login.
-5. Phase 8.4: Dog/Breed API + Dog Insights.
-6. Phase 8.5: UX/UI + Mobile polish + logo.
-7. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
-8. Phase 8.7: Phase 8 QA + demo rehearsal.
+4. Phase 8.3: Google Login feasibility.
+5. Phase 8.4A: Breed Recognition + Did You Know.
+6. Phase 8.4B: Breed-Based Product Recommendations MVP.
+7. Phase 8.4C: Profile Image / Breed-Inspired Avatar.
+8. Phase 8.5: UX/UI + Mobile polish + logo.
+9. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
+10. Phase 8.7: Final QA + demo rehearsal.
 
 Each implementation step should be handled as a small focused change with its own documentation update and regression checks for the Phase 7 stable flows.
 
@@ -150,6 +153,8 @@ Implemented Phase 8.2 result:
 
 Goal: improve registration/login if Supabase provider setup is practical.
 
+Status: planned as feasibility first.
+
 Implementation rules:
 
 - Use Supabase Auth provider support.
@@ -158,29 +163,47 @@ Implementation rules:
 - Do not add Instagram login.
 - Document setup steps and required external console configuration.
 - If setup complexity or redirect configuration becomes risky, defer rather than breaking existing auth.
+- If Google Login is risky or slow to configure safely, defer it and move to Phase 8.4A.
 
-### Dog/Breed API
+### Phase 8.4A: Breed Recognition + Did You Know
 
-Goal: add dog-specific enrichment without medical claims.
-
-Implementation rules:
-
-- Use a free public dog/breed API if practical.
-- Prefer no-key APIs where possible, such as dog image/breed data APIs.
-- Show a breed image, breed-related image, or fallback random dog image.
-- Do not use breed data for medical diagnosis.
-- Provide graceful fallback when the external API is unavailable.
-
-### Dog Insights
-
-Goal: add lightweight dog-specific value to the Dashboard or profile experience.
+Goal: add lightweight dog-specific enrichment from the breed value already entered in the dog profile.
 
 Implementation rules:
 
-- Show a random dog fact, breed-related insight, or Did You Know card.
-- Prefer safe static/local facts if an external API is unreliable.
-- Rotate the fact on Dashboard load or user action.
-- Avoid medical certainty and keep guidance general.
+- Use the dog breed value entered in the dog profile.
+- Normalize and match the breed as best as practical.
+- Show a breed-specific "Did You Know" insight when the breed is recognized.
+- If breed is not recognized, show a general dog fact.
+- Prefer safe static/local insight content first.
+- Avoid medical diagnosis, breed-health certainty, or deterministic health claims.
+- Do not require a broad external dog API integration for this sub-step.
+
+### Phase 8.4B: Breed-Based Product Recommendations MVP
+
+Goal: recommend useful dog-related product categories based on breed, size, and general needs without adding paid marketplace dependencies.
+
+Implementation rules:
+
+- Start with curated/static recommendation cards rather than live shopping APIs.
+- Recommended categories may include food, treats, toys, and accessories.
+- Cards may include category, product name, brand/company, image or placeholder, and a short reason why it fits.
+- Keep copy demo-safe and avoid claims that a product is medically required.
+- Avoid affiliate complexity, paid APIs, unreliable product APIs, scraping, or marketplace dependencies.
+- Use a free reliable API only if explicitly approved later.
+
+### Phase 8.4C: Profile Image / Breed-Inspired Avatar
+
+Goal: improve the dog profile visual experience without making image upload or AI image generation a demo blocker.
+
+Implementation rules:
+
+- Add or plan support for a dog profile image.
+- If no image exists, show a breed-inspired avatar or fallback.
+- Treat real image upload as higher-risk/optional because it may involve Supabase Storage setup and upload policies.
+- Treat AI-generated images as higher-risk/optional because they may involve cost, external AI image APIs, or unclear reliability.
+- Do not claim actual AI image generation unless a real approved implementation exists.
+- Do not block the final demo on profile image upload or AI image generation.
 
 ### UX/UI + Mobile Polish
 
@@ -205,6 +228,8 @@ Implementation rules:
 | Duplicate external notifications | Use server-side delivery tracking where practical, plus frontend in-flight guards. |
 | Mobile browser notification limitations | Treat browser notifications as optional fallback only, not the primary external reminder channel. |
 | Supabase Google Auth setup complexity | Keep email/password working and defer Google login if provider setup becomes risky. |
+| Product recommendation scope creep | Start with curated/static demo-safe cards and avoid marketplace, affiliate, scraping, or paid API dependencies. |
+| Image upload or AI avatar complexity | Keep profile image/avatar work optional and do not block the demo on Storage, policies, cost, or external image APIs. |
 | Time constraints before June 2 | Prioritize Nearby Places, Reminder Notifications, and visible UX/mobile polish first. |
 | Breaking Phase 7 flows | Use small branches, focused regression, and manual checks after each feature. |
 | Accidentally adding paid services | Avoid Google Places billing, SMS, paid APIs, and paid notification infrastructure. |
@@ -242,12 +267,27 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 - No OAuth secrets appear in frontend-visible code or network responses.
 - Logout still works.
 
-### Dog API / Insights QA
+### Breed Recognition + Did You Know QA
 
-- Breed image or dog image loads when the external API is available.
-- Fallback state works when the API fails.
-- Insights are dog-specific but do not imply medical diagnosis.
+- Recognized breed shows a breed-specific Did You Know insight.
+- Unrecognized breed shows a general dog fact fallback.
+- Breed matching handles common casing/spacing differences where practical.
+- Insights are dog-specific but do not imply medical diagnosis or breed-health certainty.
 - No paid API key is required.
+
+### Product Recommendations QA
+
+- Recommendations are curated/static or use only approved free sources.
+- Cards show category, product/brand/company when available, and a short reason.
+- Copy does not claim that a product is medically required.
+- No paid API, affiliate requirement, scraping, or marketplace dependency is introduced.
+
+### Profile Image / Breed-Inspired Avatar QA
+
+- Existing static avatar behavior remains stable unless explicitly changed.
+- Breed-inspired fallback appears only when implemented and has a safe fallback.
+- No real upload or AI image generation is claimed unless actually implemented.
+- No paid image API or secret is introduced.
 
 ### UX / Mobile QA
 
@@ -279,4 +319,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete. The next recommended Phase 8 focus is Google Login if Supabase provider setup is practical without risking the stable demo; otherwise continue with Dog/Breed API enrichment, Dog Insights, and UX/mobile polish.
+Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete. The next recommended Phase 8 focus is Google Login feasibility if Supabase provider setup is practical without risking the stable demo. If Google Login is risky, defer it and continue with Phase 8.4A Breed Recognition + Did You Know, then Phase 8.4B curated product recommendations, Phase 8.4C profile image/avatar polish, and UX/mobile polish.

@@ -32,16 +32,23 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 
 ### 3. Breed Input Improvement
 
 - Beta uses a free-text breed input.
+- Phase 8.4A should first use the existing breed value for best-effort breed matching and Did You Know insights.
 - A future version may add breed suggestions, a datalist, or a dropdown.
-- A complete breed database should not block the beta.
+- A complete breed database should not block the final demo.
 
-### 4. Public Landing Page
+### 4. Breed-Based Product Recommendations
+
+- Phase 8.4B should start with curated/static product recommendation cards.
+- Product recommendations may use breed, size, and general needs to suggest categories such as food, treats, toys, and accessories.
+- Avoid paid shopping APIs, affiliate complexity, scraping, unreliable marketplace APIs, and claims that products are medically required.
+
+### 5. Public Landing Page
 
 - The current app sends unauthenticated users to `/auth`.
 - A future version may add a public landing page with Login and Sign Up actions.
 - This is not needed for the current beta.
 
-### 5. Automated Tests
+### 6. Automated Tests
 
 - A future version should add automated tests for authentication.
 - Dog Profile CRUD should have test coverage.
@@ -49,8 +56,9 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 
 - Archive behavior should have test coverage.
 - RLS assumptions should be covered through documented verification or integration tests where practical.
 
-### 6. Real Dog Image Upload
+### 7. Real Dog Image Upload
 
 - Beta uses static avatar choices and does not use Supabase Storage.
-- A future version may add real dog image upload with Supabase Storage.
-- Storage upload should remain deferred until after beta or until the core flow is stable.
+- Phase 8.4C may add or plan profile image support and breed-inspired avatar fallbacks.
+- Real dog image upload with Supabase Storage remains higher-risk/optional because it requires storage setup and upload policies.
+- AI-generated images remain optional and should not be claimed unless a real approved implementation exists.
