@@ -46,7 +46,7 @@ Phase 8 should target these items first:
 
 - Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass. Completed in Phase 8.1.
 - Telegram Reminder Notifications MVP. Completed in Phase 8.2, including test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention.
-- Google Login through Supabase Auth, starting with feasibility only and only if setup is practical without paid services.
+- Google Login through Supabase Auth. Completed in Phase 8.3, with email/password auth retained as the fallback.
 - Breed Recognition + Did You Know, using the existing dog profile breed value with safe static/general fallbacks.
 - Breed-Based Product Recommendations MVP, using curated/static demo-safe recommendation cards first.
 - Profile Image / Breed-Inspired Avatar planning or small fallback improvements, without requiring paid image APIs.
@@ -83,7 +83,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 1. Phase 8.0: Documentation alignment and scope approval.
 2. Phase 8.1: Nearby Dog Places API MVP. Completed.
 3. Phase 8.2: Telegram Reminder Notifications MVP. Completed.
-4. Phase 8.3: Google Login feasibility.
+4. Phase 8.3: Google Login feasibility and MVP. Completed.
 5. Phase 8.4A: Breed Recognition + Did You Know.
 6. Phase 8.4B: Breed-Based Product Recommendations MVP.
 7. Phase 8.4C: Profile Image / Breed-Inspired Avatar.
@@ -151,9 +151,9 @@ Implemented Phase 8.2 result:
 
 ### Google Login
 
-Goal: improve registration/login if Supabase provider setup is practical.
+Status: completed in Phase 8.3.
 
-Status: planned as feasibility first.
+Goal: improve registration/login with Supabase Google OAuth while keeping email/password auth as a fallback.
 
 Implementation rules:
 
@@ -163,7 +163,15 @@ Implementation rules:
 - Do not add Instagram login.
 - Document setup steps and required external console configuration.
 - If setup complexity or redirect configuration becomes risky, defer rather than breaking existing auth.
-- If Google Login is risky or slow to configure safely, defer it and move to Phase 8.4A.
+
+Implemented Phase 8.3 result:
+
+- Google Login feasibility was documented.
+- Google Cloud OAuth and Supabase Google provider setup were completed manually outside the repo.
+- A secondary "Continue with Google" action was added to `/auth`.
+- Existing email/password sign in and sign up remain available.
+- Manual QA passed for existing-account Google login, new Google-only account login, logout, re-login, protected routes, data isolation, and email/password fallback.
+- No Google Client ID, Google Client Secret, `VITE_GOOGLE_*` variable, or OAuth secret was committed.
 
 ### Phase 8.4A: Breed Recognition + Did You Know
 
@@ -319,4 +327,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete. The next recommended Phase 8 focus is Google Login feasibility if Supabase provider setup is practical without risking the stable demo. If Google Login is risky, defer it and continue with Phase 8.4A Breed Recognition + Did You Know, then Phase 8.4B curated product recommendations, Phase 8.4C profile image/avatar polish, and UX/mobile polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, and Phase 8.3 Google Login are complete. The next recommended Phase 8 focus is Phase 8.4A Breed Recognition + Did You Know, then Phase 8.4B curated product recommendations, Phase 8.4C profile image/avatar polish, and UX/mobile polish.

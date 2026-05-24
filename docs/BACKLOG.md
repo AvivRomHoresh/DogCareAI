@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, and Phase 8.3 Google Login are complete and merged to main.
 
 ## QA Notes
 

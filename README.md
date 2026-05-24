@@ -4,9 +4,9 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places and Phase 8.2 Telegram Reminder Notifications are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, and Phase 8.3 Google Login are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
-Next Phase 8 work is planned as Google Login feasibility first. If Google Login is too risky for the demo timeline, the next implementation step should move to Phase 8.4A Breed Recognition + Did You Know, followed by curated/static product recommendations and profile image/avatar polish.
+Next Phase 8 work should move to Phase 8.4A Breed Recognition + Did You Know, followed by curated/static product recommendations and profile image/avatar polish.
 
 Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
 
@@ -16,7 +16,7 @@ The app currently supports:
 - TailwindCSS
 - React Router beta routes
 - Supabase browser client setup
-- Supabase email/password auth
+- Supabase email/password auth with Google Login as a secondary option
 - Protected beta routes
 - Dog Profile create/edit/archive with Supabase RLS
 - Frontend-only active dog selection through `DogPicker`
@@ -102,12 +102,12 @@ The Vercel SPA rewrite intentionally excludes `/api/*` so `/api/assistant` can r
 ## Available Routes
 
 - `/` - Dashboard basics with active dog and reminder summaries
-- `/auth` - Supabase email/password auth
+- `/auth` - Supabase email/password auth with Google Login as a secondary option
 - `/dog-profile` - Dog Profile create/edit/archive
 - `/assistant` - Beta Assistant with active dog context, emergency pre-check, Mock Mode, and secure Gemini boundary
 - `/reminders` - Basic Reminders create/edit/complete/delete and Telegram reminder settings
 
-The `/auth` route contains Supabase email/password auth. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table plus optional Telegram reminder settings. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route calls `/api/assistant` after explicit user action, uses active dog and reminder context, and runs deterministic emergency keyword detection before Gemini. Emergency responses bypass Gemini and advise contacting a veterinarian immediately. DogCareAI does not provide medical diagnosis.
+The `/auth` route contains Supabase email/password auth plus Google Login as a secondary option. Email/password remains available as the reliable fallback path. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table plus optional Telegram reminder settings. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route calls `/api/assistant` after explicit user action, uses active dog and reminder context, and runs deterministic emergency keyword detection before Gemini. Emergency responses bypass Gemini and advise contacting a veterinarian immediately. DogCareAI does not provide medical diagnosis.
 
 ## Cost-Control Notes
 
