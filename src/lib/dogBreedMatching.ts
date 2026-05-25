@@ -22,6 +22,7 @@ export const sharedCuratedBreedNames = [
   'Beagle',
   'Border Collie',
   'Bulldog',
+  'Dachshund',
   'French Bulldog',
   'German Shepherd Dog',
   'Golden Retriever',
@@ -40,6 +41,9 @@ export const sharedBreedAliases: Record<string, string> = {
   bigel: 'Beagle',
   'border collie': 'Border Collie',
   bulldog: 'Bulldog',
+  dachshund: 'Dachshund',
+  dachsund: 'Dachshund',
+  daschund: 'Dachshund',
   frenchie: 'French Bulldog',
   'french bulldog': 'French Bulldog',
   'german shepard': 'German Shepherd Dog',
@@ -61,8 +65,10 @@ export const sharedBreedAliases: Record<string, string> = {
   poodle: 'Poodle',
   rottweiler: 'Rottweiler',
   rottie: 'Rottweiler',
+  'sausage dog': 'Dachshund',
   'shih tzu': 'Shih Tzu',
   'siberian husky': 'Siberian Husky',
+  'wiener dog': 'Dachshund',
 };
 
 export function normalizeBreedName(value: string | null | undefined) {
