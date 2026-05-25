@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, and Phase 8.3 Google Login are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, and Phase 8.4A Breed Recognition + Did You Know are complete and merged to main.
 
 ## QA Notes
 
@@ -32,7 +32,7 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2
 ### 3. Breed Input Improvement
 
 - Beta uses a free-text breed input.
-- Phase 8.4A should first use the existing breed value for best-effort breed matching and Did You Know insights.
+- Phase 8.4A now uses the existing breed value for best-effort breed matching and Did You Know insights.
 - A future version may add breed suggestions, a datalist, or a dropdown.
 - A complete breed database should not block the final demo.
 

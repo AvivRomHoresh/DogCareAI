@@ -47,7 +47,7 @@ Phase 8 should target these items first:
 - Nearby Dog Places API using a free/open data source such as OpenStreetMap/Overpass. Completed in Phase 8.1.
 - Telegram Reminder Notifications MVP. Completed in Phase 8.2, including test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention.
 - Google Login through Supabase Auth. Completed in Phase 8.3, with email/password auth retained as the fallback.
-- Breed Recognition + Did You Know, using the existing dog profile breed value with safe static/general fallbacks.
+- Breed Recognition + Did You Know, using the existing dog profile breed value with dogapi.dog enrichment and safe local/general fallbacks. Completed in Phase 8.4A.
 - Breed-Based Product Recommendations MVP, using curated/static demo-safe recommendation cards first.
 - Profile Image / Breed-Inspired Avatar planning or small fallback improvements, without requiring paid image APIs.
 - UX/UI visual upgrade with logo.
@@ -84,7 +84,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 2. Phase 8.1: Nearby Dog Places API MVP. Completed.
 3. Phase 8.2: Telegram Reminder Notifications MVP. Completed.
 4. Phase 8.3: Google Login feasibility and MVP. Completed.
-5. Phase 8.4A: Breed Recognition + Did You Know.
+5. Phase 8.4A: Breed Recognition + Did You Know. Completed.
 6. Phase 8.4B: Breed-Based Product Recommendations MVP.
 7. Phase 8.4C: Profile Image / Breed-Inspired Avatar.
 8. Phase 8.5: UX/UI + Mobile polish + logo.
@@ -175,6 +175,8 @@ Implemented Phase 8.3 result:
 
 ### Phase 8.4A: Breed Recognition + Did You Know
 
+Status: completed in Phase 8.4A.
+
 Goal: add lightweight dog-specific enrichment from the breed value already entered in the dog profile.
 
 Implementation rules:
@@ -183,9 +185,21 @@ Implementation rules:
 - Normalize and match the breed as best as practical.
 - Show a breed-specific "Did You Know" insight when the breed is recognized.
 - If breed is not recognized, show a general dog fact.
-- Prefer safe static/local insight content first.
+- Use dogapi.dog as the preferred no-key external API source where practical.
+- Keep safe static/local fallback insight content mandatory.
+- Use conservative fuzzy matching for common typos and aliases.
+- Rotate already-loaded safe insight candidates without refetching on every click.
 - Avoid medical diagnosis, breed-health certainty, or deterministic health claims.
-- Do not require a broad external dog API integration for this sub-step.
+- Do not require an API key, paid API, env variable, schema change, or paid-service dependency.
+
+Implemented Phase 8.4A result:
+
+- Dashboard top Did You Know card below the page title/header and above the main dashboard content.
+- dogapi.dog is the preferred breed enrichment source.
+- Local fallback facts remain mandatory for empty, unknown, low-confidence, or failed API cases.
+- Fuse.js fuzzy matching supports common breed typos and aliases while preserving fallback for low-confidence input.
+- "Show another fact" rotates among existing safe candidates without refetching.
+- Manual QA passed for recognized breeds, typo matching, aliases, unknown breed fallback, empty breed fallback, refresh stability, and dashboard placement.
 
 ### Phase 8.4B: Breed-Based Product Recommendations MVP
 
@@ -278,8 +292,10 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 ### Breed Recognition + Did You Know QA
 
 - Recognized breed shows a breed-specific Did You Know insight.
-- Unrecognized breed shows a general dog fact fallback.
-- Breed matching handles common casing/spacing differences where practical.
+- Unrecognized or low-confidence breed shows a general dog fact fallback.
+- Empty breed shows a general dog fact fallback.
+- Breed matching handles common casing, spacing, typo, and alias differences where practical.
+- The Show another fact action rotates existing safe candidates without extra API refetching.
 - Insights are dog-specific but do not imply medical diagnosis or breed-health certainty.
 - No paid API key is required.
 
@@ -327,4 +343,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, and Phase 8.3 Google Login are complete. The next recommended Phase 8 focus is Phase 8.4A Breed Recognition + Did You Know, then Phase 8.4B curated product recommendations, Phase 8.4C profile image/avatar polish, and UX/mobile polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, and Phase 8.4A Breed Recognition + Did You Know are complete. The next recommended Phase 8 focus is Phase 8.4B curated product recommendations, then Phase 8.4C profile image/avatar polish, and UX/mobile polish.
