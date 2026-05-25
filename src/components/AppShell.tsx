@@ -10,6 +10,7 @@ const authenticatedNavItems = [
   { to: '/assistant', label: 'Assistant' },
   { to: '/reminders', label: 'Reminders' },
   { to: '/nearby', label: 'Nearby' },
+  { to: '/recommendations', label: 'Recommendations' },
 ];
 
 const publicNavItems = [{ to: '/auth', label: 'Auth / Sign in' }];

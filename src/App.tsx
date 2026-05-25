@@ -7,6 +7,7 @@ import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DogProfilePage } from './pages/DogProfilePage';
 import { NearbyPage } from './pages/NearbyPage';
+import { RecommendationsPage } from './pages/RecommendationsPage';
 import { RemindersPage } from './pages/RemindersPage';
 
 export default function App() {
@@ -58,6 +59,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <NearbyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recommendations"
+          element={
+            <ProtectedRoute>
+              <RecommendationsPage />
             </ProtectedRoute>
           }
         />

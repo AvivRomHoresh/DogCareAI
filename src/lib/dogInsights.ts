@@ -1,11 +1,18 @@
-import Fuse from 'fuse.js';
+import {
+  buildSearchableBreedList,
+  findBreedMatch,
+  normalizeBreedName,
+  sharedBreedAliases,
+  sharedCuratedBreedNames,
+} from './dogBreedMatching';
+import type { BreedMatch, BreedMatchType } from './dogBreedMatching';
 
 export type DogInsight = {
   body: string;
   factCandidates: string[];
   fallback: boolean;
   matchedBreedName: string | null;
-  matchType: 'alias' | 'exact' | 'fallback' | 'fuzzy' | 'partial';
+  matchType: BreedMatchType;
   sourceLabel: 'dogapi.dog' | 'local fallback';
   title: string;
 };
@@ -29,20 +36,6 @@ type DogApiFact = {
 
 type DogApiListResponse<T> = {
   data?: T[];
-};
-
-type SearchableBreed = {
-  breed?: DogApiBreed;
-  canonicalName: string;
-  normalizedName: string;
-  source: 'api' | 'local';
-};
-
-type BreedMatch = {
-  breed?: DogApiBreed;
-  canonicalName: string;
-  matchType: DogInsight['matchType'];
-  source: 'api' | 'local';
 };
 
 const dogApiBreedsUrl = 'https://dogapi.dog/api/v2/breeds';
@@ -91,6 +84,11 @@ const localBreedFacts: Record<string, string[]> = {
     'Many Labrador Retrievers enjoy games that combine movement, attention, and simple training cues.',
     'Labrador Retriever background can be a starting point for planning active, positive daily care.',
   ],
+  Maltese: [
+    'Maltese dogs are often companion-oriented, so many enjoy gentle routines and close interaction.',
+    'Many Maltese dogs appreciate calm play, short practice moments, and predictable grooming cues.',
+    'Maltese background can be a helpful reminder to keep enrichment gentle and tailored to the individual dog.',
+  ],
   'Mixed Breed': [
     'Mixed-breed dogs can have wonderfully varied traits, so watching their individual routines and preferences is especially useful.',
     'For mixed-breed dogs, daily habits and comfort signals often tell you more than breed labels alone.',
@@ -111,34 +109,6 @@ const localBreedFacts: Record<string, string[]> = {
     'Many Siberian Huskies benefit from consistent structure and safe ways to use their energy.',
     'Siberian Husky background can suggest a need for thoughtful enrichment, while individual preferences still matter.',
   ],
-};
-
-const localCuratedBreedNames = Object.keys(localBreedFacts);
-
-const breedAliases: Record<string, string> = {
-  beagel: 'Beagle',
-  bigel: 'Beagle',
-  bulldog: 'Bulldog',
-  frenchie: 'French Bulldog',
-  'french bulldog': 'French Bulldog',
-  'german shepard': 'German Shepherd Dog',
-  'german shepherd': 'German Shepherd Dog',
-  'german shepherd dog': 'German Shepherd Dog',
-  golden: 'Golden Retriever',
-  'golden retriever': 'Golden Retriever',
-  'golden retriver': 'Golden Retriever',
-  gsd: 'German Shepherd Dog',
-  husky: 'Siberian Husky',
-  lab: 'Labrador Retriever',
-  labrador: 'Labrador Retriever',
-  'labrador retriever': 'Labrador Retriever',
-  'labrador retriver': 'Labrador Retriever',
-  mix: 'Mixed Breed',
-  'mixed breed': 'Mixed Breed',
-  mutt: 'Mixed Breed',
-  poodle: 'Poodle',
-  'shih tzu': 'Shih Tzu',
-  'siberian husky': 'Siberian Husky',
 };
 
 const unsuitableContentPatterns = [
@@ -170,7 +140,7 @@ export async function getDogInsight(rawBreed: string | null | undefined): Promis
   }
 
   const breeds = await loadDogApiBreeds();
-  const matchedBreed = findBreedMatch(normalizedBreed, breeds);
+  const matchedBreed = findBreedMatch(normalizedBreed, buildDogInsightBreedList(breeds));
   const breedInsight = buildBreedInsight(matchedBreed);
 
   if (breedInsight) {
@@ -182,7 +152,7 @@ export async function getDogInsight(rawBreed: string | null | undefined): Promis
 
 export function getLocalDogInsight(rawBreed: string | null | undefined): DogInsight {
   const normalizedBreed = normalizeBreedName(rawBreed);
-  const aliasName = breedAliases[normalizedBreed];
+  const aliasName = sharedBreedAliases[normalizedBreed];
 
   if (aliasName && localBreedFacts[aliasName]) {
     return buildLocalBreedInsight(aliasName, aliasName === 'Mixed Breed' ? 'alias' : 'fallback');
@@ -215,7 +185,7 @@ async function buildGeneralInsight(normalizedBreed: string): Promise<DogInsight>
   return buildLocalInsight('Did You Know?', localGeneralInsights, null, 'fallback', 'local fallback');
 }
 
-function buildBreedInsight(match: BreedMatch | null): DogInsight | null {
+function buildBreedInsight(match: BreedMatch<DogApiBreed> | null): DogInsight | null {
   if (!match) {
     return null;
   }
@@ -337,127 +307,12 @@ async function loadDogApiFact(): Promise<string | null> {
   return null;
 }
 
-function findBreedMatch(normalizedBreed: string, breeds: DogApiBreed[]): BreedMatch | null {
-  const aliasName = breedAliases[normalizedBreed];
-  const searchableBreeds = buildSearchableBreedList(breeds);
-
-  if (aliasName) {
-    const aliasMatch = searchableBreeds.find((breed) => breed.canonicalName === aliasName);
-
-    if (aliasMatch) {
-      return {
-        breed: aliasMatch.breed,
-        canonicalName: aliasMatch.canonicalName,
-        matchType: 'alias',
-        source: aliasMatch.source,
-      };
-    }
-  }
-
-  const exactMatch = searchableBreeds.find(({ normalizedName }) => normalizedName === normalizedBreed);
-
-  if (exactMatch) {
-    return {
-      breed: exactMatch.breed,
-      canonicalName: exactMatch.canonicalName,
-      matchType: 'exact',
-      source: exactMatch.source,
-    };
-  }
-
-  const partialMatch = searchableBreeds.find(({ normalizedName }) => {
-    if (normalizedBreed.length < 5 || normalizedName.length < 5) {
-      return false;
-    }
-
-    return normalizedName.includes(normalizedBreed) || normalizedBreed.includes(normalizedName);
-  });
-
-  if (partialMatch) {
-    return {
-      breed: partialMatch.breed,
-      canonicalName: partialMatch.canonicalName,
-      matchType: 'partial',
-      source: partialMatch.source,
-    };
-  }
-
-  if (normalizedBreed.length < 5) {
-    return null;
-  }
-
-  const fuse = new Fuse(searchableBreeds, {
-    distance: 80,
-    includeScore: true,
-    ignoreLocation: true,
-    keys: [
-      { name: 'canonicalName', weight: 0.4 },
-      { name: 'normalizedName', weight: 0.6 },
-    ],
-    minMatchCharLength: 3,
-    threshold: 0.32,
-  });
-
-  const [bestMatch] = fuse.search(normalizedBreed);
-
-  if (!bestMatch || bestMatch.score === undefined || bestMatch.score > getFuseScoreLimit(normalizedBreed)) {
-    return null;
-  }
-
-  return {
-    breed: bestMatch.item.breed,
-    canonicalName: bestMatch.item.canonicalName,
-    matchType: 'fuzzy',
-    source: bestMatch.item.source,
-  };
-}
-
-function buildSearchableBreedList(breeds: DogApiBreed[]): SearchableBreed[] {
-  const seenBreedNames = new Set<string>();
-  const apiBreeds = breeds
-    .map((breed) => {
-      const canonicalName = sanitizeText(breed.attributes?.name ?? '');
-
-      return {
-        breed,
-        canonicalName,
-        normalizedName: normalizeBreedName(canonicalName),
-        source: 'api' as const,
-      };
-    })
-    .filter(({ normalizedName }) => normalizedName.length > 0)
-    .filter(({ normalizedName }) => {
-      if (seenBreedNames.has(normalizedName)) {
-        return false;
-      }
-
-      seenBreedNames.add(normalizedName);
-      return true;
-    });
-
-  const localBreeds = localCuratedBreedNames
-    .map((canonicalName) => ({
-      canonicalName,
-      normalizedName: normalizeBreedName(canonicalName),
-      source: 'local' as const,
-    }))
-    .filter(({ normalizedName }) => !seenBreedNames.has(normalizedName));
-
-  return [...apiBreeds, ...localBreeds];
-}
-
-function getFuseScoreLimit(normalizedBreed: string) {
-  return normalizedBreed.length <= 6 ? 0.24 : 0.3;
-}
-
-function normalizeBreedName(value: string | null | undefined) {
-  return (value ?? '')
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/[._/\\-]+/g, ' ')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+function buildDogInsightBreedList(breeds: DogApiBreed[]) {
+  return buildSearchableBreedList(
+    breeds,
+    (breed) => sanitizeText(breed.attributes?.name ?? ''),
+    sharedCuratedBreedNames,
+  );
 }
 
 function isSuitableInsightText(value: string) {
