@@ -4,9 +4,9 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, and Phase 8.4B Product Recommendations Catalog are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, and Phase 8.4C Breed-Inspired Dog Avatar are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
-Next Phase 8 work should move to Phase 8.4C profile image/avatar polish, followed by UX/mobile polish.
+Next Phase 8 work should move to UX/mobile polish and final demo rehearsal.
 
 Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
 
@@ -19,6 +19,7 @@ The app currently supports:
 - Supabase email/password auth with Google Login as a secondary option
 - Protected beta routes
 - Dog Profile create/edit/archive with Supabase RLS
+- Breed-inspired local SVG dog avatar in Dog Profile
 - Frontend-only active dog selection through `DogPicker`
 - Basic Reminders create/edit/complete/delete for the active dog
 - Telegram reminder notifications with test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention

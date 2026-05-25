@@ -49,7 +49,7 @@ Phase 8 should target these items first:
 - Google Login through Supabase Auth. Completed in Phase 8.3, with email/password auth retained as the fallback.
 - Breed Recognition + Did You Know, using the existing dog profile breed value with dogapi.dog enrichment and safe local/general fallbacks. Completed in Phase 8.4A.
 - Breed-Based Product Recommendations MVP. Completed in Phase 8.4B, using a curated/static catalog with optional Open Pet Food Facts enrichment for eligible Food/Treat cards.
-- Profile Image / Breed-Inspired Avatar planning or small fallback improvements, without requiring paid image APIs.
+- Breed-Inspired Dog Avatar. Completed in Phase 8.4C with local SVG/CSS only and no upload/storage/API dependency.
 - UX/UI visual upgrade with logo.
 - Mobile responsive polish.
 - README and demo guide updates after implementation.
@@ -86,7 +86,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 4. Phase 8.3: Google Login feasibility and MVP. Completed.
 5. Phase 8.4A: Breed Recognition + Did You Know. Completed.
 6. Phase 8.4B: Breed-Based Product Recommendations MVP. Completed.
-7. Phase 8.4C: Profile Image / Breed-Inspired Avatar.
+7. Phase 8.4C: Profile Image / Breed-Inspired Avatar. Completed.
 8. Phase 8.5: UX/UI + Mobile polish + logo.
 9. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
 10. Phase 8.7: Final QA + demo rehearsal.
@@ -234,16 +234,29 @@ Implemented Phase 8.4B result:
 
 ### Phase 8.4C: Profile Image / Breed-Inspired Avatar
 
+Status: completed in Phase 8.4C.
+
 Goal: improve the dog profile visual experience without making image upload or AI image generation a demo blocker.
 
 Implementation rules:
 
-- Add or plan support for a dog profile image.
-- If no image exists, show a breed-inspired avatar or fallback.
+- Show a breed-inspired local avatar or generic fallback in Dog Profile.
+- Reuse shared breed matching where practical.
 - Treat real image upload as higher-risk/optional because it may involve Supabase Storage setup and upload policies.
 - Treat AI-generated images as higher-risk/optional because they may involve cost, external AI image APIs, or unclear reliability.
 - Do not claim actual AI image generation unless a real approved implementation exists.
 - Do not block the final demo on profile image upload or AI image generation.
+
+Implemented Phase 8.4C result:
+
+- Dog Profile now uses a reusable `DogAvatar` component instead of the old initial-only avatar preview.
+- `DogAvatar` is local inline SVG/CSS only.
+- Existing static avatar values remain compatible as color accents.
+- Shared breed matching is reused, including Dachshund support and aliases.
+- Unknown or empty breed values use a generic avatar or weight-based fallback where available.
+- No real image upload, Supabase Storage, schema change, env variable, external image API, or AI-generated image workflow was added.
+- AppShell/top-right active dog avatar menu was not implemented and remains deferred to Phase 8.5 UX/UI polish.
+- Avatar visuals are breed-inspired, not breed-accurate.
 
 ### UX/UI + Mobile Polish
 
@@ -361,4 +374,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, and Phase 8.4B Product Recommendations Catalog are complete. The next recommended Phase 8 focus is Phase 8.4C profile image/avatar polish, then UX/mobile polish and final QA/demo rehearsal.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, and Phase 8.4C Breed-Inspired Dog Avatar are complete. The next recommended Phase 8 focus is UX/mobile polish and final QA/demo rehearsal.

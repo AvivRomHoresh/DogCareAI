@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, and Phase 8.4B Product Recommendations Catalog are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, and Phase 8.4C Breed-Inspired Dog Avatar are complete and merged to main.
 
 ## QA Notes
 
@@ -58,7 +58,8 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2
 
 ### 7. Real Dog Image Upload
 
-- Beta uses static avatar choices and does not use Supabase Storage.
-- Phase 8.4C may add or plan profile image support and breed-inspired avatar fallbacks.
+- Phase 8.4C added a local SVG breed-inspired DogAvatar for Dog Profile and kept existing static avatar values as color accents.
+- The avatar is breed-inspired, not breed-accurate.
 - Real dog image upload with Supabase Storage remains higher-risk/optional because it requires storage setup and upload policies.
 - AI-generated images remain optional and should not be claimed unless a real approved implementation exists.
+- AppShell/top-right active dog avatar menu remains deferred to Phase 8.5 UX/UI polish.
