@@ -223,6 +223,7 @@ export function DashboardPage() {
                   <QuickAction to="/reminders" title="Add Reminder" description="Create or complete a dog-care reminder." />
                   <QuickAction to="/assistant" title="Ask Assistant" description="Ask a dog-care question with the active dog context." />
                   <QuickAction to="/nearby" title="Nearby Places" description="Find nearby vets, pet shops, dog parks, and groomers." />
+                  <QuickAction to="/recommendations" title="Recommendations" description="Browse demo-safe product ideas for this dog." />
                 </div>
               </section>
 
