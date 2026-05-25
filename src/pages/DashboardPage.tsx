@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { BreedDidYouKnowCard } from '../components/BreedDidYouKnowCard';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
@@ -151,6 +152,8 @@ export function DashboardPage() {
           Select a dog from the header to load that dog's dashboard.
         </section>
       ) : null}
+
+      {activeDog ? <BreedDidYouKnowCard breed={activeDog.breed} dogName={activeDog.name} /> : null}
 
       {hasActiveDog ? (
         <>
