@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import { DogAvatar } from '../components/DogAvatar';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
@@ -36,13 +37,6 @@ const emptyForm: DogFormState = {
   activity_level: '',
   special_conditions: '',
   profile_image_url: STATIC_AVATAR_OPTIONS[0].value,
-};
-
-const avatarClasses: Record<string, string> = {
-  'static-teal': 'border-teal-200 bg-teal-100 text-teal-900',
-  'static-amber': 'border-amber-200 bg-amber-100 text-amber-900',
-  'static-sky': 'border-sky-200 bg-sky-100 text-sky-900',
-  'static-rose': 'border-rose-200 bg-rose-100 text-rose-900',
 };
 
 function dogToForm(dog: Dog): DogFormState {
@@ -265,8 +259,6 @@ export function DogProfilePage() {
     setIsSaving(false);
   };
 
-  const selectedAvatarClass = avatarClasses[form.profile_image_url] ?? avatarClasses['static-teal'];
-
   return (
     <div className="space-y-4">
       <PageCard
@@ -348,13 +340,15 @@ export function DogProfilePage() {
         <form className="mt-5 space-y-5" onSubmit={handleSubmit}>
           <div className="grid gap-4 lg:grid-cols-[180px_minmax(0,1fr)]">
             <div>
-              <p className="text-sm font-semibold text-slate-800">Static avatar</p>
-              <div
-                className={`mt-3 flex h-24 w-24 items-center justify-center rounded-2xl border text-3xl font-bold ${selectedAvatarClass}`}
-                aria-hidden="true"
-              >
-                {(form.name.trim()[0] || 'D').toUpperCase()}
-              </div>
+              <p className="text-sm font-semibold text-slate-800">Dog avatar</p>
+              <DogAvatar
+                breed={form.breed}
+                className="mt-3"
+                name={form.name}
+                profileImageUrl={form.profile_image_url}
+                size="xl"
+                weight={parseOptionalNumber(form.weight)}
+              />
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {STATIC_AVATAR_OPTIONS.map((avatar) => (
                   <button
@@ -372,7 +366,9 @@ export function DogProfilePage() {
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-500">File upload is intentionally deferred for beta.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Breed-inspired illustration with local fallback. File upload is intentionally deferred.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

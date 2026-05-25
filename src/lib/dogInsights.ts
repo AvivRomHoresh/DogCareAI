@@ -64,6 +64,11 @@ const localBreedFacts: Record<string, string[]> = {
     'Many Bulldogs enjoy calm interaction and predictable daily care cues.',
     'Bulldog background can be a reminder to watch individual comfort and activity preferences closely.',
   ],
+  Dachshund: [
+    'Dachshunds are often curious hound-type dogs, so many enjoy gentle sniffing games and short enrichment moments.',
+    'Many Dachshunds appreciate predictable routines with safe opportunities to explore at their own pace.',
+    'Dachshund background can be a reminder to tailor play and walks to the individual dog rather than the label alone.',
+  ],
   'French Bulldog': [
     'French Bulldogs are often people-oriented companions, so many enjoy short, positive interaction throughout the day.',
     'Many French Bulldogs respond well to predictable routines and gentle play sessions.',

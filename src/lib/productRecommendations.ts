@@ -20,6 +20,7 @@ type BreedGroup =
   | 'beagle'
   | 'border-collie'
   | 'bulldog'
+  | 'dachshund'
   | 'french-bulldog'
   | 'german-shepherd'
   | 'golden-retriever'
@@ -113,6 +114,7 @@ const canonicalBreedGroups: Record<string, BreedGroup> = {
   Beagle: 'beagle',
   'Border Collie': 'border-collie',
   Bulldog: 'bulldog',
+  Dachshund: 'dachshund',
   'French Bulldog': 'french-bulldog',
   'German Shepherd Dog': 'german-shepherd',
   'Golden Retriever': 'golden-retriever',
@@ -129,6 +131,7 @@ const breedSizeHints: Record<BreedGroup, DogSizeGroup> = {
   beagle: 'medium',
   'border-collie': 'medium',
   bulldog: 'medium',
+  dachshund: 'small',
   'french-bulldog': 'small',
   'german-shepherd': 'large',
   'golden-retriever': 'large',
