@@ -48,7 +48,7 @@ Phase 8 should target these items first:
 - Telegram Reminder Notifications MVP. Completed in Phase 8.2, including test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention.
 - Google Login through Supabase Auth. Completed in Phase 8.3, with email/password auth retained as the fallback.
 - Breed Recognition + Did You Know, using the existing dog profile breed value with dogapi.dog enrichment and safe local/general fallbacks. Completed in Phase 8.4A.
-- Breed-Based Product Recommendations MVP, using curated/static demo-safe recommendation cards first.
+- Breed-Based Product Recommendations MVP. Completed in Phase 8.4B, using a curated/static catalog with optional Open Pet Food Facts enrichment for eligible Food/Treat cards.
 - Profile Image / Breed-Inspired Avatar planning or small fallback improvements, without requiring paid image APIs.
 - UX/UI visual upgrade with logo.
 - Mobile responsive polish.
@@ -85,7 +85,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 3. Phase 8.2: Telegram Reminder Notifications MVP. Completed.
 4. Phase 8.3: Google Login feasibility and MVP. Completed.
 5. Phase 8.4A: Breed Recognition + Did You Know. Completed.
-6. Phase 8.4B: Breed-Based Product Recommendations MVP.
+6. Phase 8.4B: Breed-Based Product Recommendations MVP. Completed.
 7. Phase 8.4C: Profile Image / Breed-Inspired Avatar.
 8. Phase 8.5: UX/UI + Mobile polish + logo.
 9. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
@@ -203,16 +203,34 @@ Implemented Phase 8.4A result:
 
 ### Phase 8.4B: Breed-Based Product Recommendations MVP
 
+Status: completed in Phase 8.4B.
+
 Goal: recommend useful dog-related product categories based on breed, size, and general needs without adding paid marketplace dependencies.
 
 Implementation rules:
 
-- Start with curated/static recommendation cards rather than live shopping APIs.
-- Recommended categories may include food, treats, toys, and accessories.
-- Cards may include category, product name, brand/company, image or placeholder, and a short reason why it fits.
+- Use curated/static recommendation cards as the reliable base rather than live shopping APIs.
+- Recommended categories include food, treats, toys, and accessories.
+- Cards include category, product name, brand/company, image/logo/fallback, official information link, and a short reason why the card may fit.
+- Use optional Open Pet Food Facts enrichment only for already eligible Food/Treat cards.
+- Keep Toys/Accessories curated/static.
+- Keep favorites/watch-later localStorage-only and scoped by authenticated user where practical.
 - Keep copy demo-safe and avoid claims that a product is medically required.
 - Avoid affiliate complexity, paid APIs, unreliable product APIs, scraping, or marketplace dependencies.
-- Use a free reliable API only if explicitly approved later.
+- Do not add checkout, prices, affiliate links, runtime scraping, API keys, env variables, schema changes, RLS changes, or paid services.
+
+Implemented Phase 8.4B result:
+
+- Protected `/recommendations` route.
+- AppShell Recommendations navigation and Dashboard quick action.
+- Shared breed matching with Did You Know through `dogBreedMatching`.
+- Profile-aware recommendations using breed, inferred size, age group, and activity tags where available.
+- Strict eligibility gates so small-dog-only cards are not shown to clearly large dogs and large-dog-only cards are not shown to clearly small dogs.
+- Explicit general fallback recommendations for missing or unrecognized dog data.
+- Optional Open Pet Food Facts enrichment for eligible Food/Treat cards only, with curated fallback and hidden raw API errors.
+- Curated/static Toys and Accessories cards.
+- localStorage favorites/watch-later with stale saved ID cleanup.
+- Manual QA passed for Maltese, Rottweiler, unknown breed fallback, filters, favorites, mobile layout, and safety copy.
 
 ### Phase 8.4C: Profile Image / Breed-Inspired Avatar
 
@@ -343,4 +361,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, and Phase 8.4A Breed Recognition + Did You Know are complete. The next recommended Phase 8 focus is Phase 8.4B curated product recommendations, then Phase 8.4C profile image/avatar polish, and UX/mobile polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, and Phase 8.4B Product Recommendations Catalog are complete. The next recommended Phase 8 focus is Phase 8.4C profile image/avatar polish, then UX/mobile polish and final QA/demo rehearsal.

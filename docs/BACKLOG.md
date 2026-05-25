@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, and Phase 8.4A Breed Recognition + Did You Know are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, and Phase 8.4B Product Recommendations Catalog are complete and merged to main.
 
 ## QA Notes
 
@@ -38,9 +38,9 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2
 
 ### 4. Breed-Based Product Recommendations
 
-- Phase 8.4B should start with curated/static product recommendation cards.
-- Product recommendations may use breed, size, and general needs to suggest categories such as food, treats, toys, and accessories.
-- Avoid paid shopping APIs, affiliate complexity, scraping, unreliable marketplace APIs, and claims that products are medically required.
+- Phase 8.4B added a protected Product Recommendations Catalog with curated/static cards, optional Open Pet Food Facts enrichment for eligible Food/Treat cards, and localStorage favorites.
+- Future product improvements may refine catalog quality, add better official product images/logos, or move saved products to Supabase if cross-device syncing becomes important.
+- Keep avoiding paid shopping APIs, affiliate complexity, scraping, unreliable marketplace APIs, checkout flows, prices, and claims that products are medically required.
 
 ### 5. Public Landing Page
 
