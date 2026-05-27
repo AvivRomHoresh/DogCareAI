@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, and Phase 8.5A Visual Foundation + Logo + Header Cleanup are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, and Phase 8.5B Dashboard Redesign + Compact Did You Know are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
 Next Phase 8 work should continue with page-specific UX/mobile polish and final demo rehearsal.
 
@@ -24,7 +24,7 @@ The app currently supports:
 - Frontend-only active dog selection through `DogPicker`
 - Basic Reminders create/edit/complete/delete for the active dog
 - Telegram reminder notifications with test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention
-- Dashboard reminder summaries and a breed-aware Did You Know card for the active dog
+- Redesigned Dashboard overview with expanded active-dog reminder summary, compact Did You Know line, and reminder stat links
 - Product Recommendations Catalog with active-dog matching, optional Open Pet Food Facts enrichment for eligible Food/Treat cards, localStorage favorites, and safe fallback recommendations
 - Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
 - Phase 7 QA documentation and beta demo guidance
@@ -134,3 +134,4 @@ The MVP must remain demoable without paid services. Mock AI Mode stays available
 - `docs/PHASE_8_STEP_1_NEARBY_DOG_PLACES_REPORT.md` - Nearby Places implementation report.
 - `docs/PHASE_8_STEP_2_6_TELEGRAM_SCHEDULER_QA_REPORT.md` - completed Telegram scheduler QA and production verification.
 - `docs/PHASE_8_STEP_4A_BREED_DID_YOU_KNOW_IMPLEMENTATION_REPORT.md` - completed breed recognition and Did You Know implementation report.
+- `docs/PHASE_8_STEP_5B_DASHBOARD_REDESIGN_IMPLEMENTATION_REPORT.md` - completed Dashboard redesign and compact Did You Know implementation report.
