@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PageCard } from '../components/PageCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { TelegramReminderSettingsCard } from '../components/TelegramReminderSettingsCard';
@@ -46,6 +46,12 @@ const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
   { value: 'completed', label: 'Completed' },
   { value: 'all', label: 'All' },
 ];
+
+const reminderFilterValues = new Set<ReminderFilter>(reminderFilters.map((filter) => filter.value));
+
+function getReminderFilterFromQuery(value: string | null): ReminderFilter {
+  return value && reminderFilterValues.has(value as ReminderFilter) ? (value as ReminderFilter) : 'open';
+}
 
 const betaReminderStateOptions = REMINDER_STATES.filter((state) => state.value !== 'snoozed');
 
@@ -152,12 +158,15 @@ function getNextOccurrence(value: string, frequency: ReminderFrequency) {
 export function RemindersPage() {
   const { hasSupabaseConfig, user } = useAuth();
   const { activeDog, activeDogId, dogs, isLoading: isDogsLoading } = useDogs();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [selectedReminderId, setSelectedReminderId] = useState<string>('new');
   const [form, setForm] = useState<ReminderFormState>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ReminderFormState, string>>>({});
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
-  const [activeFilter, setActiveFilter] = useState<ReminderFilter>('open');
+  const [activeFilter, setActiveFilter] = useState<ReminderFilter>(() =>
+    getReminderFilterFromQuery(searchParams.get('filter')),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -238,6 +247,19 @@ export function RemindersPage() {
     setFeedback(null);
     void loadReminders();
   }, [loadReminders]);
+
+  useEffect(() => {
+    setActiveFilter(getReminderFilterFromQuery(searchParams.get('filter')));
+  }, [searchParams]);
+
+  const handleFilterChange = (nextFilter: ReminderFilter) => {
+    setActiveFilter(nextFilter);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.set('filter', nextFilter);
+      return nextParams;
+    });
+  };
 
   const updateField = (field: keyof ReminderFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -587,7 +609,7 @@ export function RemindersPage() {
                   <button
                     key={filter.value}
                     type="button"
-                    onClick={() => setActiveFilter(filter.value)}
+                    onClick={() => handleFilterChange(filter.value)}
                     className={[
                       'rounded-xl border px-3 py-2 text-sm font-medium transition',
                       activeFilter === filter.value

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { BreedDidYouKnowCard } from '../components/BreedDidYouKnowCard';
+import { DogAvatar } from '../components/DogAvatar';
+import { DashboardIcon } from '../components/icons/DashboardIcon';
 import { PageCard } from '../components/PageCard';
-import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import {
@@ -19,6 +20,7 @@ import {
   reminderTypeLabels,
 } from '../lib/reminderHelpers';
 import { supabase } from '../lib/supabaseClient';
+import type { Dog } from '../types/dog';
 import type { Reminder } from '../types/reminder';
 
 const upcomingLimit = 5;
@@ -102,16 +104,18 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <PageCard
-        title="Dashboard"
-        description="Today at a glance for the selected dog, with reminders and optional location-based helpers."
-      >
-        <div className="flex flex-wrap gap-2">
-          <StatusBadge>{dogs.length === 1 ? '1 dog profile' : `${dogs.length} dog profiles`}</StatusBadge>
-          {activeDog ? <StatusBadge>Active dog: {activeDog.name}</StatusBadge> : null}
-          <StatusBadge tone="mock">No AI calls on dashboard</StatusBadge>
+      <section className="space-y-3 bg-transparent py-2 text-center">
+        <div>
+          <h1 className="inline-flex items-center justify-center gap-3 text-4xl font-extrabold tracking-normal text-slate-950 sm:text-5xl">
+            <DashboardIcon className="h-8 w-8 text-teal-700 sm:h-9 sm:w-9" />
+            <span>Dashboard</span>
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+            Today at a glance for the selected dog, with care reminders and helpful dog-aware context.
+          </p>
         </div>
-      </PageCard>
+        {activeDog ? <BreedDidYouKnowCard breed={activeDog.breed} dogName={activeDog.name} /> : null}
+      </section>
 
       {!hasSupabaseConfig ? (
         <PageCard
@@ -153,36 +157,59 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      {activeDog ? <BreedDidYouKnowCard breed={activeDog.breed} dogName={activeDog.name} /> : null}
-
       {hasActiveDog ? (
-        <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <SummaryCard label="Active dog" value={activeDog?.name ?? 'Select a dog'} helper="Current dashboard context" />
-            <SummaryCard label="Open reminders" value={dashboardCounts.openCount} helper="Active and not missed" />
-            <SummaryCard label="Today open" value={dashboardCounts.todayOpenCount} helper="Due today, not missed" />
-            <SummaryCard label="Missed" value={dashboardCounts.missedCount} helper="Past due or marked missed" />
-            <SummaryCard label="Completed" value={dashboardCounts.completedCount} helper="Completed for this dog" />
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-            <div className="space-y-4">
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-teal-700">Selected dog</p>
-                    <h2 className="mt-1 text-2xl font-bold text-slate-950">{activeDog?.name}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {[activeDog?.breed, activeDog?.age !== null ? `${activeDog?.age} years old` : null]
-                        .filter(Boolean)
-                        .join(' - ') || 'Add breed and age details when you are ready.'}
-                    </p>
-                  </div>
-                  {activeDog?.activity_level ? <StatusBadge>{activeDog.activity_level} activity</StatusBadge> : null}
+        <section className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-sm shadow-teal-950/5 backdrop-blur">
+            <div className="flex flex-col gap-4 border-b border-stone-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <DogAvatar
+                  breed={activeDog?.breed}
+                  name={activeDog?.name}
+                  profileImageUrl={activeDog?.profile_image_url}
+                  size="md"
+                  weight={activeDog?.weight}
+                />
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-wide text-teal-700">Active profile</p>
+                  <h2 className="mt-1 text-3xl font-extrabold text-slate-950">{activeDog?.name}</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {getDogSummaryLine(activeDog)}
+                  </p>
                 </div>
-              </section>
+              </div>
+              <Link
+                className="inline-flex justify-center rounded-2xl border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-bold text-teal-900 transition hover:border-teal-200 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
+                to="/dog-profile"
+              >
+                Edit profile
+              </Link>
+            </div>
 
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <ReminderStatCard
+                color="blue"
+                helper="Active reminders"
+                label="Open"
+                to="/reminders?filter=open"
+                value={dashboardCounts.openCount}
+              />
+              <ReminderStatCard
+                color="red"
+                helper="Needs attention"
+                label="Missed"
+                to="/reminders?filter=missed"
+                value={dashboardCounts.missedCount}
+              />
+              <ReminderStatCard
+                color="green"
+                helper="Finished"
+                label="Completed"
+                to="/reminders?filter=completed"
+                value={dashboardCounts.completedCount}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <section className="rounded-2xl border border-stone-100 bg-stone-50/80 p-4">
                 <SectionHeader
                   title="Today open reminders"
                   action={<Link className="text-sm font-semibold text-teal-700 hover:text-teal-900" to="/reminders">Manage</Link>}
@@ -198,7 +225,7 @@ export function DashboardPage() {
                 <ReminderList reminders={dashboardCounts.todayOpenReminders} />
               </section>
 
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+              <section className="rounded-2xl border border-stone-100 bg-stone-50/80 p-4">
                 <SectionHeader
                   title="Later & unscheduled open reminders"
                   action={<Link className="text-sm font-semibold text-teal-700 hover:text-teal-900" to="/reminders">Add reminder</Link>}
@@ -215,63 +242,22 @@ export function DashboardPage() {
               </section>
             </div>
 
-            <div className="space-y-4">
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-950">Quick actions</h2>
-                <div className="mt-4 grid gap-3">
-                  <QuickAction to="/dog-profile" title="Edit Dog Profile" description="Update care details for the selected dog." />
-                  <QuickAction to="/reminders" title="Add Reminder" description="Create or complete a dog-care reminder." />
-                  <QuickAction to="/assistant" title="Ask Assistant" description="Ask a dog-care question with the active dog context." />
-                  <QuickAction to="/nearby" title="Nearby Places" description="Find nearby vets, pet shops, dog parks, and groomers." />
-                  <QuickAction to="/recommendations" title="Recommendations" description="Browse demo-safe product ideas for this dog." />
-                </div>
+            {!isRemindersLoading && !remindersError && !hasReminderData ? (
+              <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-center shadow-sm">
+                <h2 className="text-base font-semibold text-amber-950">
+                  No reminders yet.
+                </h2>
+                <Link
+                  className="mt-4 inline-flex rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+                  to="/reminders"
+                >
+                  Add Reminder
+                </Link>
               </section>
-
-              <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-950">Completed reminders</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {dashboardCounts.completedCount === 0
-                    ? 'No completed reminders yet for this dog.'
-                    : `${dashboardCounts.completedCount} completed ${
-                        dashboardCounts.completedCount === 1 ? 'reminder' : 'reminders'
-                      } for ${activeDog?.name}.`}
-                </p>
-              </section>
-
-              {!isRemindersLoading && !remindersError && !hasReminderData ? (
-                <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold text-amber-950">
-                    No reminders yet. Add your first dog-care reminder.
-                  </h2>
-                  <Link
-                    className="mt-4 inline-flex rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
-                    to="/reminders"
-                  >
-                    Add Reminder
-                  </Link>
-                </section>
-              ) : null}
-            </div>
-          </section>
-        </>
+            ) : null}
+        </section>
       ) : null}
     </div>
-  );
-}
-
-type SummaryCardProps = {
-  helper: string;
-  label: string;
-  value: ReactNode;
-};
-
-function SummaryCard({ helper, label, value }: SummaryCardProps) {
-  return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-slate-600">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-950">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{helper}</p>
-    </section>
   );
 }
 
@@ -300,7 +286,7 @@ function ReminderList({ reminders }: { reminders: Reminder[] }) {
         const effectiveState = getEffectiveReminderState(reminder);
 
         return (
-          <article key={reminder.id} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+          <article key={reminder.id} className="rounded-2xl border border-white bg-white/85 p-4 shadow-sm">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h3 className="font-semibold text-slate-950">{reminder.title}</h3>
@@ -318,21 +304,6 @@ function ReminderList({ reminders }: { reminders: Reminder[] }) {
         );
       })}
     </div>
-  );
-}
-
-type QuickActionProps = {
-  description: string;
-  title: string;
-  to: string;
-};
-
-function QuickAction({ description, title, to }: QuickActionProps) {
-  return (
-    <Link className="rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-teal-200 hover:bg-teal-50" to={to}>
-      <span className="font-semibold text-teal-800">{title}</span>
-      <span className="mt-1 block text-sm leading-6 text-slate-600">{description}</span>
-    </Link>
   );
 }
 
@@ -354,4 +325,62 @@ function MiniBadge({ children }: { children: ReactNode }) {
       {children}
     </span>
   );
+}
+
+type StatColor = 'blue' | 'green' | 'red';
+
+type ReminderStatCardProps = {
+  color: StatColor;
+  helper: string;
+  label: string;
+  to: string;
+  value: number;
+};
+
+const statColorClasses: Record<StatColor, string> = {
+  blue: 'border-blue-100 bg-blue-50 text-blue-900 hover:border-blue-200 hover:bg-blue-100',
+  green: 'border-green-100 bg-green-50 text-green-900 hover:border-green-200 hover:bg-green-100',
+  red: 'border-red-100 bg-red-50 text-red-900 hover:border-red-200 hover:bg-red-100',
+};
+
+function ReminderStatCard({ color, helper, label, to, value }: ReminderStatCardProps) {
+  return (
+    <Link
+      className={[
+        'rounded-2xl border p-4 text-center shadow-sm transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500',
+        statColorClasses[color],
+      ].join(' ')}
+      to={to}
+    >
+      <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-white/70">
+        <CalendarIcon />
+      </span>
+      <span className="mt-2 block text-sm font-bold">{label}</span>
+      <span className="mt-1 block text-3xl font-extrabold">{value}</span>
+      <span className="mt-1 block text-xs font-semibold opacity-75">{helper}</span>
+    </Link>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24">
+      <path
+        d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function getDogSummaryLine(dog: Dog | null | undefined) {
+  const details = [
+    dog?.breed,
+    dog?.age !== null && dog?.age !== undefined ? `${dog.age} years old` : null,
+  ].filter(Boolean);
+
+  return details.join(' - ') || 'Add breed and age details when you are ready.';
 }
