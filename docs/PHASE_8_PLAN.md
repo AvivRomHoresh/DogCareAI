@@ -50,7 +50,7 @@ Phase 8 should target these items first:
 - Breed Recognition + Did You Know, using the existing dog profile breed value with dogapi.dog enrichment and safe local/general fallbacks. Completed in Phase 8.4A.
 - Breed-Based Product Recommendations MVP. Completed in Phase 8.4B, using a curated/static catalog with optional Open Pet Food Facts enrichment for eligible Food/Treat cards.
 - Breed-Inspired Dog Avatar. Completed in Phase 8.4C with local SVG/CSS only and no upload/storage/API dependency.
-- UX/UI visual upgrade with logo.
+- UX/UI visual foundation with logo and header cleanup. Completed in Phase 8.5A.
 - Mobile responsive polish.
 - README and demo guide updates after implementation.
 
@@ -87,9 +87,10 @@ These items are not approved for Phase 8 unless explicitly approved later:
 5. Phase 8.4A: Breed Recognition + Did You Know. Completed.
 6. Phase 8.4B: Breed-Based Product Recommendations MVP. Completed.
 7. Phase 8.4C: Profile Image / Breed-Inspired Avatar. Completed.
-8. Phase 8.5: UX/UI + Mobile polish + logo.
-9. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
-10. Phase 8.7: Final QA + demo rehearsal.
+8. Phase 8.5A: Visual Foundation + Logo + Header Cleanup. Completed.
+9. Phase 8.5B+: Page-specific UX/UI + Mobile polish.
+10. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
+11. Phase 8.7: Final QA + demo rehearsal.
 
 Each implementation step should be handled as a small focused change with its own documentation update and regression checks for the Phase 7 stable flows.
 
@@ -258,18 +259,37 @@ Implemented Phase 8.4C result:
 - AppShell/top-right active dog avatar menu was not implemented and remains deferred to Phase 8.5 UX/UI polish.
 - Avatar visuals are breed-inspired, not breed-accurate.
 
+### Phase 8.5A: Visual Foundation + Logo + Header Cleanup
+
+Status: completed in Phase 8.5A.
+
+Goal: improve the global visual foundation, branding, and header polish without changing feature behavior.
+
+Implemented Phase 8.5A result:
+
+- Added a local DogCareAI logo/brand asset at `public/brand/dogcareai-logo.jpg`.
+- Added a clickable DogCareAI logo/brand that navigates to Dashboard `/`.
+- Made the AppShell header transparent so it blends with the global page background.
+- Removed the stale `Phase 6 beta` badge from the primary header.
+- Polished the global background with subtle CSS-only nature-inspired gradients.
+- Visually improved shared `PageCard`, `StatusBadge`, and header/navigation styling.
+- Kept DogPicker, logout, auth, routes, navigation, Dashboard logic, Reminders logic, Nearby logic, Recommendations logic, Assistant behavior, Telegram/scheduler behavior, dog insights, product recommendations, and dog avatar logic unchanged.
+- No env files, schema, migrations, RLS, storage, API keys, paid services, dependencies, or backend services were added.
+
 ### UX/UI + Mobile Polish
+
+Status: remaining Phase 8.5 page-specific polish.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
 Implementation rules:
 
-- Add a simple logo.
-- Make clicking the logo navigate to Dashboard.
+- Keep the completed Phase 8.5A logo/header foundation.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
+- Keep page-specific title centering, Dashboard redesign, compact Did You Know, active dog avatar menu, floating assistant, Telegram/settings move, and reminder validation in later focused sub-steps.
 
 ## Risks and Mitigation
 
@@ -351,6 +371,7 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 - Text does not overlap on common mobile widths.
 - Logo click navigates to Dashboard.
 - Visual polish improves without hiding existing functionality.
+- Transparent header remains readable over the global background.
 
 ### Phase 7 Regression QA
 
@@ -374,4 +395,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, and Phase 8.4C Breed-Inspired Dog Avatar are complete. The next recommended Phase 8 focus is UX/mobile polish and final QA/demo rehearsal.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, and Phase 8.5A Visual Foundation + Logo + Header Cleanup are complete. The next recommended Phase 8 focus is page-specific UX/mobile polish and final QA/demo rehearsal.
