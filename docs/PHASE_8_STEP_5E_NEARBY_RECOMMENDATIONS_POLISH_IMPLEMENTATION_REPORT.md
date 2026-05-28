@@ -160,6 +160,35 @@ Phase 8.5E polishes the Nearby and Recommendations pages without changing backen
 - No endpoint, status, query, coordinate, or address details are shown in the UI.
 - QA should verify a first production search can fall back after primary `406`, a second search in the same tab skips the primary endpoint, and the long-loading message appears without disrupting results.
 
+## Result-First Reliability Refinement
+
+- Production QA showed the Private.coffee Overpass endpoint is the endpoint that returns real results, while `overpass-api.de` can quickly fail with `406`.
+- The endpoint order now prefers `https://overpass.private.coffee/api/interpreter` first.
+- `https://overpass-api.de/api/interpreter` remains as a secondary fallback only.
+- If the secondary endpoint returns `406`, the app remembers that for the current browser session and skips the secondary endpoint on later searches.
+- Each Nearby search gets a finite total Overpass budget of about 110 seconds, so slow valid responses can complete while avoiding infinite loading.
+- The query remains node/way-only for the supported Nearby categories and keeps relation clauses removed.
+- Loading copy now progresses in three calm stages:
+  - initial: `Checking your location and searching OpenStreetMap...`
+  - after about 9 seconds: `Still searching nearby places... this can take a few more seconds.`
+  - after about 30 seconds: `Map data is taking longer than usual. We are still searching for nearby places...`
+- Existing sessionStorage result caching remains available for recently loaded rounded-location/radius searches.
+- Cached results are labeled with `Showing recently loaded nearby results.`
+- If all endpoint attempts fail and no cached result is available, the UI keeps the existing clean Nearby load-error message.
+- No backend proxy, env vars, API keys, paid service, dependency, or schema/storage changes were added.
+
+### Result-First Local QA Results
+
+- Nearby current-location search works.
+- Nearby address search works.
+- Overpass requests remain POST, not long GET `?data=...` requests.
+- Preferred endpoint is Private.coffee.
+- `overpass-api.de` remains secondary fallback only.
+- Loading messages are clear for slow searches.
+- Nearby visual polish remains intact.
+- Recommendations polish remains unchanged.
+- No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
+
 ### Follow-Up Local QA Results
 
 - Nearby current-location search still works.

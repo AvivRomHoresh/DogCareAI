@@ -71,14 +71,14 @@ export type GeocodingErrorCode = 'address_empty' | 'address_not_found' | 'geocod
 
 export class NearbyDogPlacesError extends Error {
   code: NearbyDogPlacesErrorCode;
-  category?: 'http' | 'network' | 'parse';
+  category?: 'http' | 'network' | 'parse' | 'timeout';
   endpointLabel?: string;
   status?: number;
 
   constructor(
     code: NearbyDogPlacesErrorCode,
     message: string,
-    details: { category?: 'http' | 'network' | 'parse'; endpointLabel?: string; status?: number } = {},
+    details: { category?: 'http' | 'network' | 'parse' | 'timeout'; endpointLabel?: string; status?: number } = {},
   ) {
     super(message);
     this.code = code;
@@ -89,8 +89,8 @@ export class NearbyDogPlacesError extends Error {
 }
 
 const overpassEndpoints = [
-  { label: 'primary', url: 'https://overpass-api.de/api/interpreter' },
-  { label: 'fallback', url: 'https://overpass.private.coffee/api/interpreter' },
+  { label: 'preferred', url: 'https://overpass.private.coffee/api/interpreter' },
+  { label: 'secondary', url: 'https://overpass-api.de/api/interpreter' },
 ] as const;
 const nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
 const photonEndpoint = 'https://photon.komoot.io/api/';
@@ -101,6 +101,7 @@ const suggestionCachePrefix = 'dogcareai.addressSuggestions.v1';
 const skipPrimaryOverpassKey = 'dogcareai.nearbyDogPlaces.skipPrimaryOverpassForSession';
 const defaultRadiusMeters = 5000;
 const defaultLimit = 30;
+const overpassTotalTimeoutMs = 110000;
 const retryableOverpassStatuses = new Set([406, 429, 502, 503, 504]);
 
 const categoryLabels: Record<NearbyDogPlaceCategory, string> = {
@@ -222,17 +223,19 @@ export async function fetchNearbyDogPlaces(
 async function fetchOverpassData(query: string): Promise<OverpassResponse> {
   let lastError: NearbyDogPlacesError | null = null;
   const endpoints = getOverpassEndpointsForSession();
+  const deadline = Date.now() + overpassTotalTimeoutMs;
 
   for (const [index, endpoint] of endpoints.entries()) {
-    try {
-      const response = await fetch(endpoint.url, {
-        body: new URLSearchParams({ data: query }).toString(),
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        },
-        method: 'POST',
+    const remainingMs = deadline - Date.now();
+
+    if (remainingMs <= 0) {
+      throw lastError ?? new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
+        category: 'timeout',
       });
+    }
+
+    try {
+      const response = await fetchOverpassEndpoint(endpoint.url, query, remainingMs);
 
       if (!response.ok) {
         const error = new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
@@ -243,7 +246,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
         warnAboutOverpassFailure(error);
 
-        if (endpoint.label === 'primary' && response.status === 406) {
+        if (endpoint.label === 'secondary' && response.status === 406) {
           rememberPrimaryOverpass406ForSession();
         }
 
@@ -278,7 +281,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
       }
 
       const nearbyError = new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
-        category: 'network',
+        category: isAbortError(error) ? 'timeout' : 'network',
         endpointLabel: endpoint.label,
       });
 
@@ -298,10 +301,35 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
 function getOverpassEndpointsForSession() {
   if (shouldSkipPrimaryOverpassForSession()) {
-    return overpassEndpoints.slice(1);
+    return overpassEndpoints.filter((endpoint) => endpoint.label !== 'secondary');
   }
 
   return overpassEndpoints;
+}
+
+async function fetchOverpassEndpoint(url: string, query: string, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    return await fetch(url, {
+      body: new URLSearchParams({ data: query }).toString(),
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      },
+      method: 'POST',
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function shouldSkipPrimaryOverpassForSession() {

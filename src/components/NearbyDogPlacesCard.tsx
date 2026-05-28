@@ -27,6 +27,7 @@ type SearchStatus =
   | 'unsupported';
 type PlaceFilter = 'all' | NearbyDogPlaceCategory;
 type SortMode = 'best_match' | 'distance' | 'name';
+type LoadingMessageLevel = 'initial' | 'long' | 'slow';
 
 const filterOptions: Array<{ label: string; value: PlaceFilter }> = [
   { label: 'All', value: 'all' },
@@ -65,7 +66,7 @@ export function NearbyDogPlacesCard() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<AddressSuggestion | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isSearchTakingLong, setIsSearchTakingLong] = useState(false);
+  const [loadingMessageLevel, setLoadingMessageLevel] = useState<LoadingMessageLevel>('initial');
 
   useEffect(() => {
     const cachedResult = readLastCachedNearbyDogPlaces(nearbyResultsFetchLimit);
@@ -87,16 +88,20 @@ export function NearbyDogPlacesCard() {
 
   useEffect(() => {
     if (status !== 'loading') {
-      setIsSearchTakingLong(false);
+      setLoadingMessageLevel('initial');
       return undefined;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setIsSearchTakingLong(true);
+    const slowTimeoutId = window.setTimeout(() => {
+      setLoadingMessageLevel('slow');
     }, 9000);
+    const longTimeoutId = window.setTimeout(() => {
+      setLoadingMessageLevel('long');
+    }, 30000);
 
     return () => {
-      window.clearTimeout(timeoutId);
+      window.clearTimeout(slowTimeoutId);
+      window.clearTimeout(longTimeoutId);
     };
   }, [status]);
 
@@ -382,9 +387,7 @@ export function NearbyDogPlacesCard() {
 
         {status === 'loading' ? (
           <InfoBox>
-            {isSearchTakingLong
-              ? 'Still searching nearby places... this can take a few more seconds.'
-              : 'Checking your location and searching OpenStreetMap...'}
+            {getLoadingMessage(loadingMessageLevel)}
           </InfoBox>
         ) : null}
 
@@ -444,7 +447,11 @@ export function NearbyDogPlacesCard() {
               <span>
                 Showing {pagedPlaces.length} of {displayedPlaces.length} matching results within {formatDistance(radiusMeters)}.
               </span>
-              {fromCache ? <span className="rounded-full bg-stone-100 px-2 py-1 font-medium">Cached result</span> : null}
+              {fromCache ? (
+                <span className="rounded-full bg-stone-100 px-2 py-1 font-medium">
+                  Showing recently loaded nearby results.
+                </span>
+              ) : null}
               {sortMode === 'best_match' ? (
                 <span className="rounded-full bg-teal-50 px-2 py-1 font-medium text-teal-800">
                   Best match uses available place details, not ratings.
@@ -510,6 +517,18 @@ function getDisplayedPlaces(places: NearbyDogPlace[], selectedFilter: PlaceFilte
 
     return a.distanceMeters - b.distanceMeters;
   });
+}
+
+function getLoadingMessage(level: LoadingMessageLevel) {
+  if (level === 'long') {
+    return 'Map data is taking longer than usual. We are still searching for nearby places...';
+  }
+
+  if (level === 'slow') {
+    return 'Still searching nearby places... this can take a few more seconds.';
+  }
+
+  return 'Checking your location and searching OpenStreetMap...';
 }
 
 function PlaceResultCard({ place }: { place: NearbyDogPlace }) {
