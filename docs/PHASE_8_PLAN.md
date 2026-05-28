@@ -54,6 +54,7 @@ Phase 8 should target these items first:
 - Dashboard redesign and compact Did You Know treatment. Completed in Phase 8.5B.
 - Dog Profile page polish. Completed in Phase 8.5C.
 - Reminders page polish and safe validation. Completed in Phase 8.5D.
+- Nearby + Recommendations page polish and Nearby reliability fixes. Completed in Phase 8.5E.
 - Mobile responsive polish.
 - README and demo guide updates after implementation.
 
@@ -94,7 +95,7 @@ These items are not approved for Phase 8 unless explicitly approved later:
 9. Phase 8.5B: Dashboard Redesign + Compact Did You Know. Completed.
 10. Phase 8.5C: Dog Profile Polish. Completed.
 11. Phase 8.5D: Reminders Polish + Safe Validation. Completed.
-12. Phase 8.5E+: Remaining page-specific UX/UI + Mobile polish.
+12. Phase 8.5E: Nearby + Recommendations Polish. Completed.
 13. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
 14. Phase 8.7: Final QA + demo rehearsal.
 
@@ -284,7 +285,7 @@ Implemented Phase 8.5A result:
 
 ### UX/UI + Mobile Polish
 
-Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, and Phase 8.5D completed; remaining Phase 8.5 page-specific polish continues.
+Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, and Phase 8.5E completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
@@ -294,11 +295,12 @@ Implementation rules:
 - Keep the completed Phase 8.5B Dashboard overview and compact Did You Know treatment.
 - Keep the completed Phase 8.5C Dog Profile polish.
 - Keep the completed Phase 8.5D Reminders polish and safe validation behavior.
+- Keep the completed Phase 8.5E Nearby + Recommendations polish and Nearby reliability behavior.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
-- Keep remaining Nearby polish, Recommendations title alignment, active dog avatar menu, floating assistant, and Telegram/settings move in later focused sub-steps.
+- Keep active dog avatar menu, floating assistant, and Telegram/settings move in later focused sub-steps.
 
 Implemented Phase 8.5B result:
 
@@ -329,6 +331,21 @@ Implemented Phase 8.5D result:
 - Notes textarea contrast, placeholder, and Repeats alignment were improved.
 - Existing missed/completed reminders, filters, Dashboard query-param filters, reminder CRUD, and Telegram test/manual/scheduled behavior remain supported.
 - Telegram settings remain on Reminders for now and are deferred to a future Settings or dedicated settings section.
+
+Implemented Phase 8.5E result:
+
+- Nearby title, icon, search card, address/radius alignment, result cards, and pagination were polished.
+- Searching-near/radius context now appears inside the search component area.
+- Nearby result titles are centered, per-card Source text was removed from the primary UI, and the Google Maps fallback/search action was removed.
+- Website handling is best-effort URL sanitation only; missing or invalid website values show `No website available`.
+- Nearby pagination is client-side over loaded results when more than 30 results are available.
+- Recommendations title, icon, and subtitle were polished, and internal/demo badges were removed.
+- Recommendation logic, filters, favorites/localStorage, product cards, matching, and Open Pet Food Facts enrichment were not changed.
+- Nearby reliability was improved by using POST Overpass requests instead of long GET `?data=...` URLs.
+- `overpass-api.de` remains the primary endpoint for fast local/dev behavior, Private.coffee is the fallback, and a primary `406` is remembered in sessionStorage for the current browser session.
+- Relation clauses were removed from the Overpass query to reduce query cost, while node/way searches remain for vets, pet shops, dog parks, and groomers.
+- Loading messages are clearer for slow searches.
+- No env files, schema, storage, backend, RLS, dependencies, API keys, paid services, or unrelated feature behavior were changed.
 
 ## Risks and Mitigation
 
@@ -434,4 +451,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, and Phase 8.5D Reminders Polish are complete. The next recommended Phase 8 focus is remaining page-specific UX/mobile polish and final QA/demo rehearsal.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, and Phase 8.5E Nearby + Recommendations Polish are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.
