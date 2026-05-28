@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   fetchAddressSuggestions,
@@ -49,13 +48,8 @@ const radiusOptions = [
   { label: '10 km', value: 10000 },
 ];
 
-const googleCategoryLabels: Record<PlaceFilter, string> = {
-  all: 'dog services',
-  dog_park: 'dog parks',
-  groomer: 'dog groomers',
-  pet_shop: 'pet shops',
-  veterinary: 'veterinary clinics',
-};
+const nearbyResultsFetchLimit = 90;
+const resultsPerPage = 30;
 
 export function NearbyDogPlacesCard() {
   const [status, setStatus] = useState<SearchStatus>('idle');
@@ -70,9 +64,10 @@ export function NearbyDogPlacesCard() {
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<AddressSuggestion | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const cachedResult = readLastCachedNearbyDogPlaces();
+    const cachedResult = readLastCachedNearbyDogPlaces(nearbyResultsFetchLimit);
 
     if (!cachedResult) {
       return;
@@ -84,6 +79,10 @@ export function NearbyDogPlacesCard() {
     setRadiusMeters(cachedResult.radiusMeters);
     setStatus(cachedResult.places.length > 0 ? 'results' : 'no-results');
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [places, selectedFilter, sortMode]);
 
   useEffect(() => {
     const trimmedAddress = addressInput.trim();
@@ -155,7 +154,7 @@ export function NearbyDogPlacesCard() {
   };
 
   const runNearbySearch = async (nextOrigin: SearchOrigin) => {
-    const result = await fetchNearbyDogPlaces(nextOrigin, { limit: 30, radiusMeters });
+    const result = await fetchNearbyDogPlaces(nextOrigin, { limit: nearbyResultsFetchLimit, radiusMeters });
 
     setOrigin(result.origin);
     setPlaces(result.places);
@@ -203,50 +202,32 @@ export function NearbyDogPlacesCard() {
 
   const isLoading = status === 'loading';
   const displayedPlaces = getDisplayedPlaces(places, selectedFilter, sortMode);
-  const googleFallbackUrl = origin ? getGoogleMapsFallbackUrl(origin, selectedFilter) : null;
+  const totalPages = Math.ceil(displayedPlaces.length / resultsPerPage);
+  const pagedPlaces = useMemo(() => {
+    const startIndex = (currentPage - 1) * resultsPerPage;
+
+    return displayedPlaces.slice(startIndex, startIndex + resultsPerPage);
+  }, [currentPage, displayedPlaces]);
 
   return (
     <section className="space-y-5">
-      <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-teal-700">Nearby dog places</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-950">Find dog-friendly services near you</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Search nearby vets, pet shops, dog parks, and groomers using your browser location and OpenStreetMap data.
-              Location is requested only when you click.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleFindPlaces}
-            disabled={isLoading}
-            className="inline-flex justify-center rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoading ? 'Searching...' : places.length > 0 ? 'Refresh nearby places' : 'Find near me'}
-          </button>
-        </div>
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 text-sm leading-6 text-teal-950">
-            <span className="font-semibold">Free data source:</span> OpenStreetMap contributors via Overpass API. No Google
-            Places, Google Maps API, Google Geolocation API, API key, billing, or paid service is used.
-          </div>
-          <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-slate-600">
-            Results may be incomplete and are not emergency-service availability. Call a veterinarian directly for urgent care.
-          </div>
-        </div>
-      </div>
-
       <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="text-center">
+          <p className="text-sm font-semibold text-teal-700">Search area</p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">Choose where to look</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            Use your current location or search from an address. Location is requested only when you click.
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
           <label className="block">
             <span className="text-sm font-semibold text-slate-950">Search from address</span>
             <span className="mt-1 block text-xs leading-5 text-slate-500">
-              Suggestions use Photon after a short pause. Nominatim runs only after you click Search address.
+              Start typing an address, then choose a suggestion or search directly.
             </span>
             <input
-              className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              className="mt-3 h-11 w-full rounded-xl border border-stone-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
               onChange={(event) => {
                 setAddressInput(event.target.value);
                 setSelectedSuggestion(null);
@@ -283,7 +264,7 @@ export function NearbyDogPlacesCard() {
               Radius
             </label>
             <select
-              className="mt-3 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              className="mt-3 h-11 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
               id="nearby-radius"
               onChange={(event) => setRadiusMeters(Number(event.target.value))}
               value={radiusMeters}
@@ -315,6 +296,15 @@ export function NearbyDogPlacesCard() {
             Use my current location
           </button>
         </div>
+
+        {origin ? (
+          <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-slate-700">
+            Searching near: <span className="font-semibold text-slate-950">{origin.label}</span>
+            <span className="block text-xs text-slate-500">
+              Radius: {formatDistance(radiusMeters)}. Results may miss some local businesses.
+            </span>
+          </div>
+        ) : null}
       </section>
 
       {places.length > 0 ? (
@@ -368,18 +358,9 @@ export function NearbyDogPlacesCard() {
 
       <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
         <div>
-        {origin ? (
-          <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-slate-700">
-            Searching near: <span className="font-semibold text-slate-950">{origin.label}</span>
-            <span className="block text-xs text-slate-500">
-              Radius: {formatDistance(radiusMeters)}. Results are based on OpenStreetMap and may miss some local businesses.
-            </span>
-          </div>
-        ) : null}
-
         {status === 'idle' ? (
           <InfoBox>
-            Click "Find near me" to search. The app will ask your browser for location permission only after that action.
+            Use your current location or enter an address to search nearby dog services.
           </InfoBox>
         ) : null}
 
@@ -431,9 +412,6 @@ export function NearbyDogPlacesCard() {
             <div className="flex flex-wrap gap-3">
               <HelperPill>Try another address</HelperPill>
               <HelperPill>Try a larger radius</HelperPill>
-              {googleFallbackUrl ? (
-                <ExternalButton href={googleFallbackUrl}>{getGoogleFallbackLabel(selectedFilter)}</ExternalButton>
-              ) : null}
             </div>
           </div>
         ) : null}
@@ -442,7 +420,7 @@ export function NearbyDogPlacesCard() {
           <>
             <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
               <span>
-                Showing {displayedPlaces.length} of {places.length} results within about 5 km.
+                Showing {pagedPlaces.length} of {displayedPlaces.length} matching results within {formatDistance(radiusMeters)}.
               </span>
               {fromCache ? <span className="rounded-full bg-stone-100 px-2 py-1 font-medium">Cached result</span> : null}
               {sortMode === 'best_match' ? (
@@ -458,22 +436,21 @@ export function NearbyDogPlacesCard() {
                   No places match this filter. Try All, another address, or a larger radius. OSM may miss some local
                   businesses.
                 </InfoBox>
-                {googleFallbackUrl ? (
-                  <ExternalButton href={googleFallbackUrl}>{getGoogleFallbackLabel(selectedFilter)}</ExternalButton>
-                ) : null}
               </div>
             ) : (
               <div className="grid gap-3">
-                {displayedPlaces.map((place) => (
+                {pagedPlaces.map((place) => (
                   <PlaceResultCard key={place.id} place={place} />
                 ))}
               </div>
             )}
 
-            {googleFallbackUrl ? (
-              <div className="mt-4">
-                <ExternalButton href={googleFallbackUrl}>{getGoogleFallbackLabel(selectedFilter)}</ExternalButton>
-              </div>
+            {totalPages > 1 ? (
+              <PaginationControls
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+                totalPages={totalPages}
+              />
             ) : null}
           </>
         ) : null}
@@ -514,18 +491,20 @@ function getDisplayedPlaces(places: NearbyDogPlace[], selectedFilter: PlaceFilte
 }
 
 function PlaceResultCard({ place }: { place: NearbyDogPlace }) {
+  const safeWebsiteUrl = getSafeExternalUrl(place.website);
+
   return (
     <article className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-950">{place.name}</h3>
-          <div className="mt-2 flex flex-wrap gap-2">
+      <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-start lg:justify-between lg:text-left">
+        <div className="w-full lg:w-auto">
+          <h3 className="text-center text-lg font-semibold text-slate-950">{place.name}</h3>
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
             <MiniBadge>{place.categoryLabel}</MiniBadge>
             <MiniBadge>{formatDistance(place.distanceMeters)}</MiniBadge>
             {place.openingHours ? <MiniBadge>Hours listed</MiniBadge> : null}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           <a
             className="inline-flex justify-center rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900"
             href={place.googleMapsDirectionsUrl}
@@ -534,20 +513,8 @@ function PlaceResultCard({ place }: { place: NearbyDogPlace }) {
           >
             Navigate
           </a>
-          <a
-            className="inline-flex justify-center rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900"
-            href={place.googleMapsSearchUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Find on Google Maps
-          </a>
         </div>
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500">
-        Navigate uses the mapped OpenStreetMap location. Google Maps search may show similar businesses if the place name is
-        ambiguous.
-      </p>
 
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <PlaceDetail label="Address" value={place.address ?? 'Address not listed in OSM'} />
@@ -567,17 +534,17 @@ function PlaceResultCard({ place }: { place: NearbyDogPlace }) {
         <div>
           <dt className="font-medium text-slate-700">Website</dt>
           <dd className="mt-1 text-slate-600">
-            {place.website ? (
+            {safeWebsiteUrl ? (
               <a
                 className="break-words font-medium text-teal-700 hover:text-teal-900"
-                href={place.website}
+                href={safeWebsiteUrl}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {place.website}
+                Open website
               </a>
             ) : (
-              'Website not listed'
+              'No website available'
             )}
           </dd>
         </div>
@@ -589,30 +556,48 @@ function PlaceResultCard({ place }: { place: NearbyDogPlace }) {
         ) : null}
       </dl>
 
-      <p className="mt-4 text-xs text-slate-500">
-        Source: {place.source}. Completeness score: {place.dataCompletenessScore}.
+      <p className="mt-4 text-center text-xs leading-5 text-slate-500">
+        Place details come from OpenStreetMap and may be incomplete.
       </p>
     </article>
   );
 }
 
-function getGoogleMapsFallbackUrl(origin: SearchOrigin, selectedFilter: PlaceFilter) {
-  const searchTerm = googleCategoryLabels[selectedFilter];
-  const query = encodeURIComponent(
-    origin.mode === 'address'
-      ? `${searchTerm} near ${origin.label}`
-      : `${searchTerm} near ${origin.label} ${origin.latitude},${origin.longitude}`,
-  );
-
-  return `https://www.google.com/maps/search/?api=1&query=${query}`;
-}
-
-function getGoogleFallbackLabel(selectedFilter: PlaceFilter) {
-  return `Search ${googleCategoryLabels[selectedFilter]} on Google Maps`;
-}
-
 function getTelHref(phone: string) {
   return phone.replace(/[^\d+]/g, '');
+}
+
+function getSafeExternalUrl(value: string | null) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue || /[\s<>"']/.test(trimmedValue)) {
+    return null;
+  }
+
+  const withProtocol =
+    trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://')
+      ? trimmedValue
+      : trimmedValue.startsWith('www.')
+        ? `https://${trimmedValue}`
+        : trimmedValue.includes('.')
+          ? `https://${trimmedValue}`
+          : trimmedValue;
+
+  try {
+    const url = new URL(withProtocol);
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null;
+    }
+
+    if (!url.hostname.includes('.') && url.hostname !== 'localhost') {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 function PlaceDetail({ label, value }: { label: string; value: ReactNode }) {
@@ -653,23 +638,67 @@ function HelperPill({ children }: { children: ReactNode }) {
   );
 }
 
-function ExternalButton({ children, href }: { children: ReactNode; href: string }) {
-  return (
-    <a
-      className="inline-flex justify-center rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900"
-      href={href}
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      {children}
-    </a>
-  );
-}
-
 function InfoBox({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-slate-600">{children}</p>;
 }
 
 function WarningBox({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">{children}</p>;
+}
+
+function PaginationControls({
+  currentPage,
+  onPageChange,
+  totalPages,
+}: {
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  totalPages: number;
+}) {
+  const pages = getVisiblePages(currentPage, totalPages);
+
+  return (
+    <nav aria-label="Nearby results pages" className="mt-5 flex flex-wrap items-center justify-center gap-2">
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Previous
+      </button>
+      {pages.map((page) => (
+        <button
+          key={page}
+          type="button"
+          onClick={() => onPageChange(page)}
+          aria-current={currentPage === page ? 'page' : undefined}
+          className={[
+            'h-10 min-w-10 rounded-xl border px-3 text-sm font-semibold transition',
+            currentPage === page
+              ? 'border-teal-200 bg-teal-700 text-white'
+              : 'border-stone-300 bg-white text-slate-700 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900',
+          ].join(' ')}
+        >
+          {page}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
+function getVisiblePages(currentPage: number, totalPages: number) {
+  const firstPage = Math.max(1, currentPage - 2);
+  const lastPage = Math.min(totalPages, firstPage + 4);
+  const adjustedFirstPage = Math.max(1, lastPage - 4);
+
+  return Array.from({ length: lastPage - adjustedFirstPage + 1 }, (_, index) => adjustedFirstPage + index);
 }
