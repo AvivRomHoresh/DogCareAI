@@ -185,33 +185,50 @@ Recommendation:
 - First polish the existing AppShell and logo.
 - Then implement the active-dog avatar menu once the target interaction is clear and can be tested on mobile.
 
-### Phase 8.5G: Floating Doggy Assistant Widget
+### Phase 8.5G: Floating Doggy Assistant Shortcut
 
-This should be planned as a future sub-phase, not bundled into the first broad polish pass.
+Completed as a safe shortcut sub-phase after the first polish passes.
 
-Desired direction:
+Implemented direction:
 
-- Remove Assistant from primary menu eventually.
-- Add a bottom-left floating AI chat widget on every page.
-- Use a friendly assistant avatar style inspired by provided references, without copying or embedding those images directly.
-- Open/close by clicking the chat edge.
-- Initial chat context includes dog name, breed, age, and weight.
-- Greeting: "I'm Doggy, your personal assistant..."
-- Show sample questions as clickable prompts.
-- Show typing animation with three bouncing dots.
-- Reuse the existing Assistant API and emergency behavior.
+- Add a left-side floating Doggy shortcut that links to `/assistant`.
+- Use the local Doggy logo asset.
+- Hide the shortcut on `/auth` and `/assistant`.
+- Do not trigger `/api/assistant` on render or click.
+- Keep `/assistant` as the stable Assistant route.
 
 Risks:
 
-- Cross-page widget state is more complex than page-local chat.
-- It could accidentally create AI calls on page load if not implemented carefully.
-- It must preserve explicit-user-action AI cost control.
-- It must preserve emergency detection and safe fallback behavior.
+- Shortcut placement must not cover important mobile controls.
+- It must remain a route shortcut only and preserve explicit-user-action AI cost control.
+- A full floating in-app panel remains more complex because it would involve cross-page state and Assistant logic reuse.
 
 Recommendation:
 
-- Defer to Phase 8.5B/8.6 unless visual polish is otherwise complete.
-- If implemented, keep `/assistant` as a fallback route until the widget is fully QA-tested.
+- Keep the Phase 8.5G shortcut as the access point.
+- Do not implement a full floating in-app chat panel unless explicitly approved later.
+
+### Phase 8.5H: Assistant Chat UI Redesign
+
+This should be the next Assistant-focused sub-phase.
+
+Desired direction:
+
+- Redesign the existing `/assistant` page into a polished chat-style experience.
+- Keep the same Assistant functionality and page route.
+- Preserve the existing `/api/assistant` server-side boundary.
+- Preserve Mock Mode, deterministic emergency handling, safe fallback behavior, and active dog/reminder context.
+- The user must still explicitly send a message before any Assistant/API call happens.
+- Keep the Phase 8.5G floating shortcut pointing to `/assistant`.
+- Do not implement a separate floating in-app chat panel in this step.
+
+Recommended follow-up order:
+
+1. Phase 8.5H: Assistant Chat UI Redesign.
+2. Phase 8.5I: Settings screen + user profile area + Telegram relocation + AI chat visibility toggle.
+3. Phase 8.5J: Registration/User profile fields for phone number and user date of birth.
+4. Phase 8.5K: Dog birth date instead of dog age.
+5. Phase 8.5L: Real dog profile image upload.
 
 ## Safe for Phase 8.5 Now
 

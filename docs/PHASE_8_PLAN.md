@@ -285,7 +285,7 @@ Implemented Phase 8.5A result:
 
 ### UX/UI + Mobile Polish
 
-Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, Phase 8.5E, Phase 8.5F, and Phase 8.5G completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
+Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, Phase 8.5E, Phase 8.5F, and Phase 8.5G completed; the next recommended follow-up is Phase 8.5H Assistant Chat UI Redesign.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
@@ -298,11 +298,12 @@ Implementation rules:
 - Keep the completed Phase 8.5E Nearby + Recommendations polish and Nearby reliability behavior.
 - Keep the completed Phase 8.5F active dog avatar menu as the primary visible navigation entry point.
 - Keep the completed Phase 8.5G floating assistant shortcut as a route shortcut only, without automatic AI calls.
+- Phase 8.5H should redesign the existing `/assistant` page into a polished chat-style experience without changing Assistant business logic or `/api/assistant`.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
-- Keep full in-app assistant panel and Telegram/settings move in later focused sub-steps.
+- Keep full floating in-app assistant panel and Telegram/settings move in later focused sub-steps.
 
 Implemented Phase 8.5B result:
 
@@ -369,6 +370,23 @@ Implemented Phase 8.5G result:
 - No `/api/assistant` request happens when the shortcut renders or when it is clicked.
 - Assistant page behavior, Gemini/server-side boundary, Mock Mode, emergency behavior, env files, schema, backend behavior, RLS, API keys, dependencies, and unrelated feature behavior were not changed.
 - A full in-app assistant chat panel remains deferred.
+
+Recommended Phase 8.5H result:
+
+- Redesign the existing `/assistant` page into a polished chat-style experience.
+- Keep the same Assistant functionality, Mock Mode, deterministic emergency handling, and `/api/assistant` server-side boundary.
+- Keep cost control: no automatic AI calls, polling, prefetching, or background requests.
+- The user must still explicitly send a message before any Assistant/API call happens.
+- Keep the Phase 8.5G floating shortcut as a shortcut to `/assistant`.
+- Keep a full floating in-app chat panel deferred unless explicitly approved later.
+
+Pending Phase 8.5 follow-up order:
+
+1. Phase 8.5H: Assistant Chat UI Redesign.
+2. Phase 8.5I: Settings screen + user profile area + Telegram relocation + AI chat visibility toggle.
+3. Phase 8.5J: Registration/User profile fields for phone number and user date of birth.
+4. Phase 8.5K: Dog birth date instead of dog age.
+5. Phase 8.5L: Real dog profile image upload.
 
 ## Risks and Mitigation
 
@@ -474,4 +492,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete. The next recommended Phase 8 focus is Phase 8.5H Assistant Chat UI Redesign, followed by Settings/user profile polish, birth-date improvements, and real dog image upload only when explicitly approved.

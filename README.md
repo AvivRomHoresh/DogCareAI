@@ -6,7 +6,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
-Next Phase 8 work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
+Next Phase 8 work should focus on Phase 8.5H Assistant Chat UI Redesign: making the existing `/assistant` page feel like a polished chat experience while preserving explicit-send-only AI behavior.
 
 Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
 
