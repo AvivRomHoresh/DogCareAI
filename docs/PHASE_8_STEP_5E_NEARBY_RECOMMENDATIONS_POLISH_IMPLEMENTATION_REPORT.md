@@ -189,6 +189,29 @@ Phase 8.5E polishes the Nearby and Recommendations pages without changing backen
 - Recommendations polish remains unchanged.
 - No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
 
+## Endpoint Strategy Hotfix
+
+- Local QA after the result-first merge showed Nearby still worked, but development searches became slower because Private.coffee was preferred for every environment.
+- The endpoint order was adjusted back to `https://overpass-api.de/api/interpreter` first to restore the faster local path.
+- Private.coffee remains the single fallback endpoint when the primary endpoint returns a recoverable error such as production `406`.
+- A primary `406` from `overpass-api.de` is still remembered in sessionStorage for the current browser session, so later searches in that tab skip directly to Private.coffee.
+- POST form-encoded Overpass requests are preserved; the app does not return to long GET `?data=...` URLs.
+- The lighter node/way-only query, finite long timeout, clear slow-loading messages, cached-result fallback, Nearby visual polish, pagination, website handling, and Recommendations polish remain unchanged.
+- No backend proxy, env vars, API keys, paid service, dependency, schema, storage, RLS, or unrelated feature behavior changes were added.
+- QA should verify local current-location and address searches are fast again, production can still fall back after a primary `406`, and repeat production searches in the same tab skip the primary endpoint after that `406`.
+
+### Endpoint Strategy Hotfix Local QA Results
+
+- Nearby current-location search feels fast again.
+- Nearby address search feels fast again.
+- Overpass requests still use POST, not long GET `?data=...` requests.
+- `overpass-api.de` is restored as the primary endpoint.
+- Private.coffee remains fallback only.
+- Session-level skip after an `overpass-api.de` `406` remains in place.
+- Nearby visual polish remains intact.
+- Recommendations polish remains unchanged.
+- No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
+
 ### Follow-Up Local QA Results
 
 - Nearby current-location search still works.
