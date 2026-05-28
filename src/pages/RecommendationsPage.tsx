@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ProductRecommendationCard } from '../components/ProductRecommendationCard';
 import { ProductRecommendationFilters } from '../components/ProductRecommendationFilters';
-import { PageCard } from '../components/PageCard';
-import { StatusBadge } from '../components/StatusBadge';
+import { RecommendationsIcon } from '../components/icons/RecommendationsIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import {
@@ -108,17 +107,16 @@ export function RecommendationsPage() {
     : `Using ${activeDog?.name}'s breed, age, and size where available.`;
 
   return (
-    <div className="space-y-4">
-      <PageCard
-        title="Recommendations"
-        description="Demo-safe product ideas for the selected dog, with no checkout, prices, affiliate flow, or medical claims."
-      >
-        <div className="flex flex-wrap gap-2">
-          <StatusBadge>{activeDog ? `Active dog: ${activeDog.name}` : 'Select a dog'}</StatusBadge>
-          <StatusBadge tone="mock">Curated catalog + optional API</StatusBadge>
-          <StatusBadge>No checkout</StatusBadge>
+    <div className="space-y-5">
+      <header className="mx-auto max-w-3xl text-center">
+        <div className="inline-flex items-center justify-center gap-3 text-teal-800">
+          <RecommendationsIcon className="h-8 w-8" />
+          <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Recommendations</h1>
         </div>
-      </PageCard>
+        <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+          Browse personalized product ideas for your dog based on their profile, size, age, and needs.
+        </p>
+      </header>
 
       {isLoading ? (
         <section className="rounded-2xl border border-stone-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
