@@ -122,6 +122,33 @@ Phase 8.5E polishes the Nearby and Recommendations pages without changing backen
 - Product cards and Open Pet Food Facts optional enrichment were not broken.
 - No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
 
+## Hotfix Note: Nearby Reliability
+
+- After merge, production Nearby search showed the generic load-error state for both current-location and address searches.
+- Browser Network evidence showed the production request to `https://overpass-api.de/api/interpreter?data=...` failed with HTTP `406`.
+- Local development still worked, which pointed to a production/browser transport issue rather than a no-results state.
+- Investigation found the 8.5E loaded-result cap change from 30 to 90 does not materially change the external Overpass query shape because the query still uses `out body center 100`; the cap is client-side slicing after a response.
+- The root transport fix replaces the Overpass GET URL-query request with a POST request using `application/x-www-form-urlencoded;charset=UTF-8` and a `data` form body.
+- The primary endpoint remains `https://overpass-api.de/api/interpreter`.
+- If the primary endpoint returns `406`, `429`, `502`, `503`, `504`, or has a network/parse failure, the app tries one fallback endpoint: `https://overpass.private.coffee/api/interpreter`.
+- If all endpoints fail, the UI keeps the existing clean Nearby load-error message and does not expose raw technical errors.
+- Sanitized console warnings include only endpoint label, HTTP status, and error category.
+- Pagination remains implemented as a client-side UI over already-loaded results and does not refetch on page changes.
+- The fix preserves the 8.5E Nearby visual polish, website sanitation, centered titles, subtle source note, Recommendations polish, and no-results/error separation.
+- QA should verify current-location search, address search, no-results state, error state, fallback behavior if the primary endpoint fails, and that page changes never refetch when pagination is visible.
+
+### Hotfix Manual QA Results
+
+- Nearby works locally.
+- Overpass request now uses POST.
+- No long Overpass GET request with `?data=...` is used.
+- Address search still works.
+- Use my current location still works.
+- Nearby visual polish remains intact.
+- Recommendations polish remains unchanged.
+- UI still shows the clean load-error message if all Overpass attempts fail.
+- No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
+
 ## Validation Results
 
 - `npm.cmd run lint`: passed.
