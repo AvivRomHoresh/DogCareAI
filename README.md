@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, and Phase 8.5C Dog Profile Polish are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, and Phase 8.5D Reminders Polish are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
 Next Phase 8 work should continue with page-specific UX/mobile polish and final demo rehearsal.
 
@@ -22,7 +22,7 @@ The app currently supports:
 - Polished Dog Profile create/edit/archive with Supabase RLS
 - Breed-inspired local SVG dog avatar in Dog Profile
 - Frontend-only active dog selection through `DogPicker`
-- Basic Reminders create/edit/complete/delete for the active dog
+- Polished Reminders create/edit/complete/delete for the active dog
 - Telegram reminder notifications with test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention
 - Redesigned Dashboard overview with expanded active-dog reminder summary, compact Did You Know line, and reminder stat links
 - Product Recommendations Catalog with active-dog matching, optional Open Pet Food Facts enrichment for eligible Food/Treat cards, localStorage favorites, and safe fallback recommendations

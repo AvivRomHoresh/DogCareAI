@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, and Phase 8.5C Dog Profile Polish are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, and Phase 8.5D Reminders Polish are complete and merged to main.
 
 ## QA Notes
 
@@ -69,5 +69,6 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2
 - Phase 8.5A added the local DogCareAI logo/brand, transparent header treatment, global background polish, and shared card/badge visual polish.
 - Phase 8.5B redesigned the Dashboard overview, removed Dashboard Quick Actions, made Did You Know compact, and added safe reminder stat filter links.
 - Phase 8.5C polished the Dog Profile page title, selector, form layout, DogAvatar area, and action button placement without changing profile behavior.
-- Remaining UX/UI work should focus on page-specific polish: Reminders layout/validation, Nearby copy/reliability review, Recommendations title alignment, and final mobile/demo polish.
+- Phase 8.5D polished the Reminders page title, form, reminder cards, notes field, repeat alignment, and safe new-reminder validation without changing Telegram behavior.
+- Remaining UX/UI work should focus on page-specific polish: Nearby copy/reliability review, Recommendations title alignment, and final mobile/demo polish.
 - The active dog avatar menu and floating Doggy assistant remain larger sub-phases and should not be bundled into small visual polish fixes.
