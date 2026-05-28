@@ -4,7 +4,7 @@
 
 This backlog captures future improvements discovered during beta and Phase 8 demo work. These items are intentionally deferred and should not block the current stable demo flow.
 
-Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, and Phase 8.5F Active Dog Avatar Menu are complete and merged to main.
+Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete and merged to main.
 
 ## QA Notes
 
@@ -73,5 +73,6 @@ Current phase status: Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2
 - Phase 8.5E polished Nearby and Recommendations, including Nearby title/icon polish, search card alignment, contextual search status, client-side pagination, safe website handling, Recommendations title/subtitle cleanup, and Nearby Overpass reliability fixes.
 - Nearby now uses POST Overpass requests, keeps `overpass-api.de` primary for fast local/dev behavior, uses Private.coffee as fallback, remembers a primary `406` in sessionStorage for the current browser session, and keeps relation clauses removed to reduce query cost.
 - Phase 8.5F added the active dog avatar menu, moved dog switching, route navigation, signed-in email, and logout into the menu, removed the old visible AppShell navigation/DogPicker/header account controls from the page surface, and reused the existing DogProfileIcon for the Dog Profile menu item.
+- Phase 8.5G added a floating Doggy assistant shortcut with the local Doggy logo asset. It links to `/assistant`, appears after about 5 seconds, stays hidden on `/auth` and `/assistant`, and does not trigger `/api/assistant` on render or click.
 - Remaining UX/UI work should focus on final mobile/demo polish and explicitly approved follow-ups.
-- The floating Doggy assistant remains a larger sub-phase and should not be bundled into small visual polish fixes.
+- A full in-app floating assistant chat panel remains a larger sub-phase and should not be bundled into small visual polish fixes.

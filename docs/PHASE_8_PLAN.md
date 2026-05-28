@@ -285,7 +285,7 @@ Implemented Phase 8.5A result:
 
 ### UX/UI + Mobile Polish
 
-Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, Phase 8.5E, and Phase 8.5F completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
+Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, Phase 8.5E, Phase 8.5F, and Phase 8.5G completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
@@ -297,11 +297,12 @@ Implementation rules:
 - Keep the completed Phase 8.5D Reminders polish and safe validation behavior.
 - Keep the completed Phase 8.5E Nearby + Recommendations polish and Nearby reliability behavior.
 - Keep the completed Phase 8.5F active dog avatar menu as the primary visible navigation entry point.
+- Keep the completed Phase 8.5G floating assistant shortcut as a route shortcut only, without automatic AI calls.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
-- Keep floating assistant and Telegram/settings move in later focused sub-steps.
+- Keep full in-app assistant panel and Telegram/settings move in later focused sub-steps.
 
 Implemented Phase 8.5B result:
 
@@ -358,6 +359,16 @@ Implemented Phase 8.5F result:
 - Logout uses the existing logout flow.
 - Dog Profile menu item reuses the existing `DogProfileIcon`.
 - Auth behavior, routes, schema, env files, backend behavior, RLS, storage, Telegram, Reminders, Nearby, Recommendations, Assistant, dog insights, product logic, and dependencies were not changed.
+
+Implemented Phase 8.5G result:
+
+- A floating Doggy assistant shortcut appears on authenticated app pages after about 5 seconds.
+- The shortcut uses the local `/brand/doggy-assistant-logo.jpg` asset and a local fallback icon.
+- The shortcut appears on the left side of the page and is hidden on `/auth` and `/assistant`.
+- Clicking the shortcut only navigates to the existing `/assistant` route.
+- No `/api/assistant` request happens when the shortcut renders or when it is clicked.
+- Assistant page behavior, Gemini/server-side boundary, Mock Mode, emergency behavior, env files, schema, backend behavior, RLS, API keys, dependencies, and unrelated feature behavior were not changed.
+- A full in-app assistant chat panel remains deferred.
 
 ## Risks and Mitigation
 
@@ -463,4 +474,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, and Phase 8.5F Active Dog Avatar Menu are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.

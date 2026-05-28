@@ -4,7 +4,7 @@ DogCareAI is an AI-assisted web application for dog owners. The project is being
 
 ## Current Status
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, and Phase 8.5F Active Dog Avatar Menu are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
 
 Next Phase 8 work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
 
@@ -27,6 +27,7 @@ The app currently supports:
 - Redesigned Dashboard overview with expanded active-dog reminder summary, compact Did You Know line, and reminder stat links
 - Polished Nearby page with client-side pagination, safe website handling, and POST-based Overpass reliability fallback
 - Product Recommendations Catalog with active-dog matching, optional Open Pet Food Facts enrichment for eligible Food/Treat cards, localStorage favorites, and safe fallback recommendations
+- Floating Doggy assistant shortcut that links to the existing Assistant route without automatic AI calls
 - Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
 - Phase 7 QA documentation and beta demo guidance
 
