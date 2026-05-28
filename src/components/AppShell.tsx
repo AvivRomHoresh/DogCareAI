@@ -1,5 +1,6 @@
 import { DogCareLogo } from './DogCareLogo';
 import { ActiveDogMenu } from './ActiveDogMenu';
+import { FloatingAssistantShortcut } from './FloatingAssistantShortcut';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -51,6 +52,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="mx-auto max-w-6xl px-4 py-6">
         <main className="min-w-0">{children}</main>
       </div>
+      {isAuthenticated ? <FloatingAssistantShortcut /> : null}
     </div>
   );
 }
