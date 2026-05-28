@@ -89,8 +89,8 @@ export class NearbyDogPlacesError extends Error {
 }
 
 const overpassEndpoints = [
-  { label: 'preferred', url: 'https://overpass.private.coffee/api/interpreter' },
-  { label: 'secondary', url: 'https://overpass-api.de/api/interpreter' },
+  { label: 'primary', url: 'https://overpass-api.de/api/interpreter' },
+  { label: 'fallback', url: 'https://overpass.private.coffee/api/interpreter' },
 ] as const;
 const nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
 const photonEndpoint = 'https://photon.komoot.io/api/';
@@ -246,7 +246,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
         warnAboutOverpassFailure(error);
 
-        if (endpoint.label === 'secondary' && response.status === 406) {
+        if (endpoint.label === 'primary' && response.status === 406) {
           rememberPrimaryOverpass406ForSession();
         }
 
@@ -301,7 +301,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
 function getOverpassEndpointsForSession() {
   if (shouldSkipPrimaryOverpassForSession()) {
-    return overpassEndpoints.filter((endpoint) => endpoint.label !== 'secondary');
+    return overpassEndpoints.filter((endpoint) => endpoint.label !== 'primary');
   }
 
   return overpassEndpoints;
