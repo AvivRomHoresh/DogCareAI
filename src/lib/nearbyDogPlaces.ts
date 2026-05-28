@@ -71,14 +71,27 @@ export type GeocodingErrorCode = 'address_empty' | 'address_not_found' | 'geocod
 
 export class NearbyDogPlacesError extends Error {
   code: NearbyDogPlacesErrorCode;
+  category?: 'http' | 'network' | 'parse';
+  endpointLabel?: string;
+  status?: number;
 
-  constructor(code: NearbyDogPlacesErrorCode, message: string) {
+  constructor(
+    code: NearbyDogPlacesErrorCode,
+    message: string,
+    details: { category?: 'http' | 'network' | 'parse'; endpointLabel?: string; status?: number } = {},
+  ) {
     super(message);
     this.code = code;
+    this.category = details.category;
+    this.endpointLabel = details.endpointLabel;
+    this.status = details.status;
   }
 }
 
-const overpassEndpoint = 'https://overpass-api.de/api/interpreter';
+const overpassEndpoints = [
+  { label: 'primary', url: 'https://overpass-api.de/api/interpreter' },
+  { label: 'fallback', url: 'https://overpass.private.coffee/api/interpreter' },
+] as const;
 const nominatimEndpoint = 'https://nominatim.openstreetmap.org/search';
 const photonEndpoint = 'https://photon.komoot.io/api/';
 const cacheTtlMs = 10 * 60 * 1000;
@@ -87,6 +100,7 @@ const lastCacheKey = `${cachePrefix}.last`;
 const suggestionCachePrefix = 'dogcareai.addressSuggestions.v1';
 const defaultRadiusMeters = 5000;
 const defaultLimit = 30;
+const retryableOverpassStatuses = new Set([406, 429, 502, 503, 504]);
 
 const categoryLabels: Record<NearbyDogPlaceCategory, string> = {
   dog_park: 'Dog park',
@@ -183,18 +197,7 @@ export async function fetchNearbyDogPlaces(
     };
   }
 
-  const query = buildOverpassQuery(origin, radiusMeters);
-  const response = await fetch(`${overpassEndpoint}?${new URLSearchParams({ data: query }).toString()}`, {
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.');
-  }
-
-  const data = (await response.json()) as OverpassResponse;
+  const data = await fetchOverpassData(buildOverpassQuery(origin, radiusMeters));
   const places = normalizeOverpassElements(data.elements ?? [], origin)
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, limit);
@@ -213,6 +216,86 @@ export async function fetchNearbyDogPlaces(
     places,
     radiusMeters,
   };
+}
+
+async function fetchOverpassData(query: string): Promise<OverpassResponse> {
+  let lastError: NearbyDogPlacesError | null = null;
+
+  for (const [index, endpoint] of overpassEndpoints.entries()) {
+    try {
+      const response = await fetch(endpoint.url, {
+        body: new URLSearchParams({ data: query }).toString(),
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
+          category: 'http',
+          endpointLabel: endpoint.label,
+          status: response.status,
+        });
+
+        warnAboutOverpassFailure(error);
+
+        if (index === 0 && retryableOverpassStatuses.has(response.status)) {
+          lastError = error;
+          continue;
+        }
+
+        throw error;
+      }
+
+      try {
+        return (await response.json()) as OverpassResponse;
+      } catch {
+        const error = new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
+          category: 'parse',
+          endpointLabel: endpoint.label,
+        });
+
+        warnAboutOverpassFailure(error);
+
+        if (index === 0) {
+          lastError = error;
+          continue;
+        }
+
+        throw error;
+      }
+    } catch (error) {
+      if (error instanceof NearbyDogPlacesError) {
+        throw error;
+      }
+
+      const nearbyError = new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.', {
+        category: 'network',
+        endpointLabel: endpoint.label,
+      });
+
+      warnAboutOverpassFailure(nearbyError);
+
+      if (index === 0) {
+        lastError = nearbyError;
+        continue;
+      }
+
+      throw nearbyError;
+    }
+  }
+
+  throw lastError ?? new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.');
+}
+
+function warnAboutOverpassFailure(error: NearbyDogPlacesError) {
+  console.warn('DogCareAI Nearby place search request failed.', {
+    category: error.category ?? 'unknown',
+    endpoint: error.endpointLabel ?? 'unknown',
+    status: error.status ?? null,
+  });
 }
 
 export async function geocodeAddress(address: string): Promise<SearchOrigin> {
