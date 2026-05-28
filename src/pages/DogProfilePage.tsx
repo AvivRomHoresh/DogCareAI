@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { DogAvatar } from '../components/DogAvatar';
+import { DogProfileIcon } from '../components/icons/DogProfileIcon';
 import { PageCard } from '../components/PageCard';
-import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
 import { supabase } from '../lib/supabaseClient';
@@ -39,6 +39,19 @@ const emptyForm: DogFormState = {
   profile_image_url: STATIC_AVATAR_OPTIONS[0].value,
 };
 
+const inputClassName =
+  'w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100';
+
+const textareaClassName =
+  'min-h-28 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100';
+
+const accentSwatchClasses: Record<string, string> = {
+  'static-amber': 'bg-gradient-to-br from-amber-100 to-orange-200',
+  'static-rose': 'bg-gradient-to-br from-rose-100 to-pink-200',
+  'static-sky': 'bg-gradient-to-br from-sky-100 to-cyan-200',
+  'static-teal': 'bg-gradient-to-br from-teal-100 to-emerald-200',
+};
+
 function dogToForm(dog: Dog): DogFormState {
   return {
     name: dog.name ?? '',
@@ -62,6 +75,10 @@ function parseOptionalNumber(value: string) {
   }
 
   return Number(value);
+}
+
+function getAccentSwatchClass(value: string) {
+  return accentSwatchClasses[value] ?? accentSwatchClasses['static-teal'];
 }
 
 function validateDogForm(form: DogFormState) {
@@ -118,6 +135,10 @@ export function DogProfilePage() {
     () => dogs.find((dog) => dog.id === selectedDogId) ?? null,
     [dogs, selectedDogId],
   );
+  const isNewProfile = selectedDogId === 'new' || !selectedDog;
+  const pageSubtitle = isNewProfile
+    ? 'Create your dog profile now'
+    : `Update ${selectedDog.name}'s profile details`;
 
   useEffect(() => {
     if (isCreatingNew) {
@@ -261,15 +282,59 @@ export function DogProfilePage() {
 
   return (
     <div className="space-y-4">
-      <PageCard
-        title="Dog Profile"
-        description="Create or update the dog profile that powers the beta care context."
-      >
-        <div className="flex flex-wrap gap-2">
-          <StatusBadge>{dogs.length === 1 ? '1 active dog' : `${dogs.length} active dogs`}</StatusBadge>
-          {activeDog ? <StatusBadge tone="mock">Selected: {activeDog.name}</StatusBadge> : null}
+      <section className="space-y-3 bg-transparent py-2 text-center">
+        <h1 className="inline-flex items-center justify-center gap-3 text-4xl font-extrabold tracking-normal text-slate-950 sm:text-5xl">
+          <DogProfileIcon className="h-9 w-9 text-teal-700 sm:h-10 sm:w-10" />
+          <span>Dog Profile</span>
+        </h1>
+        <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">{pageSubtitle}</p>
+      </section>
+
+      <section className="rounded-3xl border border-white/80 bg-white/90 p-4 shadow-sm shadow-teal-950/5 backdrop-blur sm:p-5">
+        <div className="mx-auto flex max-w-3xl flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-center">
+          <label className="flex w-full flex-col gap-1 text-sm font-semibold text-slate-700 sm:max-w-sm">
+            Choose profile
+            <select
+              value={selectedDogId}
+              onChange={(event) => {
+                const nextDogId = event.target.value;
+                if (nextDogId === 'new') {
+                  startNewDog();
+                  return;
+                }
+
+                setIsCreatingNew(false);
+                setSelectedDogId(nextDogId);
+                setActiveDogId(nextDogId);
+              }}
+              className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm transition focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100"
+              disabled={isSaving}
+            >
+              <option value="new">New dog profile</option>
+              {dogs.map((dog) => (
+                <option key={dog.id} value={dog.id}>
+                  {dog.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={startNewDog}
+            disabled={isSaving}
+            className="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm font-bold text-teal-900 shadow-sm transition hover:border-teal-200 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Add another dog
+          </button>
         </div>
-      </PageCard>
+        <p className="mt-3 text-center text-xs leading-5 text-slate-500">
+          {dogs.length === 0
+            ? 'Your first profile will become the active dog context.'
+            : activeDog
+              ? `Active dog context: ${activeDog.name}`
+              : 'Select a profile to make it the active dog context.'}
+        </p>
+      </section>
 
       {!hasSupabaseConfig ? (
         <PageCard
@@ -299,76 +364,45 @@ export function DogProfilePage() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
-          <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-slate-700">
-            Profile
-            <select
-              value={selectedDogId}
-              onChange={(event) => {
-                const nextDogId = event.target.value;
-                if (nextDogId === 'new') {
-                  startNewDog();
-                  return;
-                }
-
-                setIsCreatingNew(false);
-                setSelectedDogId(nextDogId);
-                setActiveDogId(nextDogId);
-              }}
-              className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-normal text-slate-900"
-              disabled={isSaving}
-            >
-              <option value="new">New dog profile</option>
-              {dogs.map((dog) => (
-                <option key={dog.id} value={dog.id}>
-                  {dog.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={startNewDog}
-            disabled={isSaving}
-            className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-stone-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Add another dog
-          </button>
-        </div>
-
-        <form className="mt-5 space-y-5" onSubmit={handleSubmit}>
-          <div className="grid gap-4 lg:grid-cols-[180px_minmax(0,1fr)]">
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Dog avatar</p>
+      <section className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-sm shadow-teal-950/5 backdrop-blur">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="rounded-3xl border border-stone-100 bg-stone-50/80 p-5 text-center">
+              <p className="text-sm font-bold uppercase tracking-wide text-teal-700">Dog avatar</p>
               <DogAvatar
                 breed={form.breed}
-                className="mt-3"
+                className="mx-auto mt-4"
                 name={form.name}
                 profileImageUrl={form.profile_image_url}
                 size="xl"
                 weight={parseOptionalNumber(form.weight)}
               />
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                Breed-inspired local illustration. Photo upload is intentionally deferred.
+              </p>
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Avatar accent</p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {STATIC_AVATAR_OPTIONS.map((avatar) => (
                   <button
                     key={avatar.value}
                     type="button"
+                    aria-label={`Use ${avatar.label} avatar accent`}
+                    title={avatar.label}
                     onClick={() => updateField('profile_image_url', avatar.value)}
                     className={[
-                      'rounded-xl border px-3 py-2 text-sm font-medium transition',
+                      'h-8 w-8 rounded-full border text-[0px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500',
                       form.profile_image_url === avatar.value
-                        ? 'border-teal-300 bg-teal-50 text-teal-900'
-                        : 'border-stone-200 bg-white text-slate-700 hover:border-stone-300',
+                        ? 'border-teal-500 ring-2 ring-teal-100'
+                        : 'border-white/80 hover:border-teal-200',
+                      getAccentSwatchClass(avatar.value),
                     ].join(' ')}
                   >
                     {avatar.label}
                   </button>
                 ))}
+                </div>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
-                Breed-inspired illustration with local fallback. File upload is intentionally deferred.
-              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -376,7 +410,7 @@ export function DogProfilePage() {
                 <input
                   value={form.name}
                   onChange={(event) => updateField('name', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={inputClassName}
                   maxLength={80}
                 />
               </Field>
@@ -385,7 +419,7 @@ export function DogProfilePage() {
                 <input
                   value={form.breed}
                   onChange={(event) => updateField('breed', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={inputClassName}
                   maxLength={120}
                 />
               </Field>
@@ -398,7 +432,7 @@ export function DogProfilePage() {
                   step="0.1"
                   value={form.age}
                   onChange={(event) => updateField('age', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={inputClassName}
                 />
               </Field>
 
@@ -410,7 +444,7 @@ export function DogProfilePage() {
                   step="0.1"
                   value={form.weight}
                   onChange={(event) => updateField('weight', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={inputClassName}
                 />
               </Field>
 
@@ -418,7 +452,7 @@ export function DogProfilePage() {
                 <select
                   value={form.gender}
                   onChange={(event) => updateField('gender', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
+                  className={inputClassName}
                 >
                   <option value="">Not specified</option>
                   <option value="female">Female</option>
@@ -435,7 +469,7 @@ export function DogProfilePage() {
                 <select
                   value={form.activity_level}
                   onChange={(event) => updateField('activity_level', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
+                  className={inputClassName}
                 >
                   <option value="">Not specified</option>
                   <option value="low">Low</option>
@@ -451,7 +485,7 @@ export function DogProfilePage() {
               <textarea
                 value={form.medical_notes}
                 onChange={(event) => updateField('medical_notes', event.target.value)}
-                className="min-h-28 w-full rounded-xl border border-stone-300 px-3 py-2"
+                className={textareaClassName}
                 maxLength={1200}
               />
             </Field>
@@ -460,7 +494,7 @@ export function DogProfilePage() {
               <textarea
                 value={form.allergies}
                 onChange={(event) => updateField('allergies', event.target.value)}
-                className="min-h-28 w-full rounded-xl border border-stone-300 px-3 py-2"
+                className={textareaClassName}
                 maxLength={1000}
               />
             </Field>
@@ -469,7 +503,7 @@ export function DogProfilePage() {
               <textarea
                 value={form.feeding_preferences}
                 onChange={(event) => updateField('feeding_preferences', event.target.value)}
-                className="min-h-28 w-full rounded-xl border border-stone-300 px-3 py-2"
+                className={textareaClassName}
                 maxLength={1000}
               />
             </Field>
@@ -478,7 +512,7 @@ export function DogProfilePage() {
               <textarea
                 value={form.vaccination_history}
                 onChange={(event) => updateField('vaccination_history', event.target.value)}
-                className="min-h-28 w-full rounded-xl border border-stone-300 px-3 py-2"
+                className={textareaClassName}
                 maxLength={1000}
               />
             </Field>
@@ -488,7 +522,7 @@ export function DogProfilePage() {
                 <textarea
                   value={form.special_conditions}
                   onChange={(event) => updateField('special_conditions', event.target.value)}
-                  className="min-h-24 w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={textareaClassName}
                   maxLength={1200}
                 />
               </Field>
@@ -508,30 +542,24 @@ export function DogProfilePage() {
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-center justify-center gap-3 border-t border-stone-100 pt-5 sm:flex-row">
             <button
               type="submit"
               disabled={isSaving || !hasSupabaseConfig}
-              className="rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+              className="w-full rounded-2xl bg-teal-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:bg-stone-300 sm:w-auto"
             >
               {isSaving ? 'Saving...' : selectedDog ? 'Update dog profile' : 'Save dog profile'}
             </button>
 
             {selectedDog ? (
-              <div className="max-w-sm space-y-2">
-                <p className="text-xs leading-5 text-slate-500">
-                  Archived profiles are hidden from the beta list but not permanently deleted. Restore is not
-                  implemented yet.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleArchive}
-                  disabled={isSaving}
-                  className="rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Archive profile
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={isSaving}
+                className="w-full rounded-2xl border border-red-200 bg-white px-5 py-3 text-sm font-bold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                Archive profile
+              </button>
             ) : null}
           </div>
         </form>
