@@ -65,6 +65,7 @@ export function NearbyDogPlacesCard() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<AddressSuggestion | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSearchTakingLong, setIsSearchTakingLong] = useState(false);
 
   useEffect(() => {
     const cachedResult = readLastCachedNearbyDogPlaces(nearbyResultsFetchLimit);
@@ -83,6 +84,21 @@ export function NearbyDogPlacesCard() {
   useEffect(() => {
     setCurrentPage(1);
   }, [places, selectedFilter, sortMode]);
+
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsSearchTakingLong(false);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsSearchTakingLong(true);
+    }, 9000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [status]);
 
   useEffect(() => {
     const trimmedAddress = addressInput.trim();
@@ -364,7 +380,13 @@ export function NearbyDogPlacesCard() {
           </InfoBox>
         ) : null}
 
-        {status === 'loading' ? <InfoBox>Checking your location and searching OpenStreetMap...</InfoBox> : null}
+        {status === 'loading' ? (
+          <InfoBox>
+            {isSearchTakingLong
+              ? 'Still searching nearby places... this can take a few more seconds.'
+              : 'Checking your location and searching OpenStreetMap...'}
+          </InfoBox>
+        ) : null}
 
         {status === 'permission-denied' ? (
           <WarningBox>

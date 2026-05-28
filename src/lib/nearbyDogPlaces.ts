@@ -98,6 +98,7 @@ const cacheTtlMs = 10 * 60 * 1000;
 const cachePrefix = 'dogcareai.nearbyDogPlaces.v1';
 const lastCacheKey = `${cachePrefix}.last`;
 const suggestionCachePrefix = 'dogcareai.addressSuggestions.v1';
+const skipPrimaryOverpassKey = 'dogcareai.nearbyDogPlaces.skipPrimaryOverpassForSession';
 const defaultRadiusMeters = 5000;
 const defaultLimit = 30;
 const retryableOverpassStatuses = new Set([406, 429, 502, 503, 504]);
@@ -220,8 +221,9 @@ export async function fetchNearbyDogPlaces(
 
 async function fetchOverpassData(query: string): Promise<OverpassResponse> {
   let lastError: NearbyDogPlacesError | null = null;
+  const endpoints = getOverpassEndpointsForSession();
 
-  for (const [index, endpoint] of overpassEndpoints.entries()) {
+  for (const [index, endpoint] of endpoints.entries()) {
     try {
       const response = await fetch(endpoint.url, {
         body: new URLSearchParams({ data: query }).toString(),
@@ -241,7 +243,11 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
         warnAboutOverpassFailure(error);
 
-        if (index === 0 && retryableOverpassStatuses.has(response.status)) {
+        if (endpoint.label === 'primary' && response.status === 406) {
+          rememberPrimaryOverpass406ForSession();
+        }
+
+        if (index === 0 && retryableOverpassStatuses.has(response.status) && endpoints.length > 1) {
           lastError = error;
           continue;
         }
@@ -259,7 +265,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
         warnAboutOverpassFailure(error);
 
-        if (index === 0) {
+        if (index === 0 && endpoints.length > 1) {
           lastError = error;
           continue;
         }
@@ -278,7 +284,7 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
 
       warnAboutOverpassFailure(nearbyError);
 
-      if (index === 0) {
+      if (index === 0 && endpoints.length > 1) {
         lastError = nearbyError;
         continue;
       }
@@ -288,6 +294,30 @@ async function fetchOverpassData(query: string): Promise<OverpassResponse> {
   }
 
   throw lastError ?? new NearbyDogPlacesError('api_error', 'OpenStreetMap place search is unavailable right now.');
+}
+
+function getOverpassEndpointsForSession() {
+  if (shouldSkipPrimaryOverpassForSession()) {
+    return overpassEndpoints.slice(1);
+  }
+
+  return overpassEndpoints;
+}
+
+function shouldSkipPrimaryOverpassForSession() {
+  try {
+    return window.sessionStorage.getItem(skipPrimaryOverpassKey) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function rememberPrimaryOverpass406ForSession() {
+  try {
+    window.sessionStorage.setItem(skipPrimaryOverpassKey, 'true');
+  } catch {
+    // Endpoint preference is a session-only optimization; search still works without sessionStorage.
+  }
 }
 
 function warnAboutOverpassFailure(error: NearbyDogPlacesError) {
@@ -411,22 +441,16 @@ function buildOverpassQuery({ latitude, longitude }: Coordinates, radiusMeters: 
     (
       node["amenity"="veterinary"]${around};
       way["amenity"="veterinary"]${around};
-      relation["amenity"="veterinary"]${around};
       node["shop"="pet"]${around};
       way["shop"="pet"]${around};
-      relation["shop"="pet"]${around};
       node["leisure"="dog_park"]${around};
       way["leisure"="dog_park"]${around};
-      relation["leisure"="dog_park"]${around};
       node["shop"="pet_grooming"]${around};
       way["shop"="pet_grooming"]${around};
-      relation["shop"="pet_grooming"]${around};
       node["shop"="dog_grooming"]${around};
       way["shop"="dog_grooming"]${around};
-      relation["shop"="dog_grooming"]${around};
       node["craft"="dog_grooming"]${around};
       way["craft"="dog_grooming"]${around};
-      relation["craft"="dog_grooming"]${around};
     );
     out body center 100;
   `;

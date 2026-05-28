@@ -149,6 +149,27 @@ Phase 8.5E polishes the Nearby and Recommendations pages without changing backen
 - UI still shows the clean load-error message if all Overpass attempts fail.
 - No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
 
+## Follow-Up Reliability Refinement
+
+- Production QA showed the primary Overpass endpoint can consistently return `406`, while the fallback endpoint succeeds but can take around 50 seconds.
+- The app now remembers a primary `406` for the current browser session using sessionStorage and skips directly to the fallback endpoint on later Nearby searches in that session.
+- The endpoint preference is session-only and is not persisted long-term.
+- The Overpass query was lightened by removing `relation` clauses and keeping `node` and `way` searches for vets, pet shops, dog parks, and dog groomers.
+- The query still uses POST form encoding and keeps `[out:json][timeout:18]`.
+- If a search takes longer than about 9 seconds, the UI changes the loading message to: `Still searching nearby places... this can take a few more seconds.`
+- No endpoint, status, query, coordinate, or address details are shown in the UI.
+- QA should verify a first production search can fall back after primary `406`, a second search in the same tab skips the primary endpoint, and the long-loading message appears without disrupting results.
+
+### Follow-Up Local QA Results
+
+- Nearby current-location search still works.
+- Nearby address search still works.
+- Overpass requests remain POST, not long GET `?data=...` requests.
+- Nearby visual polish remains intact.
+- Long-loading message is available for slow searches.
+- Recommendations polish remains unchanged.
+- No env, schema, storage, backend, RLS, dependencies, API keys, or unrelated feature behavior changed.
+
 ## Validation Results
 
 - `npm.cmd run lint`: passed.
