@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { ReminderIcon } from '../components/icons/ReminderIcon';
 import { PageCard } from '../components/PageCard';
-import { StatusBadge } from '../components/StatusBadge';
 import { TelegramReminderSettingsCard } from '../components/TelegramReminderSettingsCard';
 import { useAuth } from '../hooks/useAuth';
 import { useDogs } from '../hooks/useDogs';
@@ -17,7 +17,7 @@ import {
 } from '../lib/reminderHelpers';
 import { supabase } from '../lib/supabaseClient';
 import type { Reminder, ReminderFrequency, ReminderState, ReminderType } from '../types/reminder';
-import { REMINDER_FREQUENCIES, REMINDER_STATES, REMINDER_TYPES } from '../types/reminder';
+import { REMINDER_FREQUENCIES, REMINDER_TYPES } from '../types/reminder';
 
 type ReminderFormState = {
   title: string;
@@ -39,6 +39,14 @@ const emptyForm: ReminderFormState = {
   state: 'upcoming',
 };
 
+const inputClassName =
+  'w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100';
+
+const textareaClassName =
+  'min-h-28 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100';
+const notesTextareaClassName =
+  'min-h-28 w-full rounded-2xl border border-stone-300 bg-stone-50/80 px-4 py-3 text-sm text-slate-900 shadow-inner transition placeholder:text-slate-400 focus:border-teal-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100';
+
 const reminderFilters: Array<{ value: ReminderFilter; label: string }> = [
   { value: 'open', label: 'Open' },
   { value: 'today_open', label: 'Today open' },
@@ -53,9 +61,26 @@ function getReminderFilterFromQuery(value: string | null): ReminderFilter {
   return value && reminderFilterValues.has(value as ReminderFilter) ? (value as ReminderFilter) : 'open';
 }
 
-const betaReminderStateOptions = REMINDER_STATES.filter((state) => state.value !== 'snoozed');
+function isLessThanOneMinuteInFuture(value: string) {
+  if (!value) {
+    return false;
+  }
 
-function validateReminderForm(form: ReminderFormState) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return true;
+  }
+
+  return date.getTime() < Date.now() + 60 * 1000;
+}
+
+function getOneMinuteFutureDateTimeLocalValue() {
+  const date = new Date(Date.now() + 60 * 1000);
+  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 16);
+}
+
+function validateReminderForm(form: ReminderFormState, isCreatingReminder: boolean) {
   const errors: Partial<Record<keyof ReminderFormState, string>> = {};
   const title = form.title.trim();
 
@@ -73,8 +98,12 @@ function validateReminderForm(form: ReminderFormState) {
     errors.recurring_frequency = 'Choose a valid repeat option.';
   }
 
-  if (!REMINDER_STATES.some((state) => state.value === form.state)) {
-    errors.state = 'Choose a valid reminder state.';
+  if (isCreatingReminder && form.state !== 'upcoming') {
+    errors.state = 'New reminders must start as open/upcoming.';
+  }
+
+  if (isCreatingReminder && isLessThanOneMinuteInFuture(form.scheduled_at)) {
+    errors.scheduled_at = 'Choose a time at least one minute in the future.';
   }
 
   return errors;
@@ -175,6 +204,8 @@ export function RemindersPage() {
     () => reminders.find((reminder) => reminder.id === selectedReminderId) ?? null,
     [reminders, selectedReminderId],
   );
+  const isCreatingReminder = selectedReminderId === 'new';
+  const minimumReminderDateTime = useMemo(() => getOneMinuteFutureDateTimeLocalValue(), []);
 
   const filteredReminders = useMemo(() => {
     if (activeFilter === 'open') {
@@ -269,7 +300,7 @@ export function RemindersPage() {
 
   const startNewReminder = () => {
     setSelectedReminderId('new');
-    setForm(emptyForm);
+    setForm({ ...emptyForm, state: 'upcoming' });
     setFieldErrors({});
     setFeedback(null);
   };
@@ -298,7 +329,7 @@ export function RemindersPage() {
       return;
     }
 
-    const nextErrors = validateReminderForm(form);
+    const nextErrors = validateReminderForm(form, isCreatingReminder);
     setFieldErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -320,7 +351,6 @@ export function RemindersPage() {
       state: nextState,
     };
 
-    const isCreatingReminder = selectedReminderId === 'new';
     const result =
       isCreatingReminder
         ? await supabase
@@ -443,15 +473,15 @@ export function RemindersPage() {
 
   return (
     <div className="space-y-4">
-      <PageCard
-        title="Reminders"
-        description="Create and manage basic care reminders for the selected dog."
-      >
-        <div className="flex flex-wrap gap-2">
-          {activeDog ? <StatusBadge>Active dog: {activeDog.name}</StatusBadge> : null}
-          <StatusBadge>{reminders.length === 1 ? '1 reminder' : `${reminders.length} reminders`}</StatusBadge>
-        </div>
-      </PageCard>
+      <section className="space-y-3 bg-transparent py-2 text-center">
+        <h1 className="inline-flex items-center justify-center gap-3 text-4xl font-extrabold tracking-normal text-slate-950 sm:text-5xl">
+          <ReminderIcon className="h-8 w-8 text-teal-700 sm:h-9 sm:w-9" />
+          <span>Reminders</span>
+        </h1>
+        <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">
+          Keep care routines visible for the selected dog without changing Telegram scheduling behavior.
+        </p>
+      </section>
 
       {!hasSupabaseConfig ? (
         <PageCard
@@ -485,22 +515,22 @@ export function RemindersPage() {
 
       {canUseReminders ? (
         <section className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-950">
+          <div className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-sm shadow-teal-950/5 backdrop-blur">
+            <div className="border-b border-stone-100 pb-4 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <h2 className="text-2xl font-extrabold text-slate-950">
                   {selectedReminder ? 'Edit reminder' : 'Add reminder'}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">For {activeDog?.name}</p>
+                <p className="text-sm font-semibold text-teal-800">Active Profile: {activeDog?.name}</p>
+                <button
+                  type="button"
+                  onClick={startNewReminder}
+                  disabled={isSaving}
+                  className="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-bold text-teal-900 shadow-sm transition hover:border-teal-200 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  New reminder
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={startNewReminder}
-                disabled={isSaving}
-                className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-stone-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                New reminder
-              </button>
             </div>
 
             <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
@@ -508,7 +538,7 @@ export function RemindersPage() {
                 <input
                   value={form.title}
                   onChange={(event) => updateField('title', event.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={inputClassName}
                   maxLength={120}
                 />
               </Field>
@@ -516,10 +546,10 @@ export function RemindersPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Type" error={fieldErrors.type} required>
                   <select
-                    value={form.type}
-                    onChange={(event) => updateField('type', event.target.value)}
-                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
-                  >
+                  value={form.type}
+                  onChange={(event) => updateField('type', event.target.value)}
+                  className={inputClassName}
+                >
                     {REMINDER_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>
                         {type.label}
@@ -528,15 +558,28 @@ export function RemindersPage() {
                   </select>
                 </Field>
 
-                <Field label="Date and time">
+                <Field
+                  label="Date and time"
+                  error={fieldErrors.scheduled_at}
+                  helperText={isCreatingReminder ? 'Optional, but new reminders with a time must be at least one minute in the future.' : undefined}
+                >
                   <input
                     type="datetime-local"
+                    min={isCreatingReminder ? minimumReminderDateTime : undefined}
                     value={form.scheduled_at}
                     onChange={(event) => updateField('scheduled_at', event.target.value)}
-                    className="w-full rounded-xl border border-stone-300 px-3 py-2"
+                    className={inputClassName}
                   />
                 </Field>
 
+                {fieldErrors.state ? (
+                  <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {fieldErrors.state}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="mx-auto max-w-md">
                 <Field
                   label="Repeats"
                   error={fieldErrors.recurring_frequency}
@@ -545,25 +588,11 @@ export function RemindersPage() {
                   <select
                     value={form.recurring_frequency}
                     onChange={(event) => updateField('recurring_frequency', event.target.value)}
-                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
+                    className={inputClassName}
                   >
                     {REMINDER_FREQUENCIES.map((frequency) => (
                       <option key={frequency.value} value={frequency.value}>
                         {frequency.label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="State" error={fieldErrors.state}>
-                  <select
-                    value={form.state}
-                    onChange={(event) => updateField('state', event.target.value)}
-                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2"
-                  >
-                    {betaReminderStateOptions.map((state) => (
-                      <option key={state.value} value={state.value}>
-                        {state.label}
                       </option>
                     ))}
                   </select>
@@ -574,8 +603,9 @@ export function RemindersPage() {
                 <textarea
                   value={form.notes}
                   onChange={(event) => updateField('notes', event.target.value)}
-                  className="min-h-28 w-full rounded-xl border border-stone-300 px-3 py-2"
+                  className={notesTextareaClassName}
                   maxLength={1000}
+                  placeholder="Add optional notes here..."
                 />
               </Field>
 
@@ -592,13 +622,15 @@ export function RemindersPage() {
                 </div>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={isSaving || !hasSupabaseConfig}
-                className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-stone-300 sm:w-auto"
-              >
-                {isSaving ? 'Saving...' : selectedReminder ? 'Update reminder' : 'Save reminder'}
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={isSaving || !hasSupabaseConfig}
+                  className="w-full rounded-2xl bg-teal-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:bg-stone-300 sm:w-auto"
+                >
+                  {isSaving ? 'Saving...' : selectedReminder ? 'Update reminder' : 'Save reminder'}
+                </button>
+              </div>
             </form>
           </div>
 
@@ -685,40 +717,38 @@ function ReminderCard({
   return (
     <article
       className={[
-        'rounded-2xl border bg-white p-5 shadow-sm',
+        'rounded-3xl border bg-white/90 p-5 text-center shadow-sm shadow-teal-950/5',
         isSelected ? 'border-teal-300 ring-2 ring-teal-100' : 'border-stone-200',
       ].join(' ')}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-950">{reminder.title}</h3>
-          <p className="mt-1 text-sm text-slate-600">{formatDateTime(reminder.scheduled_at)}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge>{reminderTypeLabels[reminder.type] ?? reminder.type}</Badge>
-          <Badge>{reminderStateLabels[effectiveState] ?? effectiveState}</Badge>
-        </div>
-      </div>
+      <h3 className="text-xl font-extrabold text-slate-950">{reminder.title}</h3>
+      <p className="mt-2 text-sm font-medium text-slate-600">{formatDateTime(reminder.scheduled_at)}</p>
 
-      <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-        <div>
-          <dt className="font-medium text-slate-800">Repeats</dt>
-          <dd>{reminderFrequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}</dd>
+      <dl className="mx-auto mt-4 grid max-w-md gap-3 text-sm text-slate-600 sm:grid-cols-2">
+        <div className="rounded-2xl border border-stone-100 bg-stone-50/80 px-3 py-2">
+          <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Type</dt>
+          <dd className="mt-1 font-semibold text-slate-800">{reminderTypeLabels[reminder.type] ?? reminder.type}</dd>
         </div>
-        <div>
-          <dt className="font-medium text-slate-800">State</dt>
-          <dd>{reminderStateLabels[effectiveState] ?? effectiveState}</dd>
+        <div className="rounded-2xl border border-stone-100 bg-stone-50/80 px-3 py-2">
+          <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">State</dt>
+          <dd className="mt-1 font-semibold text-slate-800">{reminderStateLabels[effectiveState] ?? effectiveState}</dd>
+        </div>
+        <div className="rounded-2xl border border-stone-100 bg-stone-50/80 px-3 py-2 sm:col-span-2">
+          <dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Repeats</dt>
+          <dd className="mt-1 font-semibold text-slate-800">
+            {reminderFrequencyLabels[reminder.recurring_frequency] ?? reminder.recurring_frequency}
+          </dd>
         </div>
       </dl>
 
-      {reminder.notes ? <p className="mt-4 text-sm leading-6 text-slate-600">{reminder.notes}</p> : null}
+      {reminder.notes ? <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-600">{reminder.notes}</p> : null}
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row sm:flex-wrap">
         <button
           type="button"
           onClick={() => onEdit(reminder)}
           disabled={isSaving}
-          className="rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-stone-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-2xl border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:border-stone-300 hover:bg-stone-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Edit
         </button>
@@ -727,7 +757,7 @@ function ReminderCard({
             type="button"
             onClick={() => onMarkCompleted(reminder)}
             disabled={isSaving}
-            className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-800 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-bold text-green-800 shadow-sm transition hover:bg-green-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Mark completed
           </button>
@@ -736,7 +766,7 @@ function ReminderCard({
           type="button"
           onClick={() => onDelete(reminder)}
           disabled={isSaving}
-          className="rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Delete
         </button>
@@ -764,13 +794,5 @@ function Field({ children, error, helperText, label, required = false }: FieldPr
       {helperText ? <p className="mt-1 text-xs leading-5 text-slate-500">{helperText}</p> : null}
       {error ? <p className="mt-1 text-xs font-medium text-red-700">{error}</p> : null}
     </label>
-  );
-}
-
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-medium text-slate-700">
-      {children}
-    </span>
   );
 }
