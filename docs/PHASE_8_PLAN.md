@@ -285,7 +285,7 @@ Implemented Phase 8.5A result:
 
 ### UX/UI + Mobile Polish
 
-Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, and Phase 8.5E completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
+Status: Phase 8.5A, Phase 8.5B, Phase 8.5C, Phase 8.5D, Phase 8.5E, and Phase 8.5F completed; remaining work should focus on final mobile/demo QA and any explicitly approved follow-up polish.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
@@ -296,11 +296,12 @@ Implementation rules:
 - Keep the completed Phase 8.5C Dog Profile polish.
 - Keep the completed Phase 8.5D Reminders polish and safe validation behavior.
 - Keep the completed Phase 8.5E Nearby + Recommendations polish and Nearby reliability behavior.
+- Keep the completed Phase 8.5F active dog avatar menu as the primary visible navigation entry point.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
-- Keep active dog avatar menu, floating assistant, and Telegram/settings move in later focused sub-steps.
+- Keep floating assistant and Telegram/settings move in later focused sub-steps.
 
 Implemented Phase 8.5B result:
 
@@ -346,6 +347,17 @@ Implemented Phase 8.5E result:
 - Relation clauses were removed from the Overpass query to reduce query cost, while node/way searches remain for vets, pet shops, dog parks, and groomers.
 - Loading messages are clearer for slow searches.
 - No env files, schema, storage, backend, RLS, dependencies, API keys, paid services, or unrelated feature behavior were changed.
+
+Implemented Phase 8.5F result:
+
+- Active dog avatar menu is now the primary visible navigation entry point.
+- The avatar menu appears on the left side of the transparent header while the DogCareAI logo remains centered.
+- Old visible AppShell navigation/menu, visible DogPicker, active dog header control, header email, and header logout were removed from the page surface.
+- Dashboard, Dog Profile, Reminders, Nearby, Recommendations, and Assistant remain accessible through the avatar menu.
+- Dog switching uses the existing active dog flow and preserves existing active dog persistence.
+- Logout uses the existing logout flow.
+- Dog Profile menu item reuses the existing `DogProfileIcon`.
+- Auth behavior, routes, schema, env files, backend behavior, RLS, storage, Telegram, Reminders, Nearby, Recommendations, Assistant, dog insights, product logic, and dependencies were not changed.
 
 ## Risks and Mitigation
 
@@ -451,4 +463,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, and Phase 8.5E Nearby + Recommendations Polish are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, and Phase 8.5F Active Dog Avatar Menu are complete. The next recommended Phase 8 focus is final mobile/demo QA and any explicitly approved follow-up polish.
