@@ -52,6 +52,7 @@ Phase 8 should target these items first:
 - Breed-Inspired Dog Avatar. Completed in Phase 8.4C with local SVG/CSS only and no upload/storage/API dependency.
 - UX/UI visual foundation with logo and header cleanup. Completed in Phase 8.5A.
 - Dashboard redesign and compact Did You Know treatment. Completed in Phase 8.5B.
+- Dog Profile page polish. Completed in Phase 8.5C.
 - Mobile responsive polish.
 - README and demo guide updates after implementation.
 
@@ -90,9 +91,10 @@ These items are not approved for Phase 8 unless explicitly approved later:
 7. Phase 8.4C: Profile Image / Breed-Inspired Avatar. Completed.
 8. Phase 8.5A: Visual Foundation + Logo + Header Cleanup. Completed.
 9. Phase 8.5B: Dashboard Redesign + Compact Did You Know. Completed.
-10. Phase 8.5C+: Remaining page-specific UX/UI + Mobile polish.
-11. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
-12. Phase 8.7: Final QA + demo rehearsal.
+10. Phase 8.5C: Dog Profile Polish. Completed.
+11. Phase 8.5D+: Remaining page-specific UX/UI + Mobile polish.
+12. Phase 8.6: Optional product polish, such as archive restore, settings, or birth date.
+13. Phase 8.7: Final QA + demo rehearsal.
 
 Each implementation step should be handled as a small focused change with its own documentation update and regression checks for the Phase 7 stable flows.
 
@@ -280,7 +282,7 @@ Implemented Phase 8.5A result:
 
 ### UX/UI + Mobile Polish
 
-Status: Phase 8.5A and Phase 8.5B completed; remaining Phase 8.5 page-specific polish continues.
+Status: Phase 8.5A, Phase 8.5B, and Phase 8.5C completed; remaining Phase 8.5 page-specific polish continues.
 
 Goal: improve visual quality and mobile usability without a major redesign.
 
@@ -288,11 +290,12 @@ Implementation rules:
 
 - Keep the completed Phase 8.5A logo/header foundation.
 - Keep the completed Phase 8.5B Dashboard overview and compact Did You Know treatment.
+- Keep the completed Phase 8.5C Dog Profile polish.
 - Improve header, cards, dashboard hero, empty states, spacing, icons, and shadows.
 - Improve mobile layout and tap targets.
 - Keep the app calm, readable, card-based, and mobile-first.
 - Do not show inactive final-only features as implemented.
-- Keep remaining page-specific title centering, Dog Profile polish, Reminders polish, active dog avatar menu, floating assistant, Telegram/settings move, and reminder validation in later focused sub-steps.
+- Keep remaining Reminders polish, Nearby polish, Recommendations title alignment, active dog avatar menu, floating assistant, Telegram/settings move, and reminder validation in later focused sub-steps.
 
 Implemented Phase 8.5B result:
 
@@ -304,6 +307,15 @@ Implemented Phase 8.5B result:
 - Reminder stat cards link to `/reminders?filter=open`, `/reminders?filter=missed`, and `/reminders?filter=completed`.
 - `RemindersPage` reads the safe filter query param and falls back to Open for invalid or missing values.
 - Reminder CRUD, Telegram manual/test/scheduled behavior, scheduler behavior, duplicate prevention, schema, env files, API keys, storage, RLS, backend behavior, paid services, and service-role behavior were not changed.
+
+Implemented Phase 8.5C result:
+
+- Dog Profile title is centered, transparent, and paired with a local standalone paw icon.
+- Dog Profile subtitle now adapts between new-profile and existing-profile states.
+- Profile selection moved into a cleaner centered row.
+- DogAvatar preview remains in use with compact static accent swatches for existing `profile_image_url` compatibility.
+- Save/update and archive actions are centered and visually polished.
+- Dog Profile create/edit/save/archive behavior, active dog switching, schema, storage, env files, backend behavior, and unrelated features were not changed.
 
 ## Risks and Mitigation
 
@@ -409,4 +421,4 @@ Phase 8 QA should include focused feature checks plus regression for stable Phas
 
 ## Final Recommendation
 
-Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, and Phase 8.5B Dashboard Redesign + Compact Did You Know are complete. The next recommended Phase 8 focus is remaining page-specific UX/mobile polish and final QA/demo rehearsal.
+Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, and Phase 8.5C Dog Profile Polish are complete. The next recommended Phase 8 focus is Reminders polish, remaining page-specific UX/mobile polish, and final QA/demo rehearsal.
