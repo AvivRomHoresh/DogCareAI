@@ -20,6 +20,7 @@ Added a Telegram webhook helper route that lets the central DogCareAI Telegram b
 - The help content explains what a Chat ID is and how DogCareAI uses it for Telegram reminders.
 - The help content explains that users do not need BotFather, bot tokens, or `getUpdates`.
 - The help content explains that DogCareAI uses one central server-side Telegram bot token.
+- The help panel now includes the Telegram bot username `@dogCareAI_bot` so users know exactly what to search for.
 - The help panel tells users to send `/myid` to the DogCareAI reminder bot.
 - The help content clarifies that users should copy only the Chat ID number.
 - The help content clarifies that a Bot Token should not be pasted into the Chat ID field.

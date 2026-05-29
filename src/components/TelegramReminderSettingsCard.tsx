@@ -440,7 +440,10 @@ export function TelegramReminderSettingsCard() {
                   <span className="font-semibold text-slate-900">Open Telegram.</span>
                 </li>
                 <li>
-                  <span className="font-semibold text-slate-900">Open the DogCareAI reminder bot.</span>
+                  <span className="font-semibold text-slate-900">Search Telegram for the DogCareAI reminder bot.</span>
+                  <span className="block">
+                    Search for: <code className="select-all rounded bg-sky-50 px-1 py-0.5 text-[0.7rem] text-sky-900">@dogCareAI_bot</code>
+                  </span>
                 </li>
                 <li>
                   <span className="font-semibold text-slate-900">Send:</span>
