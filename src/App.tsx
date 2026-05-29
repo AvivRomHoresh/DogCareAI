@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicOnlyRoute } from './components/PublicOnlyRoute';
-import { AssistantPage } from './pages/AssistantPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DogProfilePage } from './pages/DogProfilePage';
@@ -35,14 +34,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DogProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/assistant"
-          element={
-            <ProtectedRoute>
-              <AssistantPage />
             </ProtectedRoute>
           }
         />

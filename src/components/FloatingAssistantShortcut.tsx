@@ -12,7 +12,7 @@ export function FloatingAssistantShortcut() {
   const [hasEntered, setHasEntered] = useState(false);
   const [hasLogoFailed, setHasLogoFailed] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const isHiddenRoute = location.pathname === '/assistant' || location.pathname === '/auth';
+  const isHiddenRoute = location.pathname === '/auth';
 
   useEffect(() => {
     setIsVisible(false);

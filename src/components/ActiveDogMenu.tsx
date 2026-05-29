@@ -17,11 +17,10 @@ type ActiveDogMenuProps = {
   onLogout: () => void | Promise<void>;
 };
 
-type MenuIconName = 'assistant' | 'dashboard' | 'dogProfile' | 'nearby' | 'recommendations' | 'reminders';
+type MenuIconName = 'dashboard' | 'dogProfile' | 'nearby' | 'recommendations' | 'reminders';
 
 const routeIconByPath: Record<string, MenuIconName> = {
   '/': 'dashboard',
-  '/assistant': 'assistant',
   '/dog-profile': 'dogProfile',
   '/nearby': 'nearby',
   '/recommendations': 'recommendations',
@@ -292,14 +291,6 @@ function MenuIcon({ name }: { name: MenuIconName }) {
   };
 
   switch (name) {
-    case 'assistant':
-      return (
-        <svg aria-hidden="true" {...commonProps}>
-          <path d="M7 9h10" />
-          <path d="M8 14h5" />
-          <path d="M6 19 3 21V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3z" />
-        </svg>
-      );
     case 'dogProfile':
       return <DogProfileIcon className="h-5 w-5 shrink-0" />;
     case 'nearby':
