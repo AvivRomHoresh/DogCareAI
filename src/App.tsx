@@ -8,6 +8,7 @@ import { DogProfilePage } from './pages/DogProfilePage';
 import { NearbyPage } from './pages/NearbyPage';
 import { RecommendationsPage } from './pages/RecommendationsPage';
 import { RemindersPage } from './pages/RemindersPage';
+import { UpdatePasswordPage } from './pages/UpdatePasswordPage';
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/update-password" element={<UpdatePasswordPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
