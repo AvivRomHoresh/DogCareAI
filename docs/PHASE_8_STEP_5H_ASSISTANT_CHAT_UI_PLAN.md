@@ -1,4 +1,8 @@
-# Phase 8.5H Assistant Chat UI Redesign Plan
+# Phase 8.5H Interactive Floating Assistant Chat Widget Plan
+
+## Roadmap Pivot Note
+
+Phase 8.5H was clarified during implementation. The target experience is now an interactive floating Doggy chat widget, not only a redesigned full `/assistant` page. The floating widget should become the primary Assistant access pattern, while the existing `/assistant` route remains available for compatibility and can render the same shared chat experience in focused page mode.
 
 ## Current Assistant Page Behavior Summary
 
@@ -17,31 +21,36 @@
 
 ## Desired Chat-Style UX
 
-- Make `/assistant` feel like a real, polished chat with Doggy.
+- Make the Assistant feel like a real, polished chat with Doggy.
+- Open the primary chat experience from the floating Doggy shortcut as a compact bottom-area widget.
+- Support minimize and expand/open behavior similar to a small Messenger-style chat.
+- Keep `/assistant` available for compatibility, preferably using the same shared chat UI in page/focused mode.
 - Keep the existing Assistant functionality and safety behavior.
-- Replace the plain card-heavy layout with a chat-style composition:
+- Replace the plain card-heavy layout with a reusable chat-style composition:
   - clear chat header with Doggy identity,
   - active dog context shown compactly,
   - scrollable message area,
   - assistant/user bubbles with stronger visual distinction,
   - fixed or sticky composer within the page card,
-  - starter prompts styled as quick-reply chips/cards,
+  - starter prompts styled as chat-native quick-reply chips shown only before the first user message,
   - subtle typing/preparing state after explicit submit.
 - Keep the page calm, friendly, and product-quality rather than childish.
-- Keep the Phase 8.5G floating shortcut pointing to this improved `/assistant` page.
+- Keep the Phase 8.5G floating shortcut, but have it open the chat widget instead of directly navigating to `/assistant`.
 
 ## Safe Implementation Scope
 
 Recommended Phase 8.5H implementation:
 
-1. Redesign `src/pages/AssistantPage.tsx` visually and structurally.
-2. Preserve existing `sendQuestion`, `requestServerAssistantResponse`, emergency handling, fallback response, and reminder loading behavior.
-3. Reuse existing `ContextSummaryCard`, `EmergencyAlert`, and `StatusBadge` if they still fit, or reposition/de-emphasize them visually.
-4. Convert the conversation section into a chat panel.
-5. Style starter questions as quick prompts that populate the composer, not automatic sends.
-6. Keep the existing textarea and submit flow, but make it look like a chat composer.
-7. Keep the existing `/assistant` route and `AppShell` integration.
-8. Do not add a separate floating chat panel.
+1. Extract the existing Assistant page behavior into a reusable chat experience component.
+2. Wire the floating Doggy shortcut to open that chat experience in widget mode.
+3. Keep `/assistant` rendering the same chat experience in page/focused mode.
+4. Preserve existing `sendQuestion`, `requestServerAssistantResponse`, emergency handling, fallback response, and reminder loading behavior.
+5. Reuse existing `ContextSummaryCard`, `EmergencyAlert`, and `StatusBadge` if they still fit, or reposition/de-emphasize them visually.
+6. Convert the conversation section into a compact chat panel with a widget-safe layout.
+7. Style starter questions as chat-native quick prompts that populate the composer, not automatic sends.
+8. Show starter prompts only at the beginning of the local chat session before the first user message.
+9. Keep the existing textarea and submit flow, but make it look like a chat composer.
+10. Keep the existing `/assistant` route and `AppShell` integration.
 
 If small helper components are useful, keep them local to `AssistantPage.tsx` or create narrowly scoped UI components that do not own Assistant API logic.
 
@@ -69,6 +78,7 @@ If small helper components are useful, keep them local to `AssistantPage.tsx` or
 - No background requests.
 - No real Gemini call unless the user explicitly submits a question.
 - Starter prompts must not auto-send unless explicitly approved; safest behavior is to fill the composer only.
+- Starter prompts should disappear after the first user message in the local chat session.
 - Keep Mock Mode available.
 - Keep Gemini server-side only through `/api/assistant`.
 - Do not add new AI providers or paid APIs.
@@ -136,12 +146,13 @@ If small helper components are useful, keep them local to `AssistantPage.tsx` or
 - No chat persistence.
 - No Supabase schema, RLS, storage, env, API key, backend/service-role, auth, Telegram, scheduler, Reminders, Nearby, Recommendations, Dog Profile, Dashboard, dog insights, product recommendations, or product logic changes.
 - No new dependencies unless explicitly approved.
-- No full floating in-app chat panel.
 - No proactive assistant messages.
 
 ## QA Checklist
 
-- `/assistant` opens for authenticated users.
+- Floating Doggy shortcut opens a chat widget without navigating away.
+- Widget can minimize and reopen.
+- `/assistant` opens for authenticated users and remains compatible.
 - Page looks like a polished chat-style experience.
 - Active dog context still appears.
 - Reminder context still loads.
@@ -154,19 +165,19 @@ If small helper components are useful, keep them local to `AssistantPage.tsx` or
 - Duplicate send guard still works while sending.
 - Validation still blocks empty questions.
 - Messages remain local and clear after dog switching.
-- Floating shortcut still points to `/assistant` and remains hidden on `/assistant`.
+- Floating shortcut opens the widget and remains hidden on `/assistant`.
 - Mobile layout has no horizontal overflow.
 - No unrelated feature flows are changed.
 
 ## Risks / TODOs
 
-- Decide during implementation whether `ContextSummaryCard` remains a card, becomes a side panel, or is visually collapsed.
 - Decide whether starter prompts should only fill the composer or optionally send after a second explicit click; safest MVP is fill-only.
 - Consider a future extraction of chat UI components only after the page redesign stabilizes.
-- Full floating in-app chat panel remains deferred.
+- Consider whether `/assistant` should eventually redirect to the widget-first experience after compatibility is no longer needed.
+- After Gemini-connected QA passes, consider removing or replacing the standalone `/assistant` page fully with the floating chat widget.
 
 ## Go / No-Go Recommendation
 
-Go for Phase 8.5H as a visual/chat-layout redesign of the existing `/assistant` page.
+Go for Phase 8.5H as a reusable Assistant chat experience with a floating widget as the primary entry point and `/assistant` retained as a compatibility route.
 
 Do not change Assistant business logic, `/api/assistant`, emergency behavior, Mock Mode, or server-side Gemini boundary. The implementation should improve the chat experience while preserving explicit-submit-only cost control.
