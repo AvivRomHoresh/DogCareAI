@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
@@ -99,6 +99,9 @@ function areFormsEqual(a: TelegramSettingsForm, b: TelegramSettingsForm) {
 
 export function TelegramReminderSettingsCard() {
   const { hasSupabaseConfig, session, user } = useAuth();
+  const chatIdInputId = useId();
+  const chatIdHelpId = useId();
+  const [isChatIdHelpOpen, setIsChatIdHelpOpen] = useState(false);
   const [form, setForm] = useState<TelegramSettingsForm>(defaultForm);
   const [savedForm, setSavedForm] = useState<TelegramSettingsForm | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -393,9 +396,26 @@ export function TelegramReminderSettingsCard() {
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <label className="block text-sm font-medium text-slate-700">
-          Telegram chat ID
+        <div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-slate-700" htmlFor={chatIdInputId}>
+              Telegram chat ID
+            </label>
+            <button
+              type="button"
+              aria-controls={chatIdHelpId}
+              aria-expanded={isChatIdHelpOpen}
+              onClick={() => setIsChatIdHelpOpen((current) => !current)}
+              className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2.5 py-1 text-xs font-semibold text-sky-800 transition hover:border-sky-300 hover:bg-sky-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            >
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-sky-100 text-[0.65rem] font-bold text-sky-900">
+                ?
+              </span>
+              Need help finding your Chat ID?
+            </button>
+          </div>
           <input
+            id={chatIdInputId}
             value={form.telegram_chat_id}
             onChange={(event) => updateField('telegram_chat_id', event.target.value)}
             disabled={isLoading || isSaving || isSendingTest || isCheckingReminders}
@@ -403,7 +423,53 @@ export function TelegramReminderSettingsCard() {
             placeholder="Example: 123456789"
             autoComplete="off"
           />
-        </label>
+          {isChatIdHelpOpen ? (
+            <div
+              id={chatIdHelpId}
+              className="mt-3 rounded-2xl border border-sky-200 bg-white/85 p-4 text-xs leading-5 text-slate-700 shadow-sm"
+            >
+              <p className="text-sm font-bold text-slate-950">How to find your Telegram Chat ID</p>
+              <p className="mt-2">
+                A Chat ID tells DogCareAI where to send your Telegram reminders.
+              </p>
+              <p className="mt-2 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-slate-700">
+                You do not need to create your own Telegram bot. DogCareAI uses its own Telegram reminder bot.
+              </p>
+              <ol className="mt-3 list-decimal space-y-2 pl-4">
+                <li>
+                  <span className="font-semibold text-slate-900">Open Telegram.</span>
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-900">Open the DogCareAI reminder bot.</span>
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-900">Send:</span>
+                  <code className="mt-1 block w-fit select-all rounded bg-sky-50 px-2 py-1 text-[0.7rem] text-sky-900">
+                    /myid
+                  </code>
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-900">The bot will reply with your Chat ID.</span>
+                </li>
+                <li>
+                  <span className="font-semibold text-slate-900">Copy only the Chat ID number and paste it here.</span>
+                  <span className="block">
+                    Example: <code className="select-all rounded bg-sky-50 px-1 py-0.5 text-[0.7rem] text-sky-900">123456789</code>
+                  </span>
+                </li>
+              </ol>
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950">
+                Do not paste a Bot Token here. This field is only for your Chat ID.
+              </p>
+              <p className="mt-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-slate-700">
+                For groups/channels, the Chat ID may be negative or start with -100. Keep the minus sign.
+              </p>
+              <p className="mt-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-slate-700">
+                If you do not see a chat id, send another message to the bot and try /myid again.
+              </p>
+            </div>
+          ) : null}
+        </div>
 
         <label className="block text-sm font-medium text-slate-700">
           Notify before
