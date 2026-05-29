@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PageCard } from '../components/PageCard';
 import { hasSupabaseConfig, supabase } from '../lib/supabaseClient';
 
-type AuthMode = 'sign-in' | 'sign-up';
+type AuthMode = 'forgot-password' | 'sign-in' | 'sign-up';
 
 const REALISTIC_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -81,6 +81,22 @@ export function AuthPage() {
 
     setIsSubmitting(true);
 
+    if (mode === 'forgot-password') {
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+
+      setIsSubmitting(false);
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setSuccessMessage('Check your email for a password reset link.');
+      return;
+    }
+
     const credentials = {
       email: normalizedEmail,
       password,
@@ -105,12 +121,12 @@ export function AuthPage() {
     }
 
     if (data.session) {
-      setSuccessMessage('Account created. Redirecting to your dashboard.');
+      setSuccessMessage('Account created and signed in. Redirecting to your dashboard.');
       navigate('/', { replace: true });
       return;
     }
 
-    setSuccessMessage('Account created. Check your email if Supabase requires confirmation before sign in.');
+    setSuccessMessage('Account created. Please check your email and confirm your account before signing in.');
   };
 
   const handleGoogleSignIn = async () => {
@@ -146,6 +162,7 @@ export function AuthPage() {
 
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
+    setPassword('');
     setErrorMessage('');
     setSuccessMessage('');
   };
@@ -161,8 +178,12 @@ export function AuthPage() {
 
   return (
     <PageCard
-      title={mode === 'sign-in' ? 'Sign in' : 'Create account'}
-      description="Use Supabase email/password authentication to access the DogCareAI beta routes."
+      title={mode === 'sign-in' ? 'Sign in' : mode === 'sign-up' ? 'Create account' : 'Reset password'}
+      description={
+        mode === 'forgot-password'
+          ? 'Enter your email and DogCareAI will send a Supabase password reset link.'
+          : 'Use Supabase email/password authentication to access the DogCareAI beta routes.'
+      }
     >
       <div className="mb-5 flex rounded-2xl border border-stone-200 bg-stone-100 p-1">
         <button
@@ -203,21 +224,23 @@ export function AuthPage() {
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-800" htmlFor="password">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            minLength={6}
-            autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-          />
-        </div>
+        {mode !== 'forgot-password' ? (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-800" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={6}
+              autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+              className="w-full rounded-xl border border-stone-300 px-3 py-2 text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            />
+          </div>
+        ) : null}
 
         {errorMessage ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
@@ -236,30 +259,60 @@ export function AuthPage() {
           disabled={isSubmitting || isGoogleSubmitting}
           className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-teal-400"
         >
-          {isSubmitting ? 'Please wait...' : mode === 'sign-in' ? 'Sign in' : 'Create account'}
+          {isSubmitting
+            ? 'Please wait...'
+            : mode === 'sign-in'
+              ? 'Sign in'
+              : mode === 'sign-up'
+                ? 'Create account'
+                : 'Send reset link'}
         </button>
+
+        {mode === 'sign-in' ? (
+          <button
+            type="button"
+            onClick={() => switchMode('forgot-password')}
+            className="w-full text-sm font-semibold text-teal-800 underline-offset-4 transition hover:text-teal-950 hover:underline"
+          >
+            Forgot password?
+          </button>
+        ) : null}
+
+        {mode === 'forgot-password' ? (
+          <button
+            type="button"
+            onClick={() => switchMode('sign-in')}
+            className="w-full text-sm font-semibold text-teal-800 underline-offset-4 transition hover:text-teal-950 hover:underline"
+          >
+            Return to sign in
+          </button>
+        ) : null}
       </form>
 
-      <div className="my-5 flex items-center gap-3">
-        <div className="h-px flex-1 bg-stone-200" />
-        <span className="text-xs font-medium uppercase tracking-normal text-slate-500">or</span>
-        <div className="h-px flex-1 bg-stone-200" />
-      </div>
+      {mode !== 'forgot-password' ? (
+        <>
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-stone-200" />
+            <span className="text-xs font-medium uppercase tracking-normal text-slate-500">or</span>
+            <div className="h-px flex-1 bg-stone-200" />
+          </div>
 
-      <div className="space-y-2">
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled={isSubmitting || isGoogleSubmitting}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-stone-400 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <GoogleIcon />
-          {isGoogleSubmitting ? 'Opening Google sign in...' : 'Continue with Google'}
-        </button>
-        <p className="text-xs leading-5 text-slate-500">
-          Email and password sign in remains available for demo and fallback access.
-        </p>
-      </div>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting || isGoogleSubmitting}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-stone-400 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <GoogleIcon />
+              {isGoogleSubmitting ? 'Opening Google sign in...' : 'Continue with Google'}
+            </button>
+            <p className="text-xs leading-5 text-slate-500">
+              Email and password sign in remains available for demo and fallback access.
+            </p>
+          </div>
+        </>
+      ) : null}
     </PageCard>
   );
 }
