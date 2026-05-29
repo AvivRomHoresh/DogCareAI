@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { AssistantChatExperience } from './AssistantChatExperience';
 import { AssistantShortcutIcon } from './icons/AssistantShortcutIcon';
 
 const assistantLogoSrc = '/brand/doggy-assistant-logo.jpg';
@@ -10,11 +11,13 @@ export function FloatingAssistantShortcut() {
   const [isVisible, setIsVisible] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
   const [hasLogoFailed, setHasLogoFailed] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const isHiddenRoute = location.pathname === '/assistant' || location.pathname === '/auth';
 
   useEffect(() => {
     setIsVisible(false);
     setHasEntered(false);
+    setIsChatOpen(false);
 
     if (isHiddenRoute) {
       return undefined;
@@ -36,9 +39,18 @@ export function FloatingAssistantShortcut() {
     return null;
   }
 
+  if (isChatOpen) {
+    return (
+      <div className="fixed bottom-4 left-4 z-40 sm:bottom-6 sm:left-6">
+        <AssistantChatExperience mode="widget" onMinimize={() => setIsChatOpen(false)} />
+      </div>
+    );
+  }
+
   return (
-    <Link
-      to="/assistant"
+    <button
+      type="button"
+      onClick={() => setIsChatOpen(true)}
       aria-label="Open DogCareAI assistant"
       className={[
         'fixed bottom-5 left-5 z-40 inline-flex min-h-16 items-center gap-3 rounded-full border border-white/80 bg-slate-950/95 px-3 py-2 pr-4 text-sm font-extrabold text-white shadow-2xl shadow-teal-950/25 transition duration-500 ease-out hover:-translate-y-0.5 hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:bottom-6 sm:left-6',
@@ -61,6 +73,6 @@ export function FloatingAssistantShortcut() {
         <span className="block text-[0.7rem] font-bold uppercase tracking-[0.18em] text-teal-200">Doggy</span>
         <span className="block">Ask Assistant</span>
       </span>
-    </Link>
+    </button>
   );
 }
