@@ -8,7 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 const authenticatedNavItems = [
   { to: '/', label: 'Dashboard' },
   { to: '/dog-profile', label: 'Dog Profile' },
-  { to: '/assistant', label: 'Assistant' },
   { to: '/reminders', label: 'Reminders' },
   { to: '/nearby', label: 'Nearby' },
   { to: '/recommendations', label: 'Recommendations' },
