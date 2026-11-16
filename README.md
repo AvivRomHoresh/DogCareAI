@@ -1,139 +1,50 @@
 # DogCareAI
 
-DogCareAI is an AI-assisted web application for dog owners. The project is being built incrementally from the planning documents in `SPEC.md`, `docs/ARCHITECTURE.md`, and `docs/DESIGN.md`.
+DogCareAI is a full-stack web app for managing everyday dog care. Owners can keep profiles for multiple dogs, track upcoming care, and find nearby services. Doggy, the built-in AI assistant, uses the selected dog’s profile and relevant reminders to tailor its answers.
 
-## Current Status
+**[Try the live demo](https://dog-care-ai.vercel.app/)** · Sign in or create an account, add a sample dog and a care reminder, then open Doggy from the floating chat button and ask about that dog’s routine.
 
-Phase 7 QA is complete. Phase 8.1 Nearby Places, Phase 8.2 Telegram Reminder Notifications, Phase 8.3 Google Login, Phase 8.4A Breed Recognition + Did You Know, Phase 8.4B Product Recommendations Catalog, Phase 8.4C Breed-Inspired Dog Avatar, Phase 8.5A Visual Foundation + Logo + Header Cleanup, Phase 8.5B Dashboard Redesign + Compact Did You Know, Phase 8.5C Dog Profile Polish, Phase 8.5D Reminders Polish, Phase 8.5E Nearby + Recommendations Polish, Phase 8.5F Active Dog Avatar Menu, and Phase 8.5G Floating Assistant Shortcut are complete, and DogCareAI remains a beta/demo project that does not provide medical diagnosis.
+## Features
 
-Next Phase 8 work should focus on Phase 8.5H Assistant Chat UI Redesign: making the existing `/assistant` page feel like a polished chat experience while preserving explicit-send-only AI behavior.
+| Feature | What you can do |
+| --- | --- |
+| **Dog profiles and dashboard** | Create, edit, and archive profiles. Switch between dogs to see upcoming and overdue reminders for each one. |
+| **Care reminders** | Create, edit, complete, and delete reminders. Connect Telegram to receive due reminders and send a test message to verify the connection. |
+| **Doggy assistant** | Ask general care questions in a floating chat. The assistant uses the selected dog’s context, and the conversation stays in memory. |
+| **Nearby places** | Find vets and other dog-related services using your device location or a place name. Results and response times depend on public OpenStreetMap services. |
+| **Product recommendations** | Browse a curated catalog matched to the selected dog, see additional product details from Open Pet Food Facts for eligible items, and save favorites in the browser. |
 
-Vercel Production is the active deployment target. Netlify remains as a backup/static deployment only and should not be used for active Gemini work.
+## How it was built
 
-The app currently supports:
+**One active dog across the app.** A shared selection keeps the dashboard, reminders, recommendations, and chat focused on the same dog. The frontend uses React, TypeScript, Vite, Tailwind CSS, and React Router.
 
-- React + Vite + TypeScript
-- TailwindCSS
-- React Router beta routes
-- Local DogCareAI logo/brand in a transparent polished header
-- Supabase browser client setup
-- Supabase email/password auth with Google Login as a secondary option
-- Protected beta routes
-- Polished Dog Profile create/edit/archive with Supabase RLS
-- Breed-inspired local SVG dog avatar in Dog Profile
-- Active dog avatar menu with dog switching, route navigation, and logout
-- Polished Reminders create/edit/complete/delete for the active dog
-- Telegram reminder notifications with test send, manual due-reminder check, scheduled cron-job.org delivery, and duplicate prevention
-- Redesigned Dashboard overview with expanded active-dog reminder summary, compact Did You Know line, and reminder stat links
-- Polished Nearby page with client-side pagination, safe website handling, and POST-based Overpass reliability fallback
-- Product Recommendations Catalog with active-dog matching, optional Open Pet Food Facts enrichment for eligible Food/Treat cards, localStorage favorites, and safe fallback recommendations
-- Floating Doggy assistant shortcut that links to the existing Assistant route without automatic AI calls
-- Assistant with Mock Mode, deterministic emergency rules, and Gemini through `/api/assistant`
-- Phase 7 QA documentation and beta demo guidance
+**AI with care context.** When the owner sends a question, the [assistant API](api/assistant.js) verifies the Supabase session and checks dog ownership. It builds a prompt from the dog’s profile and relevant reminders, then calls Gemini from a Vercel function. When emergency keywords trigger a rule, the function directs the user to a veterinarian and skips the model call. Mock mode lets developers try the chat flow without a Gemini API key.
 
-Mock Mode is the recommended default for routine testing and demos to avoid Gemini quota usage. Gemini can be enabled intentionally by setting `MOCK_AI_MODE=false` with a server-side `GEMINI_API_KEY`. Do not create `VITE_GEMINI_API_KEY`.
+**Accounts and data isolation.** Supabase Auth handles email/password and Google sign-in, with a dedicated password recovery flow. Supabase Postgres stores dog profiles, reminders, and notification settings. The [database migrations](supabase/migrations) define row-level security policies to restrict access to user-owned data.
 
-Activity Log, Vet Finder, chat persistence, and `ai_usage_logs` persistence are not active beta features.
+**Reminders that run with the app closed.** An external scheduler calls a [Vercel function](api/telegram/reminders/scheduled-check.js) that looks up due reminders in Supabase and sends them through the Telegram Bot API. The function records deliveries to prevent duplicate notifications on subsequent checks.
 
-## Local Setup
+## Run locally
 
-1. Install dependencies:
+You’ll need Node.js with npm and a Supabase project.
 
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/AvivRomHoresh/DogCareAI.git
+cd DogCareAI
+npm ci
+cp .env.example .env.local
+```
 
-2. Create a local environment file:
+On PowerShell, use `Copy-Item .env.example .env.local` for the copy step.
 
-   ```bash
-   cp .env.example .env.local
-   ```
+1. Apply the SQL files in [`supabase/migrations`](supabase/migrations) in filename order using the Supabase SQL Editor.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` using the project URL and public anon key.
+3. In Supabase Auth, allow the local app URL and its `/update-password` URL as redirects. Enable email confirmation or configure the Google provider if you want to exercise those flows.
+4. Run `npm run dev` and open the URL printed by Vite, typically `http://localhost:5173`.
 
-3. Fill in the frontend-safe Supabase values if you have a Supabase project:
+To run the Assistant and Telegram API routes locally, link a Vercel project and start it with `vercel dev`. Add the local URL printed by the CLI and its `/update-password` URL to the Supabase Auth redirect allowlist. Use `MOCK_AI_MODE=true` for the Assistant demo. To enable Gemini, set `MOCK_AI_MODE=false` and supply `GEMINI_API_KEY` as a server-side environment variable. See [`.env.example`](.env.example) for available settings.
 
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-   Authentication now requires these frontend-safe Supabase values. Do not add service-role keys to the frontend.
-
-4. Start the dev server:
-
-   ```bash
-   npm run dev
-   ```
-
-5. Open the URL printed by Vite, usually:
-
-   ```text
-   http://localhost:5173
-   ```
-
-## Environment Variables
-
-Use `.env.example` as the source of truth. Only variables prefixed with `VITE_` are safe for the browser bundle.
-
-Server-side variables such as `GEMINI_API_KEY`, `MOCK_AI_MODE`, `AI_MODEL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CRON_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` are for Vercel Functions or server-side boundaries. They must not be exposed in frontend code.
-
-For local Gemini testing, add `GEMINI_API_KEY` to `.env.local` and set `MOCK_AI_MODE=false` only when intentionally testing real Gemini. Do not create `VITE_GEMINI_API_KEY`; Gemini keys must stay server-side only.
-
-## Deploying to Vercel
-
-Use the Vite framework preset in Vercel.
-
-- Build command: `npm run build`
-- Output directory: `dist`
-- Required frontend environment variables:
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-- Server-side Assistant variables:
-  - `GEMINI_API_KEY`
-  - `MOCK_AI_MODE`
-  - `AI_MODEL`
-  - `AI_MAX_INPUT_CHARS`
-  - `AI_REQUEST_TIMEOUT_MS`
-  - `AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE`
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
-  - `TELEGRAM_BOT_TOKEN`
-  - `TELEGRAM_CRON_SECRET`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-
-Do not add service-role keys to frontend code or the frontend bundle. `SUPABASE_SERVICE_ROLE_KEY` is server-side only and is used by the scheduled Telegram reminder endpoint. Netlify remains available as a backup/static deployment path, so do not remove `netlify.toml` yet. Active Gemini and Telegram server-side work should use Vercel because `/api/*` routes run as Vercel Functions. `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CRON_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` must not be prefixed with `VITE_`.
-
-The Vercel SPA rewrite intentionally excludes `/api/*` so `/api/assistant` can run as a Vercel Function.
-
-## Available Routes
-
-- `/` - Dashboard basics with active dog and reminder summaries
-- `/auth` - Supabase email/password auth with Google Login as a secondary option
-- `/dog-profile` - Dog Profile create/edit/archive
-- `/assistant` - Beta Assistant with active dog context, emergency pre-check, Mock Mode, and secure Gemini boundary
-- `/reminders` - Basic Reminders create/edit/complete/delete and Telegram reminder settings
-
-The `/auth` route contains Supabase email/password auth plus Google Login as a secondary option. Email/password remains available as the reliable fallback path. The `/dog-profile` route supports beta dog profile management through the existing `dogs` table. The `/reminders` route supports basic reminder management through the existing `reminders` table plus optional Telegram reminder settings. The dashboard loads active-dog reminder summaries from the existing `reminders` table without making AI calls. The Assistant route calls `/api/assistant` after explicit user action, uses active dog and reminder context, and runs deterministic emergency keyword detection before Gemini. Emergency responses bypass Gemini and advise contacting a veterinarian immediately. DogCareAI does not provide medical diagnosis.
-
-## Cost-Control Notes
-
-The MVP must remain demoable without paid services. Mock AI Mode stays available for local development and classroom demos and is default-safe when `MOCK_AI_MODE` is missing or true, or when `GEMINI_API_KEY` is missing. Real Gemini calls go only through `/api/assistant`, never from the browser.
-
-`AI_RATE_LIMIT_MAX_REQUESTS_PER_MINUTE` controls a beta best-effort per-user Gemini request guard before real provider calls.
-
-## Phase 7 / Beta Demo Docs
-
-- `docs/DEMO_GUIDE.md` - recommended beta demo flow, known limitations, and success checklist.
-- `docs/PHASE_7_QA_PLAN.md` - QA plan and manual test matrix.
-- `docs/PHASE_7_MANUAL_QA_RESULTS.md` - full Phase 7 manual QA execution results.
-- `docs/PHASE_7_BUG_TRIAGE.md` - triage for bugs and blocked tests found during manual QA.
-- `docs/PHASE_7_BUGFIX_ROUND_1.md` - approved Phase 7 bugfix round.
-- `docs/PHASE_7_REGRESSION_QA.md` - targeted regression results for the bugfix round.
-- `docs/PHASE_7_AUTOMATED_TESTS_ASSESSMENT.md` - decision to defer automated tests for the current beta unless dependency/package changes are explicitly approved.
-
-## Phase 8 Docs
-
-- `docs/PHASE_8_PLAN.md` - final demo upgrade plan.
-- `docs/PHASE_8_STEP_1_NEARBY_DOG_PLACES_REPORT.md` - Nearby Places implementation report.
-- `docs/PHASE_8_STEP_2_6_TELEGRAM_SCHEDULER_QA_REPORT.md` - completed Telegram scheduler QA and production verification.
-- `docs/PHASE_8_STEP_4A_BREED_DID_YOU_KNOW_IMPLEMENTATION_REPORT.md` - completed breed recognition and Did You Know implementation report.
-- `docs/PHASE_8_STEP_5B_DASHBOARD_REDESIGN_IMPLEMENTATION_REPORT.md` - completed Dashboard redesign and compact Did You Know implementation report.
+```bash
+npm run lint   # TypeScript check
+npm run build  # TypeScript check and production bundle
+```
